@@ -1,0 +1,162 @@
+.profile-card {
+  position: relative;
+  background-color: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  border-radius: 20px;
+  padding: 20px;
+  color: #fff;
+  text-align: center;
+  width: 95%;
+  height: 600px;
+  max-width: full-width;
+  margin: auto;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.4);
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.avatar-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.avatar {
+  width: 100px;
+  height: 100px;
+  background: #ccc;
+  border-radius: 50%;
+  margin-bottom: 10px;
+  border: 3px solid gold;
+}
+
+.username {
+  color: gold;
+}
+
+.action-buttons {
+  display: flex;
+  justify-content: space-between;
+  margin: 20px 0;
+  flex-wrap: wrap;
+  gap: 1px;
+  border-radius: 17px;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 9px;
+  border: rgb(39, 117, 214)  1px solid;
+}
+
+.action {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #ffd700;
+  font-size: 13px;
+  width: 60px;
+}
+
+.action svg {
+  font-size: 20px;
+  margin-bottom: 4px;
+}
+
+.stats {
+  display: flex;
+  justify-content: space-between;
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
+  padding: 10px 15px;
+  margin: 15px 0;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  flex-wrap: wrap;
+}
+
+.stat {
+  flex: 1;
+  min-width: 70px;
+  text-align: center;
+}
+
+.stat strong {
+  font-size: 16px;
+  color: white;
+}
+
+.stat span {
+  font-size: 13px;
+  color: #ccc;
+}
+
+.mutual-section {
+  padding: 10px;
+  background: rgba(0, 76, 255, 0.1);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  margin: 15px 0;
+}
+
+.mutual-section h4 {
+  color: #fff;
+  margin-bottom: 10px;
+}
+
+.mutual-friends {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.mutual-avatar {
+  width: 35px;
+  height: 35px;
+  background: #fff;
+  border-radius: 50%;
+  border: 2px solid #00f;
+}
+
+.achievements {
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  margin-top: 15px;
+}
+
+.achievements-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffd700;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.trophy-icon {
+  margin-right: 6px;
+  font-size: 16px;
+}
+
+.close-btn {
+   position: absolute;
+  top: 12px;
+  right: 12px;
+  background: transparent;
+  border: none;
+  font-size: 24px;
+  color: black;
+  cursor: pointer;
+  z-index: 100;
+}
