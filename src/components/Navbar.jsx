@@ -1,5 +1,5 @@
 import React from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import logo from '../assets/logo.png';
 import { FaHome, FaGamepad, FaTrophy, FaUsers, FaWallet, FaUser } from 'react-icons/fa';
 
@@ -20,14 +20,14 @@ const Navbar = () => {
                 { path: '/games', icon: <FaGamepad className="text-xl mb-0.5" />, label: 'Games' },
                 { path: '/tournaments', icon: <FaTrophy className="text-xl mb-0.5" />, label: 'Tournaments' }
               ].map((item) => (
-                <a 
+                <Link 
                   key={item.path}
-                  href={item.path} 
+                  to={item.path} 
                   className={`flex flex-col items-center text-xs px-2 ${location.pathname === item.path ? 'text-active' : ''}`}
                 >
                   {item.icon}
                   <span>{item.label}</span>
-                </a>
+                </Link>
               ))}
             </div>
 
@@ -45,14 +45,14 @@ const Navbar = () => {
                 { path: '/wallet', icon: <FaWallet className="text-xl mb-0.5" />, label: 'Wallet' },
                 { path: '/profile', icon: <FaUser className="text-xl mb-0.5" />, label: 'Profile' }
               ].map((item) => (
-                <a 
+                <Link 
                   key={item.path}
-                  href={item.path} 
+                  to={item.path} 
                   className={`flex flex-col items-center text-xs px-2 ${location.pathname === item.path ? 'text-active' : ''}`}
                 >
                   {item.icon}
                   <span>{item.label}</span>
-                </a>
+                </Link>
               ))}
             </div>
           </div>
@@ -67,14 +67,14 @@ const Navbar = () => {
               { path: '/wallet', icon: <FaWallet className="text-base mb-0.5" />, label: 'Wallet' },
               { path: '/profile', icon: <FaUser className="text-base mb-0.5" />, label: 'Profile' }
             ].map((item) => (
-              <a 
+              <Link 
                 key={item.path}
-                href={item.path} 
+                to={item.path} 
                 className={`flex flex-col items-center text-[9px] px-0.5 text-center leading-none ${location.pathname === item.path ? 'text-active' : ''}`}
               >
                 {item.icon}
                 <span className="whitespace-nowrap overflow-hidden text-ellipsis w-full">{item.label}</span>
-              </a>
+              </Link>
             ))}
           </div>
 

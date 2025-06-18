@@ -13,7 +13,7 @@ const Home = () => {
         <Header />
         <div className="pt-16 md:pt-0">
           <Banner />
-          <div className="container mx-auto px-4 py-8">
+          <div className="container mx-auto px-4 py-2">
             <TrendingGames />
             <MultiplayerGames />
             <PopularGames />

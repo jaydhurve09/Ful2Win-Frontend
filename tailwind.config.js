@@ -12,8 +12,11 @@ export default {
         bgColor: "#000B18",
       },
       backgroundImage: {
+        whiteGradient: "linear-gradient(to bottom right, #ffffff, #f0f0f0)",
         blueGradient: "linear-gradient(to bottom, #000B18, #002B5A, #00498E)",
         darkBlueGradient: "linear-gradient(to bottom, #021242, #0D34A7)",
+        glassDark: "linear-gradient(to bottom right, rgba(31, 41, 55, 0.1), rgba(0, 0, 0, 0.1))",
+        blueGradient: "linear-gradient(to bottom right, #1565C0, #0D47A1, #0A2472)",
       }
     },
   },
