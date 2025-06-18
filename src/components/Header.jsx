@@ -34,8 +34,8 @@ const Header = () => {
             />
           </div>
           <div className="flex items-center space-x-3">
-            <div className="flex items-center bg-[#1e2e5c] px-3 py-1.5 rounded-full">
-              <IoMdWallet className="text-yellow-400 text-lg mr-1.5" />
+            <div className="flex items-center bg-dullBlue px-3 py-1.5 rounded-full">
+              <IoMdWallet className="text-black text-lg mr-1.5" />
               <span className="text-white font-medium text-sm">₹28.71</span>
             </div>
             <button className="text-white text-xl hover:opacity-80 transition-opacity">
