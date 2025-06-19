@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
+import RewardPopup from './RewardPopup';
 
 /**
  * SpinWheelScreen Component
@@ -36,10 +37,14 @@ function getConicGradient() {
   return `conic-gradient(${parts.join(', ')})`;
 }
 
+const REWARDS = ["100 Coins", "200 Coins", "500 Coins"];
+
 const SpinWheelScreen = ({ onClose, isVisible, initialSpins = 5 }) => {
   const [isSpinning, setIsSpinning] = useState(false);
   const [spinsLeft, setSpinsLeft] = useState(initialSpins);
   const [rotation, setRotation] = useState(0);
+  const [showReward, setShowReward] = useState(false);
+  const [currentReward, setCurrentReward] = useState('');
   const wheelRef = useRef(null);
 
   // Prevent body scroll when modal is open
@@ -63,6 +68,7 @@ const SpinWheelScreen = ({ onClose, isVisible, initialSpins = 5 }) => {
 
   const spin = () => {
     if (isSpinning || spinsLeft === 0) return;
+    
     const fullRotations = Math.floor(Math.random() * 3) + 3; // 3-5 full turns
     const randomSegment = Math.floor(Math.random() * COLORS.length);
     const finalDeg = fullRotations * 360 + randomSegment * SEGMENT_DEGREE + SEGMENT_DEGREE / 2;
@@ -70,11 +76,20 @@ const SpinWheelScreen = ({ onClose, isVisible, initialSpins = 5 }) => {
     setIsSpinning(true);
     setRotation((prev) => prev + finalDeg);
 
-    // Wait for transition (3.5s) then update.
+    // Wait for transition (3.5s) then show reward
     setTimeout(() => {
       setIsSpinning(false);
       setSpinsLeft((s) => Math.max(s - 1, 0));
+      // Select and show random reward after spin completes
+      const randomReward = REWARDS[Math.floor(Math.random() * REWARDS.length)];
+      setCurrentReward(randomReward);
+      setShowReward(true);
     }, 3500);
+  };
+
+  const handleCloseReward = () => {
+    setShowReward(false);
+    setCurrentReward('');
   };
 
   if (!isVisible) return null;
@@ -141,6 +156,12 @@ const SpinWheelScreen = ({ onClose, isVisible, initialSpins = 5 }) => {
           ×
         </button>
       </div>
+      
+      {/* Reward Popup */}
+      <RewardPopup 
+        reward={currentReward}
+        onClose={handleCloseReward}
+      />
     </div>
   );
 };
