@@ -1,22 +1,22 @@
-import { useState } from 'react'
-import './App.css'
-import Home from './pages/Home'
-import { BrowserRouter } from 'react-router-dom';
-import ErrorBoundary from './components/ErrorBoundary';
+import './App.css';
+import Home from './pages/Home';
+import ProfileScreen from './pages/ProfileScreen';
+import Wallet from './pages/Wallet';
+import ErrorBoundary from './MyComponents/ErrorBoundary';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 
 function App() {
-  // const [count, setCount] = useState(0)
-
   return (
-    <>
-      {/* <div className="bg-red-500 text-white p-4">Tailwind Works!</div> */}
-      <BrowserRouter>
-        <ErrorBoundary>
-          <Home />
-        </ErrorBoundary>
-      </BrowserRouter>
-    </>
-  )
+    <BrowserRouter>
+      <ErrorBoundary>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/profile" element={<ProfileScreen />} />
+          <Route path="/wallet" element={<Wallet />} />
+        </Routes>
+      </ErrorBoundary>
+    </BrowserRouter>
+  );
 }
 
-export default App
+export default App;

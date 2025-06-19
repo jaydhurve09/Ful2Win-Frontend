@@ -1,10 +1,10 @@
 import React from 'react';
-import Header from '../components/Header';
-import TrendingGames from '../components/TrendingGames';
-import MultiplayerGames from '../components/MultiplayerGames';
-import PopularGames from '../components/PopularGames';
-import Navbar from '../components/Navbar';
-import Banner from '../components/Banner';
+import Header from '../MyComponents/Header';
+import TrendingGames from '../MyComponents/TrendingGames';
+import MultiplayerGames from '../MyComponents/MultiplayerGames';
+import PopularGames from '../MyComponents/PopularGames';
+import Navbar from '../MyComponents/Navbar';
+import Banner from '../MyComponents/Banner';
 
 const Home = () => {
   return (
