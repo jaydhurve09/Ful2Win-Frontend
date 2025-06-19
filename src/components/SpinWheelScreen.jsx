@@ -101,7 +101,10 @@ const SpinWheelScreen = ({ onClose, isVisible, initialSpins = 5 }) => {
 
         {/* Wheel wrapper */}
         <div className="relative flex items-center justify-center mb-8 md:mb-10" style={{ width: wheelSize, height: wheelSize }}>
-          {/* Triangular pointer */}
+          {/* Red pointer */}
+          <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-2.5 h-5 bg-red-600 z-10" />
+          
+          {/* Triangular pointer (keeping this for backward compatibility) */}
           <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-0 h-0 border-l-10 border-r-10 border-b-10 border-l-transparent border-r-transparent border-b-white" />
 
           {/* Wheel */}
