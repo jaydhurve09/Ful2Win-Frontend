@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import Navbar from "../MyComponents/Navbar";
 import ChatOverlay from "../components/ChatOverlay";
 import mainProfileIcon from '../assets/main-profile.png';
+import profileIcon from '../assets/profile.png';
 import callIcon from '../assets/call.png';
 import friendsIcon from '../assets/friends.png';
 import walletIcon from '../assets/wallet.png';
@@ -11,12 +12,24 @@ import trophyIcon from '../assets/Trophy1.png';
 import gamesPlayedIcon from '../assets/gamesPlayed.png';
 import coinsIcon from '../assets/coins.png';
 import statsFriendsIcon from '../assets/stats-friends.png';
+import kycStatusIcon from '../assets/kycStatus.png';
+import editInfoIcon from '../assets/eidtInfo.png';
+import emailIcon from '../assets/email.png';
+import shareIcon from '../assets/share.png';
 
 const ProfileScreen = () => {
   // Navigation state
   const [activeSection, setActiveSection] = useState('profile');
   const [activeProfileAction, setActiveProfileAction] = useState(null);
   const [selectedChat, setSelectedChat] = useState(null);
+  
+  // User stats state
+  const [userStats, setUserStats] = useState({
+    wins: 120,
+    coins: 5000,
+    matches: 1234,
+    friends: 89
+  });
   const navigate = useNavigate();
 
   // Mock data for friends with recent chats
@@ -178,9 +191,9 @@ const ProfileScreen = () => {
       )}
 
       {/* Main content */}
-      <div className={`relative z-10 pt-16 pb-20 px-4 ${selectedChat ? 'opacity-50 pointer-events-none' : ''}`}>
+      <div className={`relative z-10 ${selectedChat ? 'opacity-50 pointer-events-none' : ''}`}>
         {/* Scrollable content */}
-        <div className="flex-1 overflow-y-auto pb-20 md:pb-4">
+        <div className={`${activeSection === 'friends' ? 'h-screen overflow-y-auto' : 'overflow-hidden'} pt-16 pb-20 px-4 md:pb-4`}>
           {/* Profile header */}
           <div className="pt-16 pb-8 px-6 text-center">
             {/* Profile picture - responsive sizing */}
@@ -206,7 +219,7 @@ const ProfileScreen = () => {
                   id: 'call'
                 },
                 { 
-                  icon: <img src={friendsIcon} alt="Friends" className="w-8 h-8 sm:w-10 sm:h-10 object-contain -mt-1" />, 
+                  icon: <img src={friendsIcon} alt="Friends" className="w-10 h-8 sm:w-12 sm:h-10 object-contain -mt-1" />, 
                   label: "Friends",
                   id: 'friends'
                 },
@@ -227,7 +240,7 @@ const ProfileScreen = () => {
                       className: `w-7 h-7 sm:w-8 sm:h-8 ${activeSection === item.id ? 'text-blue-400 scale-110' : 'text-white/80'} transition-transform` 
                     })}
                   </button>
-                  <span className={`text-sm sm:text-base mt-2 whitespace-nowrap transition-colors ${activeSection === item.id ? 'text-blue-400 font-medium' : 'text-white/60'}`}>
+                  <span className={`text-sm sm:text-base mt-2 whitespace-nowrap transition-colors ${activeSection === item.id ? 'text-[#AECBF9] font-medium' : 'text-[#AECBF9] opacity-80'}`}>
                     {item.label}
                   </span>
                 </div>
@@ -236,68 +249,68 @@ const ProfileScreen = () => {
           </div>
 
         {/* Main Content Sections */}
-        <div className="px-4 max-w-2xl mx-auto w-full">
+        <div className="max-w-2xl mx-auto w-full">
           {/* Profile Section */}
           {activeSection === 'profile' && (
-            <div className="gradient-border rounded-2xl p-1 mt-6 w-full">
-              <div className="bg-white rounded-2xl p-6">
+            <div className="gradient-border rounded-t-2xl md:rounded-2xl mt-6 w-full">
+              <div className="bg-white rounded-t-2xl md:rounded-2xl p-4 sm:p-6">
                 {/* Stats Cards */}
-                <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-6">
+                <div className="grid grid-cols-2 gap-2 sm:gap-4 mb-6">
                   {/* Wins */}
-                  <div className="relative p-4 rounded-xl gradient-border bg-white">
+                  <div className="relative p-2 sm:p-3 rounded-xl gradient-border bg-white">
                     <div className="relative z-10">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 flex items-center justify-center">
-                          <img src={trophyIcon} alt="Wins" className="w-8 h-8" />
+                      <div className="flex items-center space-x-2 sm:space-x-3">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0 flex items-center justify-center bg-blue-50 rounded-lg">
+                          <img src={trophyIcon} alt="Wins" className="w-8 h-8 sm:w-10 sm:h-10" />
                         </div>
-                        <div className="text-left">
-                          <div className="font-bold text-gray-800 text-lg">120</div>
-                          <div className="text-xs text-gray-600">Wins</div>
+                        <div className="min-w-0">
+                          <div className="font-bold text-[#0D47A1] text-base sm:text-lg md:text-xl truncate">{userStats.wins.toLocaleString()}</div>
+                          <div className="text-xs sm:text-sm font-medium text-[#0D47A1] opacity-80 truncate">Wins</div>
                         </div>
                       </div>
                     </div>
                   </div>
                   
                   {/* Coins */}
-                  <div className="relative p-4 rounded-xl gradient-border bg-white">
+                  <div className="relative p-2 sm:p-3 rounded-xl gradient-border bg-white">
                     <div className="relative z-10">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 flex items-center justify-center">
-                          <img src={coinsIcon} alt="Coins" className="w-8 h-8" />
+                      <div className="flex items-center space-x-2 sm:space-x-3">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0 flex items-center justify-center bg-blue-50 rounded-lg">
+                          <img src={coinsIcon} alt="Coins" className="w-8 h-8 sm:w-10 sm:h-10" />
                         </div>
-                        <div className="text-left">
-                          <div className="font-bold text-gray-800 text-lg">5,000</div>
-                          <div className="text-xs text-gray-600">Coins</div>
+                        <div className="min-w-0">
+                          <div className="font-bold text-[#0D47A1] text-base sm:text-lg md:text-xl truncate">{userStats.coins.toLocaleString()}</div>
+                          <div className="text-xs sm:text-sm font-medium text-[#0D47A1] opacity-80 truncate">Coins</div>
                         </div>
                       </div>
                     </div>
                   </div>
                   
                   {/* Matches Played */}
-                  <div className="relative p-4 rounded-xl gradient-border bg-white">
+                  <div className="relative p-2 sm:p-3 rounded-xl gradient-border bg-white">
                     <div className="relative z-10">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 flex items-center justify-center">
-                          <img src={gamesPlayedIcon} alt="Matches Played" className="w-8 h-8" />
+                      <div className="flex items-center space-x-2 sm:space-x-3">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0 flex items-center justify-center bg-blue-50 rounded-lg">
+                          <img src={gamesPlayedIcon} alt="Matches Played" className="w-8 h-8 sm:w-10 sm:h-10" />
                         </div>
-                        <div className="text-left">
-                          <div className="font-bold text-gray-800 text-lg">1,234</div>
-                          <div className="text-xs text-gray-600">Matches</div>
+                        <div className="min-w-0">
+                          <div className="font-bold text-[#0D47A1] text-base sm:text-lg md:text-xl truncate">{userStats.matches.toLocaleString()}</div>
+                          <div className="text-xs sm:text-sm font-medium text-[#0D47A1] opacity-80 truncate">Matches</div>
                         </div>
                       </div>
                     </div>
                   </div>
                   
                   {/* Friends */}
-                  <div className="relative p-4 rounded-xl gradient-border bg-white">
+                  <div className="relative p-2 sm:p-3 rounded-xl gradient-border bg-white">
                     <div className="relative z-10">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 flex items-center justify-center">
-                          <img src={statsFriendsIcon} alt="Friends" className="w-8 h-8" />
+                      <div className="flex items-center space-x-2 sm:space-x-3">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0 flex items-center justify-center bg-blue-50 rounded-lg">
+                          <img src={statsFriendsIcon} alt="Friends" className="w-8 h-8 sm:w-10 sm:h-10" />
                         </div>
-                        <div className="text-left">
-                          <div className="font-bold text-gray-800 text-lg">89</div>
-                          <div className="text-xs text-gray-600">Friends</div>
+                        <div className="min-w-0">
+                          <div className="font-bold text-[#0D47A1] text-base sm:text-lg md:text-xl truncate">{userStats.friends.toLocaleString()}</div>
+                          <div className="text-xs sm:text-sm font-medium text-[#0D47A1] opacity-80 truncate">Friends</div>
                         </div>
                       </div>
                     </div>
@@ -309,25 +322,25 @@ const ProfileScreen = () => {
                   <div className="rounded-xl overflow-hidden">
                     {[
                       { 
-                        icon: <FiMail className="text-blue-600 group-hover:text-white transition-colors" />, 
+                        icon: <img src={emailIcon} alt="Email" className="w-6 h-5" />, 
                         text: "Email",
                         id: 'email',
                         action: 'email'
                       },
                       { 
-                        icon: <FiEdit className="text-blue-600 group-hover:text-white transition-colors" />, 
+                        icon: <img src={editInfoIcon} alt="Edit Info" className="w-5 h-5" />, 
                         text: "Edit Info",
                         id: 'edit',
                         action: 'edit'
                       },
                       { 
-                        icon: <FiShare2 className="text-blue-600 group-hover:text-white transition-colors" />, 
+                        icon: <img src={shareIcon} alt="Share" className="w-5 h-5" />, 
                         text: "Referrals",
                         id: 'referrals',
                         action: 'referrals'
                       },
                       { 
-                        icon: <span className="text-blue-600 font-bold group-hover:text-white transition-colors">KYC</span>, 
+                        icon: <img src={kycStatusIcon} alt="KYC Status" className="w-5 h-5" />, 
                         text: "KYC Status",
                         id: 'kyc',
                         action: 'kyc'
@@ -360,7 +373,7 @@ const ProfileScreen = () => {
                             {item.icon}
                           </div>
                           <div className="flex-1 text-left">
-                            <div className={`font-medium ${item.isDanger ? 'text-red-600' : 'text-gray-800'}`}>
+                            <div className={`font-medium ${item.isDanger ? 'text-red-600' : 'text-[#0D47A1]'}`}>
                               {item.text}
                             </div>
                           </div>
@@ -374,7 +387,7 @@ const ProfileScreen = () => {
                         </button>
                         {index < array.length - 1 && (
                           <div className="px-4">
-                            <div className="w-full h-[1px] bg-gray-300"></div>
+                            <div className="w-full h-[1px] bg-[#0D47A1] bg-opacity-30"></div>
                           </div>
                         )}
                       </React.Fragment>
@@ -539,8 +552,9 @@ const ProfileScreen = () => {
       </div>
       
       {/* Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 z-20 md:static md:mt-8">
-        <div className="max-w-2xl mx-auto">
+      <div className="fixed bottom-0 left-0 right-0 z-20 overflow-hidden md:static md:mt-8">
+        <div className="max-w-2xl mx-auto relative">
+          <div className="absolute inset-0 bg-darkBlueGradient rounded-t-2xl md:rounded-lg -z-10"></div>
           <Navbar />
         </div>
       </div>
