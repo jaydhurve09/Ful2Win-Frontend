@@ -1,0 +1,27 @@
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin: 1rem auto;
+  flex-wrap: wrap;
+}
+
+.action-box {
+  width: 90px;
+  height: 90px;
+  background-color: #002e6e;
+  border: 2px solid #ffffff80;
+  border-radius: 12px;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  gap: 5px;
+}
+
+.action-icon {
+  color: #ffc107;
+  font-size: 1.5rem;
+}
