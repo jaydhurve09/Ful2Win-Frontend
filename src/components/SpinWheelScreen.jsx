@@ -84,25 +84,25 @@ const SpinWheelScreen = ({ onClose, isVisible, initialSpins = 5 }) => {
 
   return (
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 p-4"
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 backdrop-blur-md p-4"
       role="dialog"
       aria-modal="true"
       onClick={onClose}
     >
       {/* Modal content */}
       <div
-        className="relative w-full max-w-[400px] bg-gradient-to-b from-blue-700 via-blue-800 to-blue-900 rounded-2xl p-6 flex flex-col items-center"
+        className="relative w-full max-w-[400px] bg-white/10 backdrop-blur-lg rounded-2xl p-6 flex flex-col items-center"
         onClick={(e) => e.stopPropagation()} // stop overlay close
       >
         {/* Header */}
-        <h2 className="text-2xl font-extrabold text-[#FFD700] text-center mb-6 select-none">
+        <h2 className="text-2xl font-extrabold text-[#FFD700] text-center mb-6 md:mb-8 select-none">
           Daily Spin Wheel
         </h2>
 
         {/* Wheel wrapper */}
-        <div className="relative flex items-center justify-center mb-8" style={{ width: wheelSize, height: wheelSize }}>
+        <div className="relative flex items-center justify-center mb-8 md:mb-10" style={{ width: wheelSize, height: wheelSize }}>
           {/* Triangular pointer */}
-          <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-b-8 border-l-transparent border-r-transparent border-b-white" />
+          <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-0 h-0 border-l-10 border-r-10 border-b-10 border-l-transparent border-r-transparent border-b-white" />
 
           {/* Wheel */}
           <div
