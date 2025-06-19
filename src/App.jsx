@@ -6,6 +6,7 @@ import ProfileScreen from './pages/ProfileScreen'
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import ErrorBoundary from './components/ErrorBoundary';
 import CommunityFeed from './pages/CommunityFeed'
+import Community from './pages/Community'
 
 function App() {
   // const [count, setCount] = useState(0)
@@ -19,7 +20,9 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/tournaments" element={<Tournaments />} />
             <Route path="/profile" element={<ProfileScreen/>} />
-            <Route path='/community' element={<CommunityFeed/>} />
+            {/* <Route path='/community' element={<CommunityFeed/>} /> */}
+            <Route path='/community' element={<Community />} />
+            <Route path='/profile/:id' element={<ProfileScreen/>} />
           </Routes>
         </ErrorBoundary>
       </BrowserRouter>
