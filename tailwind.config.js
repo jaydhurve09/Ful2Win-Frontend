@@ -20,6 +20,8 @@ export default {
         neonBlueGradient: "linear-gradient(to bottom right, #00cfff, #00b8ff, #007bff)",
         glassDark: "linear-gradient(to bottom right, rgba(31, 41, 55, 0.1), rgba(0, 0, 0, 0.1))",
         blueGradient: "linear-gradient(to bottom right, #1565C0, #0D47A1, #0A2472)",
+        communityGradient:"linear-gradient(to bottom, #1565C0 0%, #0D47A1 42%, #0A2472 100%)",
+    
       }
     },
   },
