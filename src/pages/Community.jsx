@@ -4,6 +4,7 @@ import Navbar from '../components/Navbar';
 import Header from '../components/Header';
 import BackgroundBubbles from '../components/BackgroundBubbles';
 import Button from '../components/Button';
+import CommunityProfile from '../components/CommunityProfile';
 
 // React Icons
 import { 
@@ -21,12 +22,14 @@ import {
 } from 'react-icons/fi';
 import { RiSwordLine } from 'react-icons/ri';
 import { BsThreeDotsVertical } from 'react-icons/bs';
+import { FaEllipsisH, FaThumbsUp, FaComment, FaShare, FaBookmark, FaSmile, FaImage, FaVideo, FaPoll } from 'react-icons/fa';
 
 const Community = () => {
   const [activeTab, setActiveTab] = useState('feed');
   const [activeType, setActiveType] = useState('all');
   const [newPostContent, setNewPostContent] = useState('');
   const [showCreatePost, setShowCreatePost] = useState(false);
+  const [viewingProfile, setViewingProfile] = useState(null);
 
   const communityTabs = [
     { id: 'feed', label: 'Feed', icon: <FiHome className="mr-1" /> },
@@ -46,20 +49,32 @@ const Community = () => {
   const communityPosts = [
     {
       id: 1,
-      user: 'gamer123',
-      avatar: 'G',
-      time: '2h ago',
-      content: 'Just won my first tournament! 🎮🏆 #winner #gaming',
-      likes: 42,
-      comments: 8,
-      shares: 3,
+      user: 'gaming_legend',
+      name: 'Alex Johnson',
+      avatar: 'AJ',
+      time: '1h ago',
+      content: 'Check out this insane headshot I hit in the tournament yesterday! #headshot #gaming #esports',
+      image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80',
+      likes: 256,
+      comments: 32,
+      shares: 18,
       type: 'popular',
-      userLiked: false
+      userLiked: true,
+      game: 'Valorant',
+      playTime: '2h 45m',
+      views: '12.5K',
+      verified: true,
+      stats: {
+        wins: 42,
+        winRate: '87%',
+        games: 156,
+        friends: 128
+      }
     },
     {
       id: 2,
       user: 'esports_pro',
-      avatar: 'E',
+      avatar: 'EP',
       time: '4h ago',
       content: 'Check out my latest gaming setup! What do you think? #gaming #setup',
       likes: 128,
@@ -71,7 +86,7 @@ const Community = () => {
     {
       id: 3,
       user: 'game_dev',
-      avatar: 'D',
+      avatar: 'GD',
       time: '1d ago',
       content: 'What\'s your favorite game of all time? Let\'s discuss in the comments! #gamingcommunity',
       likes: 87,
@@ -124,6 +139,12 @@ const Community = () => {
   return (
     <div className="relative min-h-screen pb-24 overflow-hidden text-white bg-blueGradient">
       <BackgroundBubbles />
+      {viewingProfile && (
+        <CommunityProfile 
+          user={viewingProfile} 
+          onClose={() => setViewingProfile(null)} 
+        />
+      )}
       <div className="relative z-10">
         <Header />
         <div className="pt-16 md:pt-0">
@@ -176,17 +197,39 @@ const Community = () => {
 
             {/* Create Post Card */}
             <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 mb-6 border border-white/10">
-              <div className="flex items-center">
+              <h3 className="text-lg font-semibold mb-4">Create Post</h3>
+              <div className="flex items-center mb-4">
                 <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-white font-bold mr-3">
                   U
                 </div>
                 <input
                   type="text"
                   placeholder="What's on your mind?"
-                  className="flex-1 bg-white/10 border border-white/20 rounded-full px-4 py-2 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+                  className="flex-1 bg-white/5 border border-white/10 rounded-full px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
                   onClick={() => setShowCreatePost(true)}
                   readOnly
                 />
+              </div>
+              
+              {/* Post Type Selection */}
+              <div className="flex items-center justify-between border-t border-white/10 pt-3">
+                <div className="flex space-x-2">
+                  <button className="flex items-center text-sm text-gray-300 hover:text-white p-2 rounded-lg hover:bg-white/5 transition-colors">
+                    <FaImage className="mr-1" /> Photo
+                  </button>
+                  <button className="flex items-center text-sm text-gray-300 hover:text-white p-2 rounded-lg hover:bg-white/5 transition-colors">
+                    <FaVideo className="mr-1" /> Video
+                  </button>
+                  <button className="flex items-center text-sm text-gray-300 hover:text-white p-2 rounded-lg hover:bg-white/5 transition-colors">
+                    <FaPoll className="mr-1" /> Poll
+                  </button>
+                </div>
+                <button 
+                  className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-1.5 rounded-full text-sm font-medium transition-colors"
+                  onClick={() => setShowCreatePost(true)}
+                >
+                  Post
+                </button>
               </div>
               {showCreatePost && (
                 <div className="mt-4">
@@ -226,22 +269,61 @@ const Community = () => {
                   <div key={post.id} className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10">
                     {/* Post Header */}
                     <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center">
+                      <button 
+                        onClick={() => setViewingProfile(post)}
+                        className="flex items-center hover:opacity-80 transition-opacity"
+                      >
                         <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-white font-bold mr-3">
                           {post.avatar}
                         </div>
-                        <div>
-                          <h3 className="font-semibold text-white">{post.user}</h3>
+                        <div className="text-left">
+                          <h3 className="font-semibold text-white flex items-center">
+                            {post.user}
+                            {post.verified && (
+                              <svg className="w-3.5 h-3.5 ml-1 text-blue-400" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                              </svg>
+                            )}
+                          </h3>
                           <p className="text-xs text-white/60">{post.time}</p>
                         </div>
-                      </div>
-                      <button className="text-white/50 hover:text-white">
+                      </button>
+                      <button 
+                        className="text-white/50 hover:text-white p-1 -mr-1"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          // Add more options menu here if needed
+                        }}
+                      >
                         <BsThreeDotsVertical />
                       </button>
                     </div>
 
                     {/* Post Content */}
                     <p className="mb-3 text-white/90">{post.content}</p>
+
+                    {/* Post Image */}
+                    {post.image && (
+                      <div className="relative rounded-lg overflow-hidden mb-3 border border-white/10 max-h-64">
+                        <img 
+                          src={post.image} 
+                          alt="Post content" 
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                        {post.game && (
+                          <div className="absolute bottom-2 left-2 bg-black/70 px-2 py-1 rounded text-xs flex items-center">
+                            <span className="w-2 h-2 bg-green-500 rounded-full mr-1"></span>
+                            {post.game} • {post.playTime}
+                          </div>
+                        )}
+                        {post.views && (
+                          <div className="absolute bottom-2 right-2 bg-black/70 px-2 py-1 rounded text-xs">
+                            👁️ {post.views}
+                          </div>
+                        )}
+                      </div>
+                    )}
 
                     {/* Post Actions */}
                     <div className="flex items-center justify-between mt-4 pt-3 border-t border-white/10">
