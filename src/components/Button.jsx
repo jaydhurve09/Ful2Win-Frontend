@@ -16,7 +16,7 @@ const Button = ({
   const variants = {
     primary: 'bg-active hover:bg-white text-black',
     secondary: 'bg-blue-600 hover:bg-blue-700 text-white',
-    gradient: 'bg-blueGradient text-white hover:bg-whiteGradient hover:text-black',
+    gradient: 'bg-neonBlueGradient text-white hover:bg-whiteGradient hover:text-black',
     outline: 'border-2 border-active hover:bg-active hover:text-black text-active',
   };
 

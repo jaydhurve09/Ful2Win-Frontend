@@ -7,7 +7,7 @@ import ludo from '../assets/ludo.png';
 
 const TrendingGames = () => {
   return (
-    <section className="my-12">
+    <section className="my-8">
       <h2 className="text-2xl font-bold mb-4 text-pink-200">🔥 Trending Games</h2>
       <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
         <div className="bg-gray-800/50 rounded-lg overflow-hidden shadow-lg hover:shadow-pink-500/20 transition-all duration-300 hover:-translate-y-1">

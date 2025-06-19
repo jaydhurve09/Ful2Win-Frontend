@@ -24,7 +24,7 @@ const Header = () => {
       </header>
 
       {/* Mobile Header */}
-      <header className="md:hidden fixed top-0 left-0 right-0 bg-darkBlueGradient z-40 rounded-b-xl">
+      <header className="md:hidden fixed top-0 left-0 right-0 bg-blueGradient z-40 rounded-b-xl">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center">
             <img 
@@ -35,7 +35,7 @@ const Header = () => {
           </div>
           <div className="flex items-center space-x-3">
             <div className="flex items-center bg-dullBlue px-3 py-1.5 rounded-full">
-              <IoMdWallet className=" text-black text-lg mr-1.5" />
+              <IoMdWallet className=" bg-active rounded-full p-1 text-lg mr-1.5" />
               <span className="text-black font-medium text-sm">₹28.71</span>
             </div>
             <button className="text-white text-xl hover:opacity-80 transition-opacity">
