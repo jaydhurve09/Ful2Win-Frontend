@@ -5,11 +5,14 @@ import MultiplayerGames from '../components/MultiplayerGames';
 import PopularGames from '../components/PopularGames';
 import Navbar from '../components/Navbar';
 import Banner from '../components/Banner';
+// import BackgroundCircles from '../components/BackgroundCircles';
+import BackgroundBubbles from '../components/BackgroundBubbles';
 
 const Home = () => {
   return (
-    <div className="bg-bgColor text-white min-h-screen pb-24">
-      <div className="bg-gradient-to-b from-blue-500/10 via-purple-500/5 to-transparent">
+    <div className="relative min-h-screen pb-24 overflow-hidden text-white bg-blueGradient">
+      <BackgroundBubbles />
+      <div className="relative z-10">
         <Header />
         <div className="pt-16 md:pt-0">
           <Banner />

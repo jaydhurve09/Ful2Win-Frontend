@@ -4,6 +4,7 @@ import { FaTrophy, FaGamepad } from "react-icons/fa";
 import { IoMdPerson } from "react-icons/io";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
+import BackgroundBubbles from "../components/BackgroundBubbles";
 // import ChatOverlay from "../components/ChatOverlay";
 
 const ProfileScreen = () => {
@@ -101,24 +102,8 @@ const ProfileScreen = () => {
         <div className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm z-20"></div>
       )}
       
-      {/* Decorative background bubbles */}
-      <div className={`fixed inset-0 overflow-hidden z-0 pointer-events-none ${selectedChat ? 'blur-sm' : ''}`}>
-        {/* Large bubbles */}
-        <div className="absolute -top-48 -left-48 w-96 h-96 bg-blue-400 rounded-full opacity-20 animate-float"></div>
-        <div className="absolute top-1/4 -right-24 w-72 h-72 bg-blue-300 rounded-full opacity-15 animate-float animation-delay-2000"></div>
-        <div className="absolute bottom-1/4 -left-16 w-80 h-80 bg-blue-500 rounded-full opacity-15 animate-float animation-delay-3000"></div>
-        
-        {/* Medium bubbles */}
-        <div className="absolute top-1/3 left-1/4 w-48 h-48 bg-blue-300 rounded-full opacity-20 animate-float animation-delay-1000"></div>
-        <div className="absolute top-1/2 right-1/4 w-40 h-40 bg-blue-400 rounded-full opacity-20 animate-float animation-delay-1500"></div>
-        <div className="absolute bottom-1/3 left-1/3 w-56 h-56 bg-blue-200 rounded-full opacity-20 animate-float animation-delay-2500"></div>
-        
-        {/* Small bubbles */}
-        <div className="absolute top-1/5 right-1/3 w-24 h-24 bg-blue-300 rounded-full opacity-20 animate-float animation-delay-500"></div>
-        <div className="absolute bottom-1/4 left-1/4 w-28 h-28 bg-blue-400 rounded-full opacity-20 animate-float animation-delay-1000"></div>
-        <div className="absolute top-3/4 right-1/5 w-32 h-32 bg-blue-200 rounded-full opacity-20 animate-float animation-delay-1500"></div>
-        <div className="absolute bottom-1/5 right-1/4 w-24 h-24 bg-blue-300 rounded-full opacity-20 animate-float animation-delay-2000"></div>
-      </div>
+      {/* Background Bubbles Component */}
+      <BackgroundBubbles blur={!!selectedChat} />
       
       {/* Add animation keyframes and gradient border styles */}
       <style dangerouslySetInnerHTML={{

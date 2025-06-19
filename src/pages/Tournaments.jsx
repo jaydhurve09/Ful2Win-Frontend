@@ -5,6 +5,7 @@ import Button from '../components/Button';
 import ludo from '../assets/ludo.png';
 import rummy from '../assets/rummy.png';
 import carrom from '../assets/carrom.png';
+import BackgroundBubbles from '../components/BackgroundBubbles';
 
 const Tournaments = () => {
   const [activeTab, setActiveTab] = useState('all');
@@ -59,7 +60,8 @@ const Tournaments = () => {
   ];
 
   return (
-    <div className="bg-bgColor text-white min-h-screen pb-24">
+    <div className="bg-blueGradient text-white min-h-screen pb-24">
+      <BackgroundBubbles />
       <div className="bg-gradient-to-b from-blue-500/10 via-purple-500/5 to-transparent">
         <Header />
         <div className="container mx-auto px-4 py-8">

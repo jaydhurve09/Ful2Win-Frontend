@@ -7,9 +7,9 @@ const Navbar = () => {
   const location = useLocation();
   return (
     <>
-      <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-b from-transparent to-[#012058] h-16 md:h-24">
+      <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-b from-transparent to-[#022870] h-16 md:h-24">
       </div>
-      <nav className="fixed bottom-0 left-0 right-0 lg:m-2 md:my-0 md:mx-16 lg:mx-64 rounded-t-lg md:rounded-lg bg-darkBlueGradient text-dullBlue py-2.5 md:py-3 z-50 h-16">
+      <nav className="fixed bottom-0 left-0 right-0 lg:m-2 md:my-0 md:mx-16 lg:mx-64 rounded-t-lg md:rounded-lg bg-blueHorizontalGradient text-dullBlue py-2.5 md:py-3 z-50 h-16">
         <div className="max-w-3xl mx-auto px-3">
           {/* Desktop/Tablet View with Logo and Navigation */}
           <div className="hidden md:flex items-center justify-between relative">
@@ -33,7 +33,7 @@ const Navbar = () => {
 
             {/* Centered Logo */}
             <div className="absolute left-1/2 transform -translate-x-1/2 -top-7">
-              <div className="w-16 h-16 rounded-xl border-2 border-dullBlue flex items-center justify-center bg-darkBlueGradient">
+              <div className="w-16 h-16 rounded-xl border-2 border-dullBlue flex items-center justify-center bg-blueGradient">
                 <img src={logo} alt="Logo" className="w-14 h-14 object-contain" />
               </div>
             </div>
