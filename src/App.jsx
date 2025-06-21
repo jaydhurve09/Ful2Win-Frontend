@@ -6,7 +6,12 @@ import ProfileScreen from './pages/ProfileScreen'
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import ErrorBoundary from './components/ErrorBoundary';
 import Community from './pages/Community';
-import Games from './pages/Games'
+import Games from './pages/Games';
+import Wallet from './pages/Wallet';
+import Add from './pages/AddMoney';
+import Withdraw from './pages/Withdraw';
+import Ads from './components/Ads';
+import HistoryPage from './components/HistoryPage';
 
 function App() {
   // const [count, setCount] = useState(0)
@@ -22,7 +27,12 @@ function App() {
             <Route path="/games" element={<Games />} />
             <Route path="/profile" element={<ProfileScreen/>} />
             <Route path="/community" element={<Community />} />
+            <Route path="/wallet" element={<Wallet />} />
+            <Route path="/add" element={<Add />} /> 
+            <Route path="/withdraw" element={<Withdraw />} />
             <Route path="/profile/:id" element={<ProfileScreen/>} />
+            <Route path="/ads" element={<Ads />} />
+            <Route path="/history" element={<HistoryPage />} /> 
           </Routes>
         </ErrorBoundary>
       </BrowserRouter>
