@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import { FiChevronDown, FiChevronUp, FiSend, FiUpload, FiX } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
+import BackgroundBubbles from '../components/BackgroundBubbles';
+
+
 
 const SupportCenter = () => {
   const navigate = useNavigate();
@@ -125,26 +128,48 @@ const SupportCenter = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    
+<div
+  className="min-h-screen p-4 sm:p-6 lg:p-8"
+  style={{
+    background: 'linear-gradient(to bottom, #0A2472 0%, #0D47A1 45%, #1565C0 100%)'
+  }}
+   
+><BackgroundBubbles />
+  
+
+      
+      <div className="max-w-4xl mx-auto px-4 pt-4 text-left">
+  <button
+    onClick={() => navigate(-1)}
+    className="flex items-center text-blue-600 hover:text-[#1b1f61] font-medium"
+  >
+    <svg className="h-5 w-5 mr-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+    </svg>  
+  </button>
+</div>
+
+
       <Navbar title="Support Center" />
       
       <div className="max-w-4xl mx-auto px-4 py-6">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Support Center</h1>
-          <p className="text-gray-600">Need help? We're here for you.</p>
+          <h1 className="text-3xl font-bold text-amber-400 mb-2">Support Center</h1>
+          <p className="text-blue-200">Need help? We're here for you.</p>
         </div>
         
         {/* Tabs */}
         <div className="flex border-b border-gray-200 mb-8">
           <button
             onClick={() => setActiveTab('faq')}
-            className={`py-3 px-6 font-medium text-sm ${activeTab === 'faq' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+            className={`py-3 px-6 font-medium text-sm ${activeTab === 'faq' ? 'text-blue-300 border-b-2 border-blue-300' : 'text-blue-300 hover:text-blue-600'}`}
           >
             FAQs
           </button>
           <button
             onClick={() => setActiveTab('contact')}
-            className={`py-3 px-6 font-medium text-sm ${activeTab === 'contact' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+            className={`py-3 px-6 font-medium text-sm ${activeTab === 'contact' ? 'text-blue-300 border-b-2 border-blue-300' : 'text-blue-300 hover:text-blue-600'}`}
           >
             Contact Support
           </button>
@@ -153,7 +178,7 @@ const SupportCenter = () => {
         {/* FAQ Section */}
         {activeTab === 'faq' && (
           <div className="space-y-4">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">Frequently Asked Questions</h2>
+            <h2 className="text-xl font-semibold text-white mb-4">Frequently Asked Questions</h2>
             <div className="space-y-3">
               {faqs.map((faq, index) => (
                 <div key={index} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
@@ -179,7 +204,7 @@ const SupportCenter = () => {
             
             {/* Chat with us button */}
             <div className="mt-8 text-center">
-              <p className="text-gray-600 mb-4">Still have questions?</p>
+              <p className='text-white mb-4'>Still have questions?</p>
               <button
                 onClick={() => setShowChat(true)}
                 className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-full font-medium shadow-md hover:shadow-lg transform transition-all hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
@@ -213,7 +238,7 @@ const SupportCenter = () => {
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="name" className="block text-sm font-medium text-white mb-1">
                     Name <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -228,7 +253,7 @@ const SupportCenter = () => {
                 </div>
                 
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="email" className="block text-sm font-medium text-white mb-1">
                     Email <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -243,27 +268,40 @@ const SupportCenter = () => {
                 </div>
               </div>
               
-              <div>
-                <label htmlFor="issueType" className="block text-sm font-medium text-gray-700 mb-1">
-                  Issue Type <span className="text-red-500">*</span>
-                </label>
-                <select
-                  id="issueType"
-                  name="issueType"
-                  value={formData.issueType}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
-                  required
-                >
-                  <option value="Bug">Bug</option>
-                  <option value="Payment Issue">Payment Issue</option>
-                  <option value="Account Issue">Account Issue</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
+             <div>
+  <label htmlFor="issueType" className="block text-sm font-medium text-white mb-1">
+    Issue Type <span className="text-red-500">*</span>
+  </label>
+  <select
+    id="issueType"
+    name="issueType"
+    value={formData.issueType}
+    onChange={handleInputChange}
+    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+    required
+  >
+    <option value="Bug">Bug</option>
+    <option value="Payment Issue">Payment Issue</option>
+    <option value="Account Issue">Account Issue</option>
+    <option value="Other">Other</option>
+  </select>
+
+  {/* Show input if "Other" is selected */}
+  {formData.issueType === 'Other' && (
+    <input
+      type="text"
+      name="customIssue"
+      value={formData.customIssue || ''}
+      onChange={(e) => setFormData(prev => ({ ...prev, customIssue: e.target.value }))}
+      placeholder="Please describe your issue"
+      className="mt-3 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+    />
+  )}
+</div>
+
               
               <div>
-                <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="subject" className="block text-sm font-medium text-white mb-1">
                   Subject <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -278,7 +316,7 @@ const SupportCenter = () => {
               </div>
               
               <div>
-                <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="message" className="block text-sm font-medium text-white mb-1">
                   Message <span className="text-red-500">*</span>
                 </label>
                 <textarea
@@ -293,7 +331,7 @@ const SupportCenter = () => {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-white mb-1">
                   Attachment (Optional)
                 </label>
                 <div className="mt-1 flex items-center">
@@ -306,20 +344,21 @@ const SupportCenter = () => {
                       accept="image/*,.pdf,.doc,.docx"
                     />
                   </label>
-                  <span className="ml-3 text-sm text-gray-500">
+                  <span className="block text-sm font-medium text-white mb-1">
                     {formData.file ? formData.file.name : 'No file chosen'}
                   </span>
                   {formData.file && (
                     <button 
                       type="button" 
                       onClick={removeFile}
-                      className="ml-2 text-gray-400 hover:text-gray-500"
+                      className="block text-sm font-medium text-white mb-1"
                     >
                       <FiX className="h-5 w-5" />
                     </button>
                   )}
                 </div>
-                <p className="mt-1 text-xs text-gray-500">
+                <p className="block text-sm font-medium text-white/70 mb-1"
+>
                   Upload a screenshot or document (max 5MB)
                 </p>
               </div>
@@ -344,8 +383,8 @@ const SupportCenter = () => {
                     <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
                   </svg>
                   <div>
-                    <p className="text-sm text-gray-500">Email us at</p>
-                    <a href="mailto:support@yourapp.com" className="text-sm font-medium text-blue-600 hover:text-blue-500">
+                    <p className="text-sm text-white">Email us at</p>
+                    <a href="mailto:support@yourapp.com" className="text-sm font-medium text-white/80 hover:text-white">
                       support@yourapp.com
                     </a>
                   </div>
@@ -355,8 +394,8 @@ const SupportCenter = () => {
                     <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
                   </svg>
                   <div>
-                    <p className="text-sm text-gray-500">Call us at</p>
-                    <a href="tel:+911234567890" className="text-sm font-medium text-blue-600 hover:text-blue-500">
+                    <p className="text-sm text-white">Call us at</p>
+                    <a href="tel:+911234567890" className="text-sm font-medium text-white/80 hover:text-white">
                       +91 XXXX-XXX-XXX
                     </a>
                   </div>
@@ -440,44 +479,53 @@ const SupportCenter = () => {
             </div>
           </div>
         </div>
+
       )}
       
       {/* Footer */}
-      <footer className="bg-white border-t border-gray-200 mt-12">
-        <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="flex space-x-6 md:space-x-8">
-              <a 
-                href="#" 
-                className="text-gray-600 hover:text-gray-900 text-sm font-medium"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setActiveTab('contact');
-                  window.scrollTo(0, 0);
-                }}
-              >
-                Contact Us
-              </a>
-              <a 
-                href="#" 
-                className="text-gray-600 hover:text-gray-900 text-sm font-medium"
-                onClick={(e) => {
-                  e.preventDefault();
-                  // You can add a modal or navigate to an about page if needed
-                  alert('About our company: We are dedicated to providing the best gaming experience!');
-                }}
-              >
-                About Company
-              </a>
-            </div>
-            <div className="mt-4 md:mt-0">
-              <p className="text-gray-500 text-xs md:text-sm">
-                © {new Date().getFullYear()} Your Game Name. All rights reserved.
-              </p>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <footer className="bg-transparent border-t border-gray-600 mt-12">
+  <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+    <div className="flex flex-col md:flex-row justify-between items-center">
+      
+      {/* Left: Links */}
+      <div className="flex space-x-6 md:space-x-8">
+        <a 
+          href="#" 
+          className="text-white hover:text-blue-300 text-sm font-medium focus:outline-none focus:ring-0 active:bg-transparent"
+          onClick={(e) => {
+            e.preventDefault();
+            setActiveTab('contact');
+            window.scrollTo(0, 0);
+          }}
+        >
+          Contact Us
+        </a>
+        <a 
+          href="#" 
+          className="text-gray-300 hover:text-white text-sm font-medium focus:outline-none focus:ring-0 active:bg-transparent"
+          onClick={(e) => {
+            e.preventDefault();
+            alert('About our company: We are dedicated to providing the best gaming experience!');
+          }}
+        >
+          About Company
+        </a>
+      </div>
+
+      {/* Right: Copyright */}
+      <div className="mt-4 md:mt-0">
+        <p className="text-white text-xs md:text-sm">
+          © {new Date().getFullYear()} Your Game Name. All rights reserved.
+        </p>
+      </div>
+
+    </div>
+  </div>
+</footer>
+
+    
+
+
     </div>
   );
 };
