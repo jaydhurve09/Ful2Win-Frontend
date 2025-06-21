@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { FiUser, FiMessageSquare, FiUsers, FiDollarSign, FiEdit, FiShare2, FiLogOut, FiMail } from "react-icons/fi";
-import { FaTrophy, FaGamepad,FaRupeeSign } from "react-icons/fa";
+import { FiUser, FiMessageSquare, FiUsers, FiDollarSign, FiEdit, FiShare2, FiLogOut, FiMail, FiHeadphones, FiHelpCircle } from "react-icons/fi";
+import { FaTrophy, FaGamepad, FaRupeeSign } from "react-icons/fa";
 import { IoMdPerson } from "react-icons/io";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
@@ -79,6 +79,9 @@ const ProfileScreen = () => {
         break;
       case 'kyc':
         alert('KYC status will be shown here');
+        break;
+      case 'support':
+        navigate('/support');
         break;
       case 'logout':
         if (window.confirm('Are you sure you want to log out?')) {
@@ -314,6 +317,12 @@ const ProfileScreen = () => {
                       text: "KYC Status",
                       id: 'kyc',
                       action: 'kyc'
+                    },
+                    { 
+                      icon: <FiHeadphones className="text-blue-600 group-hover:text-white transition-colors" />, 
+                      text: "Support",
+                      id: 'support',
+                      action: 'support'
                     },
                     { 
                       icon: <FiLogOut className="text-red-500 group-hover:text-white transition-colors" />, 
