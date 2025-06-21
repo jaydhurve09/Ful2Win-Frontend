@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { FiUser, FiMessageSquare, FiUsers, FiDollarSign, FiEdit, FiShare2, FiLogOut, FiMail } from "react-icons/fi";
-import { FaTrophy, FaGamepad } from "react-icons/fa";
+import { FaTrophy, FaGamepad,FaRupeeSign } from "react-icons/fa";
 import { IoMdPerson } from "react-icons/io";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
@@ -190,7 +190,7 @@ const ProfileScreen = () => {
                   id: 'friends'
                 },
                 { 
-                  icon: <FiDollarSign />, 
+                  icon: <FaRupeeSign />, 
                   label: "Wallet",
                   id: 'wallet'
                 }
