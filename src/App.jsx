@@ -10,8 +10,15 @@ import Games from './pages/Games';
 import Wallet from './pages/Wallet';
 import Add from './pages/AddMoney';
 import Withdraw from './pages/Withdraw';
-import Ads from './components/Ads';
+import Ads from './components/Ads'; 
 import HistoryPage from './components/HistoryPage';
+import Challenges from './components/Challenges'; 
+import Notification from './components/Notification';
+import ReferralPage from './components/ReferralPage';
+import ChatScreen from './components/ChatScreen';
+import KYCStatusPage from './components/KYCStatusPage'
+import Account from './components/Account'
+import FollowerPage from './components/FollowerPage'
 
 function App() {
   // const [count, setCount] = useState(0)
@@ -33,6 +40,13 @@ function App() {
             <Route path="/profile/:id" element={<ProfileScreen/>} />
             <Route path="/ads" element={<Ads />} />
             <Route path="/history" element={<HistoryPage />} /> 
+             <Route path="/challenges" element={<Challenges />} />
+             <Route path="/notifications" element={<Notification />} />
+             <Route path="/refer" element={<ReferralPage />} />
+             <Route path="/chat" element={<ChatScreen />} />
+             <Route path="/kyc" element={<KYCStatusPage />} />
+             <Route path="/account" element={<Account />} />
+             <Route path="/followers" element={<FollowerPage />} />
           </Routes>
         </ErrorBoundary>
       </BrowserRouter>
