@@ -8,7 +8,7 @@ import logo from '../assets/logo.png';
 
 const Header = () => {
   const navigate = useNavigate();
-
+  const balance = 24; 
   return (
     <>
       {/* Desktop Header */}
@@ -22,11 +22,24 @@ const Header = () => {
               className="flex items-center justify-center mx-auto py-[2px] px-1 gap-2 rounded-2xl text-black bg-dullBlue cursor-pointer hover:opacity-90 transition"
             >
               <IoMdWallet className="text-3xl bg-active rounded-full p-1" />
-              <span className="mr-4 text-lg">₹28.71</span>
+              <span className="mr-4 text-lg">₹{balance.toFixed(2)}</span>
             </div>
 
-            <button className="text-xl"><FaBell /></button>
-            <button className="bg-yellow-500 p-2 rounded-full ml-2 text-black"><IoPerson /></button>
+            {/* Bell Notification */}
+            <button
+              className="text-xl"
+              onClick={() => navigate('/notifications')}
+            >
+              <FaBell />
+            </button>
+
+            {/* Profile */}
+            <button
+              onClick={() => navigate('/profile/:id')}
+              className="bg-yellow-500 p-2 rounded-full ml-2 text-black hover:opacity-90 transition-opacity"
+            >
+              <IoPerson />
+            </button>
           </div>
         </div>
       </header>
@@ -37,19 +50,28 @@ const Header = () => {
           <img src={logo} alt="Ludo Logo" className="h-10 w-auto object-contain" />
 
           <div className="flex items-center space-x-3">
-            {/* Wallet (clickable) */}
+            {/* Wallet */}
             <div
               onClick={() => navigate('/wallet')}
               className="flex items-center bg-dullBlue px-3 py-1.5 rounded-full cursor-pointer hover:opacity-90 transition"
             >
               <IoMdWallet className="bg-active rounded-full p-1 text-lg mr-1.5" />
-              <span className="text-black font-medium text-sm">₹28.71</span>
+              <span className="text-black font-medium text-sm">₹{balance.toFixed(2)}</span>
             </div>
 
-            <button className="text-white text-xl hover:opacity-80 transition-opacity">
+            {/* Bell Notification */}
+            <button
+              className="text-white text-xl hover:opacity-80 transition-opacity"
+              onClick={() => navigate('/notifications')}
+            >
               <FaBell />
             </button>
-            <button className="bg-yellow-500 p-1.5 rounded-full text-black hover:opacity-90 transition-opacity">
+
+            {/* Profile */}
+            <button
+              onClick={() => navigate('/profile/:id')}
+              className="bg-yellow-500 p-1.5 rounded-full text-black hover:opacity-90 transition-opacity"
+            >
               <IoPerson className="text-lg" />
             </button>
           </div>

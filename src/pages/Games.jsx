@@ -1,77 +1,32 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import Navbar from '../components/Navbar';
-import Header from '../components/Header';
-import BackgroundBubbles from '../components/BackgroundBubbles';
-import Button from '../components/Button';
-
-// Icons
 import { FaSearch, FaFire } from 'react-icons/fa';
+import Header from '../components/Header';
+import Navbar from '../components/Navbar';
 import GameCard from '../components/GameCard';
+import BackgroundBubbles from '../components/BackgroundBubbles';
 
-// Import game images
+// Game images
 import callBreak from '../assets/call-break.png';
 import rummy from '../assets/rummy.png';
 import mazeRunner from '../assets/maze-runner.png';
 import poker from '../assets/poker.png';
 import ludo from '../assets/ludo.png';
 
-// Game data from Home page
+// Game data
 const games = [
-  {
-    id: 1,
-    title: 'Call Break',
-    category: 'Card',
-    players: '10K+',
-    image: callBreak,
-    featured: true,
-    description: 'Play the classic card game with friends'
-  },
-  {
-    id: 2,
-    title: 'Rummy',
-    category: 'Card',
-    players: '25K+',
-    image: rummy,
-    featured: true,
-    description: 'Master the art of card sequences'
-  },
-  {
-    id: 3,
-    title: 'Maze Runner',
-    category: 'Puzzle',
-    players: '8K+',
-    image: mazeRunner,
-    featured: true,
-    description: 'Navigate through challenging mazes'
-  },
-  {
-    id: 4,
-    title: 'Poker',
-    category: 'Card',
-    players: '15K+',
-    image: poker,
-    featured: false,
-    description: 'Test your poker face'
-  },
-  {
-    id: 5,
-    title: 'Ludo',
-    category: 'Board',
-    players: '30K+',
-    image: ludo,
-    featured: true,
-    description: 'Family favorite board game'
-  },
+  { id: 1, title: 'Call Break', category: 'Card', players: '10K+', image: callBreak, featured: true },
+  { id: 2, title: 'Rummy', category: 'Card', players: '25K+', image: rummy, featured: true },
+  { id: 3, title: 'Maze Runner', category: 'Puzzle', players: '8K+', image: mazeRunner, featured: true },
+  { id: 4, title: 'Poker', category: 'Card', players: '15K+', image: poker, featured: false },
+  { id: 5, title: 'Ludo', category: 'Board', players: '30K+', image: ludo, featured: true },
 ];
 
 const Games = () => {
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
-
   const categories = ['all', 'Card', 'Puzzle', 'Board'];
 
-  const filteredGames = games.filter(game => {
+  const filteredGames = games.filter((game) => {
     const matchesCategory = activeCategory === 'all' || game.category === activeCategory;
     const matchesSearch = game.title.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
@@ -84,7 +39,8 @@ const Games = () => {
         <Header />
         <div className="pt-16 md:pt-0">
           <div className="container mx-auto px-4 py-6">
-            {/* Page Header */}
+
+            {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
               <div>
                 <h1 className="text-3xl font-bold bg-neonBlueGradient bg-clip-text text-transparent">
@@ -93,16 +49,14 @@ const Games = () => {
                 <p className="text-gray-200 mt-1">Discover and compete in your favorite games</p>
               </div>
               <div className="mt-4 md:mt-0 relative">
-                <div className="relative">
-                  <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="Search games..."
-                    className="bg-white/10 border border-white/20 rounded-full pl-10 pr-4 py-2 w-full md:w-64 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                </div>
+                <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search games..."
+                  className="bg-white/10 border border-white/20 rounded-full pl-10 pr-4 py-2 w-full md:w-64 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
               </div>
             </div>
 
@@ -134,15 +88,11 @@ const Games = () => {
                 </h2>
                 <button className="text-sm text-blue-400 hover:text-blue-300">View All</button>
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              <div className="grid grid-cols-3 gap-4">
                 {filteredGames
                   .filter((game) => game.featured)
                   .map((game) => (
-                    <GameCard 
-                      key={game.id} 
-                      game={game} 
-                      size="sm"
-                    />
+                    <GameCard key={game.id} game={game} />
                   ))}
               </div>
             </div>
@@ -160,16 +110,13 @@ const Games = () => {
                   </select>
                 </div>
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              <div className="grid grid-cols-3 gap-4">
                 {filteredGames.map((game) => (
-                  <GameCard 
-                    key={game.id} 
-                    game={game} 
-                    size="sm"
-                  />
+                  <GameCard key={game.id} game={game} />
                 ))}
               </div>
             </div>
+
           </div>
         </div>
       </div>
