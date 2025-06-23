@@ -7,6 +7,9 @@ import {
   FiEdit,
   FiShare2,
   FiLogOut,
+  FiMail,
+  FiHeadphones,
+  FiHelpCircle,
 } from "react-icons/fi";
 import { FaTrophy, FaGamepad, FaRupeeSign } from "react-icons/fa";
 import { IoMdPerson } from "react-icons/io";
@@ -19,6 +22,7 @@ const ProfileScreen = () => {
   const location = useLocation();
 
   const [activeSection, setActiveSection] = useState("profile");
+  const [activeProfileAction, setActiveProfileAction] = useState(null);
 
   useEffect(() => {
     const path = location.pathname;
@@ -44,27 +48,32 @@ const ProfileScreen = () => {
 
   const profileActions = [
     {
-      icon: <FiEdit className="text-blue-600 group-hover:text-white transition-colors" />,
+      icon: <FiMail className="text-blue-600" />,
+      text: "Email",
+      action: "email",
+    },
+    {
+      icon: <FiEdit className="text-blue-600" />,
       text: "Edit Info",
       action: "edit",
     },
     {
-      icon: <FiShare2 className="text-blue-600 group-hover:text-white transition-colors" />,
+      icon: <FiShare2 className="text-blue-600" />,
       text: "Referrals",
       action: "referrals",
     },
     {
-      icon: <span className="text-blue-600 font-bold group-hover:text-white transition-colors">KYC</span>,
+      icon: <span className="text-blue-600 font-bold">KYC</span>,
       text: "KYC Status",
       action: "kyc",
     },
     {
-      icon: <FiMessageSquare className="text-blue-600 group-hover:text-white transition-colors" />,
+      icon: <FiHeadphones className="text-blue-600" />,
       text: "Support",
       action: "support",
     },
     {
-      icon: <FiLogOut className="text-red-500 group-hover:text-white transition-colors" />,
+      icon: <FiLogOut className="text-red-500" />,
       text: "Log Out",
       action: "logout",
       isDanger: true,
@@ -72,7 +81,11 @@ const ProfileScreen = () => {
   ];
 
   const handleProfileAction = (action) => {
+    setActiveProfileAction(action);
     switch (action) {
+      case "email":
+        alert("Email section coming soon!");
+        break;
       case "edit":
         navigate("/account");
         break;
@@ -83,11 +96,12 @@ const ProfileScreen = () => {
         navigate("/kyc");
         break;
       case "support":
-        alert("Support section will open here");
+        navigate("/support");
         break;
       case "logout":
         if (window.confirm("Are you sure you want to log out?")) {
           alert("Logging out...");
+          // Add your logout logic here
         }
         break;
       default:
@@ -167,7 +181,7 @@ const ProfileScreen = () => {
 
         {/* Actions */}
         <div className="bg-white rounded-2xl p-4">
-          {profileActions.map((item, i, arr) => (
+          {profileActions.map((item, index, array) => (
             <React.Fragment key={item.action}>
               <button
                 onClick={() => handleProfileAction(item.action)}
@@ -191,9 +205,11 @@ const ProfileScreen = () => {
                 >
                   {item.text}
                 </div>
-                <div className="text-gray-400 group-hover:text-blue-600 text-lg">&gt;</div>
+                <div className="text-gray-400 group-hover:text-blue-600 text-lg">
+                  &gt;
+                </div>
               </button>
-              {i < arr.length - 1 && (
+              {index < array.length - 1 && (
                 <div className="px-4 py-1">
                   <div className="w-full h-px bg-gray-200"></div>
                 </div>

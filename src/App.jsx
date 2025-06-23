@@ -3,6 +3,7 @@ import './App.css'
 import Home from './pages/Home'
 import Tournaments from './pages/Tournaments'
 import ProfileScreen from './pages/ProfileScreen'
+import SupportCenter from './pages/SupportCenter';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import ErrorBoundary from './components/ErrorBoundary';
 import Community from './pages/Community';
@@ -33,6 +34,7 @@ function App() {
             <Route path="/tournaments" element={<Tournaments />} />
             <Route path="/games" element={<Games />} />
             <Route path="/profile" element={<ProfileScreen/>} />
+            <Route path="/support" element={<SupportCenter />} />
             <Route path="/community" element={<Community />} />
             <Route path="/wallet" element={<Wallet />} />
             <Route path="/add" element={<Add />} /> 
