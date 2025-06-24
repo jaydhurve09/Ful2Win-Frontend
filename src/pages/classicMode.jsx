@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { IoArrowBack } from "react-icons/io5";
 import { FaUserFriends, FaTrophy, FaClock } from "react-icons/fa";
 import snakeLogo from "../assets/snake-and-ladder.png";
-import "./ClassicMode.css";
+import "./classicMode.css";
 
 const games = [
   {
