@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from "react";
 import {
   FiUser,
-  FiMessageSquare,
   FiUsers,
   FiDollarSign,
   FiEdit,
   FiShare2,
   FiLogOut,
+  FiMessageSquare,
   FiMail,
   FiHeadphones,
   FiHelpCircle,
+
 } from "react-icons/fi";
 import { FaTrophy, FaGamepad, FaRupeeSign } from "react-icons/fa";
 import { IoMdPerson } from "react-icons/io";
@@ -27,14 +28,14 @@ const ProfileScreen = () => {
   useEffect(() => {
     const path = location.pathname;
     if (path.includes("wallet")) setActiveSection("wallet");
-    else if (path.includes("chat")) setActiveSection("chat");
+    else if (path.includes("tournamenthistory")) setActiveSection("tournament");
     else if (path.includes("followers")) setActiveSection("followers");
     else setActiveSection("profile");
   }, [location.pathname]);
 
   const navItems = [
     { id: "profile", label: "Account", icon: <FiUser />, path: "/account" },
-    { id: "chat", label: "Chat", icon: <FiMessageSquare />, path: "/chat" },
+    { id: "tournament", label: "Tournament Log", icon: <FaTrophy />, path: "/tournamenthistory" },
     { id: "followers", label: "Followers", icon: <FiUsers />, path: "/followers" },
     { id: "wallet", label: "Wallet", icon: <FaRupeeSign />, path: "/wallet" },
   ];
@@ -96,7 +97,7 @@ const ProfileScreen = () => {
         navigate("/kyc");
         break;
       case "support":
-        navigate("/support");
+        navigate("/supports");
         break;
       case "logout":
         if (window.confirm("Are you sure you want to log out?")) {
