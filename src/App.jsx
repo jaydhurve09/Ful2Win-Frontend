@@ -22,7 +22,7 @@ import FollowerPage from './components/FollowerPage'
 import SupportCenter from './pages/SupportCenter';
 import LeaderboardPage from './components/LeaderboardPage';
 import TournamentHistory from './components/TournamentHistory';
-import Login from './pages/login';
+import Login from './pages/Login';
 import SignUp from './pages/SignUp';
 
 
