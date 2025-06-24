@@ -12,7 +12,7 @@ import Add from './pages/AddMoney';
 import Withdraw from './pages/Withdraw';
 import Ads from './components/Ads'; 
 import HistoryPage from './components/HistoryPage';
-import ClassicMode from './pages/ClassicMode'
+import ClassicMode from './pages/classicMode'
 import GameLobby from './pages/GameLobby'
 import Challenges from './components/Challenges'; 
 import Notification from './components/Notification';
@@ -50,7 +50,7 @@ function App() {
             <Route path="/profile/:id" element={<ProfileScreen/>} />
             <Route path="/ads" element={<Ads />} />
             <Route path="/history" element={<HistoryPage />} />
-            <Route path="/ClassicMode" element={<ClassicMode/>} />
+            <Route path="/classic-mode" element={<ClassicMode/>} />
             <Route path="/game-lobby" element={<GameLobby />} /> 
             <Route path="/history" element={<HistoryPage />} /> 
             <Route path="/challenges" element={<Challenges />} />
