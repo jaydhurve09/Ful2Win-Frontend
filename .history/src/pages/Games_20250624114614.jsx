@@ -20,7 +20,7 @@ const games = [
   { id: 3, title: 'Maze Runner', category: 'Puzzle', players: '8K+', image: mazeRunner, featured: true },
   { id: 4, title: 'Poker', category: 'Card', players: '15K+', image: poker, featured: false },
   { id: 5, title: 'Ludo', category: 'Board', players: '30K+', image: ludo, featured: true },
-  { id: 6, title: 'Gravity Hop', category: 'Puzzle', players: '5K+', featured: false , to: 'GravityHop'},
+  { id: 6, title: 'Gravity Hop', category: 'Puzzle', players: '5K+', image: <GravityHop />, featured: false },
 ];
 
 const Games = () => {
