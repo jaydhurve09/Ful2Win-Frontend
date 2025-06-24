@@ -11,7 +11,7 @@ const Banner = () => {
         <div className="relative p-4 sm:p-6 flex flex-col md:flex-row items-center justify-between min-h-[120px] md:h-48">
           {/* Content */}
           <div className="text-center md:text-left mb-4 md:mb-0 md:mr-6">
-            <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-2">FULL2WIN</h2>
+            <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-2">FUL2WIN</h2>
             <div className="flex items-center justify-center md:justify-start space-x-2">
               <span className="text-yellow-300 text-xl">🏆</span>
               <p className="text-yellow-100 text-base font-medium">Win Big, Play More!</p>

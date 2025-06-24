@@ -1,20 +1,60 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import logo from '../assets/logo.png';
+import authService from '../services/api';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const Login = () => {
-  const [phone, setPhone] = useState('');
-  const [password, setPassword] = useState('');
+  const [formData, setFormData] = useState({
+    phoneNumber: '',
+    password: '',
+  });
   const [agree, setAgree] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+  const { phoneNumber, password } = formData;
+
+  useEffect(() => {
+    // Redirect if user is already logged in
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (user) {
+      navigate('/');
+    }
+  }, [navigate]);
+
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const handleLogin = async (e) => {
     e.preventDefault();
+    
     if (!agree) {
-      alert('Please agree to the terms and privacy policy');
+      toast.error('Please agree to the terms and privacy policy');
       return;
     }
-    console.log({ phone, password });
-    // Perform login logic
+
+    if (!phoneNumber || !password) {
+      toast.error('Please fill in all fields');
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      await authService.login({ phoneNumber, password });
+      toast.success('Login successful!');
+      navigate('/');
+    } catch (error) {
+      const message = error.response?.data?.message || 'Login failed. Please try again.';
+      toast.error(message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -39,12 +79,12 @@ const Login = () => {
               Phone Number
             </label>
             <input
-              id="phone"
-              name="phone"
+              id="phoneNumber"
+              name="phoneNumber"
               type="tel"
               autoComplete="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
+              value={phoneNumber}
+              onChange={handleChange}
               placeholder="Enter your phone number"
               className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-300"
               required
@@ -58,13 +98,12 @@ const Login = () => {
             </label>
             <input
               id="password"
-              name="password"
               type="password"
-              autoComplete="current-password"
+              name="password"
+              placeholder="Password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your password"
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-300"
+              onChange={handleChange}
+              className="w-full p-2 border rounded-md"
               required
             />
           </div>
@@ -88,9 +127,10 @@ const Login = () => {
 
           <button
             type="submit"
-            className="w-full bg-blue-700 hover:bg-blue-800 text-white font-semibold py-2 rounded-md transition duration-200"
+            disabled={isLoading}
+            className={`w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition-colors ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
-            LOGIN
+            {isLoading ? 'Logging in...' : 'Login'}
           </button>
         </form>
 
