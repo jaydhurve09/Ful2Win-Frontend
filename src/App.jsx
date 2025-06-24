@@ -13,6 +13,8 @@ import Add from './pages/AddMoney';
 import Withdraw from './pages/Withdraw';
 import Ads from './components/Ads';
 import HistoryPage from './components/HistoryPage';
+import ClassicMode from './pages/ClassicMode'
+import GameLobby from './pages/GameLobby'
 
 function App() {
   // const [count, setCount] = useState(0)
@@ -34,7 +36,9 @@ function App() {
             <Route path="/withdraw" element={<Withdraw />} />
             <Route path="/profile/:id" element={<ProfileScreen/>} />
             <Route path="/ads" element={<Ads />} />
-            <Route path="/history" element={<HistoryPage />} /> 
+            <Route path="/history" element={<HistoryPage />} />
+             <Route path="/ClassicMode" element={<ClassicMode/>} />
+            <Route path="/game-lobby" element={<GameLobby />} /> 
           </Routes>
         </ErrorBoundary>
       </BrowserRouter>
