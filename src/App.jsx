@@ -22,6 +22,7 @@ import FollowerPage from './components/FollowerPage'
 import SupportCenter from './pages/SupportCenter';
 import LeaderboardPage from './components/LeaderboardPage';
 import TournamentHistory from './components/TournamentHistory';
+import FlappyBall from './components/FlappyBall';
 import Login from './pages/Login';
 import SignUp from './pages/SignUp';
 
@@ -59,6 +60,9 @@ function App() {
             <Route path="/supports" element={<SupportCenter/>} />
             <Route path="/leaderboard" element={<LeaderboardPage/>} />
             <Route path="/tournamenthistory" element={<TournamentHistory/>} />
+  
+            <Route path="/flappyball" element={<FlappyBall />} />
+            {/* Add more routes as needed */}
             
           </Routes>
         </ErrorBoundary>

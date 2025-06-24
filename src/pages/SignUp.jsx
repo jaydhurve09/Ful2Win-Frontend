@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import logo from '../assets/logo.png'; // Adjust path if needed
-
+import axios from 'axios'; // Ensure axios is installed in your project
 const Signup = () => {
   const [formData, setFormData] = useState({
     name: '',
-    phone: '',
+    phoneNumber: '',
     password: '',
     confirmPassword: '',
     agree: false,
   });
+  const [userData, setUserData] = useState({});
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -19,15 +20,20 @@ const Signup = () => {
     }));
   };
 
-  const handleSignup = (e) => {
+  const handleSignup = async(e) => {
     e.preventDefault();
-    const { name, phone, password, confirmPassword, agree } = formData;
+    const { name, phoneNumber, password, confirmPassword, agree } = formData;
 
     if (!agree) return alert('Please agree to the Terms and Privacy Policy.');
     if (password !== confirmPassword) return alert('Passwords do not match.');
-
-    console.log('Signing up with:', { name, phone, password });
-    // Handle signup logic
+    const userData = { name, phoneNumber, password };
+    console.log(userData);
+    try {
+      const response = await axios.post(`${import.meta.env.VITE_BASE_URL}/user/register`, userData);
+      setUserData(response.data);
+    } catch (error) {
+      console.error('Signup failed:', error);
+    }
   };
 
   return (
@@ -66,16 +72,16 @@ const Signup = () => {
 
           {/* Phone Number */}
           <div className="mb-4">
-            <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-1">
               Phone Number
             </label>
             <input
-              id="phone"
-              name="phone"
+              id="phoneNumber"
+              name="phoneNumber"
               type="tel"
               autoComplete="tel"
               placeholder="Enter your phone number"
-              value={formData.phone}
+              value={formData.phoneNumber}
               onChange={handleChange}
               className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-300"
               required
