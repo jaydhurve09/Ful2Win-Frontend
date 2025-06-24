@@ -20,6 +20,12 @@ import ChatScreen from './components/ChatScreen';
 import KYCStatusPage from './components/KYCStatusPage'
 import Account from './components/Account'
 import FollowerPage from './components/FollowerPage'
+import SupportCenter from './pages/SupportCenter';
+import LeaderboardPage from './components/LeaderboardPage';
+import TournamentHistory from './components/TournamentHistory';
+import Login from './pages/login';
+import SignUp from './pages/SignUp';
+
 
 function App() {
   // const [count, setCount] = useState(0)
@@ -31,6 +37,8 @@ function App() {
         <ErrorBoundary>
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/login" element={<Login/>} />
+            <Route path="/signup" element={<SignUp />} />
             <Route path="/tournaments" element={<Tournaments />} />
             <Route path="/games" element={<Games />} />
             <Route path="/profile" element={<ProfileScreen/>} />
@@ -49,6 +57,10 @@ function App() {
              <Route path="/kyc" element={<KYCStatusPage />} />
              <Route path="/account" element={<Account />} />
              <Route path="/followers" element={<FollowerPage />} />
+            <Route path="/supports" element={<SupportCenter/>} />
+            <Route path="/leaderboard" element={<LeaderboardPage/>} />
+            <Route path="/tournamenthistory" element={<TournamentHistory/>} />
+            
           </Routes>
         </ErrorBoundary>
       </BrowserRouter>
@@ -56,4 +68,4 @@ function App() {
   )
 }
 
-export default App
+export default App;

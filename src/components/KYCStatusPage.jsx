@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Navbar from './Navbar';
 import BackgroundBubbles from './BackgroundBubbles';
 import BackgroundCircles from './BackgroundCircles';
@@ -38,37 +39,74 @@ const mockUser = {
   rejectionReason: 'Document blurred',
 };
 
-const Popup = ({ title, message, onClose }) => (
-  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={onClose}>
-    <div className="bg-white rounded-xl p-6 relative w-[90%] max-w-md" onClick={(e) => e.stopPropagation()}>
-      <button className="absolute top-2 right-3 text-gray-600 text-xl font-bold" onClick={onClose}>×</button>
-      <h2 className="text-xl font-semibold mb-2">{title}</h2>
-      <p className="text-gray-700">{message}</p>
-    </div>
-  </div>
-);
+const Popup = ({ title, message, onClose, inputMode = false, onInputSubmit }) => {
+  const [inputValue, setInputValue] = useState('');
 
-const KYCStatusPage = () => {
-  const [status, setStatus] = useState('NOT_SUBMITTED');
-  const [showPopup, setShowPopup] = useState(false);
-  const [popupContent, setPopupContent] = useState({ title: '', message: '' });
-
-  const handleSubmit = () => setStatus('PENDING');
-  const handleResubmit = () => setStatus('PENDING');
-  const handleBack = () => {
-    if (status !== 'NOT_SUBMITTED') {
-      setStatus('NOT_SUBMITTED');
-    } else {
-      window.history.back();
+  const handleSubmit = () => {
+    if (inputValue.trim()) {
+      onInputSubmit?.(inputValue);
+      onClose();
     }
   };
 
-  const handleStepClick = (title, message) => {
-    setPopupContent({ title, message });
-    setShowPopup(true);
-  };
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={onClose}>
+      <div className="bg-white rounded-xl p-6 relative w-[90%] max-w-md" onClick={(e) => e.stopPropagation()}>
+        <button className="absolute top-2 right-3 text-gray-600 text-xl font-bold" onClick={onClose}>×</button>
+        <h2 className="text-xl font-semibold mb-2">{title}</h2>
+        <p className="text-gray-700 mb-2">{message}</p>
+        {inputMode && (
+          <div className="mt-4">
+            <input
+              type="text"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none"
+              placeholder="Enter PAN"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+            />
+            <button
+              onClick={handleSubmit}
+              className="mt-3 w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700"
+            >
+              Submit PAN
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+const KYCStatusPage = () => {
+  const navigate = useNavigate();
+  const [status, setStatus] = useState('NOT_SUBMITTED');
+  const [showPopup, setShowPopup] = useState(false);
+  const [popupContent, setPopupContent] = useState({ title: '', message: '', inputMode: false });
+  const fileInputRef = useRef(null);
+
+  const handleSubmit = () => setStatus('PENDING');
+  const handleResubmit = () => setStatus('PENDING');
 
   const statusObj = STATUS[status];
+
+  const handleStepClick = (step) => {
+    if (step === 'document') {
+      fileInputRef.current.click();
+    } else if (step === 'selfie') {
+      fileInputRef.current.click();
+    } else if (step === 'pan') {
+      setPopupContent({
+        title: 'Enter PAN',
+        message: 'Enter your PAN details accurately.',
+        inputMode: true,
+      });
+      setShowPopup(true);
+    }
+  };
+
+  const handlePANInput = (value) => {
+    alert(`PAN submitted: ${value}`);
+  };
 
   return (
     <div className="min-h-screen w-full text-white overflow-hidden relative" style={{
@@ -78,10 +116,8 @@ const KYCStatusPage = () => {
       <BackgroundBubbles />
 
       <div className="relative z-10 px-4 pt-16 pb-24">
-        <div className="flex items-center justify-between mb-6">
-          <button onClick={handleBack} className="text-white text-2xl font-bold">←</button>
-          <h1 className="text-xl font-semibold text-center w-full -ml-6">KYC Status</h1>
-        </div>
+        {/* Removed Back Button */}
+        <h1 className="text-xl font-semibold text-center mb-6">KYC Status</h1>
 
         <div className={`rounded-xl p-6 text-center bg-white text-gray-800 shadow-lg mb-6 ${statusObj.cardClass}`}>
           <div className="text-4xl mb-2">{statusObj.icon}</div>
@@ -96,24 +132,25 @@ const KYCStatusPage = () => {
             </button>
             <ul className="space-y-3 text-left">
               <li>
-                <button onClick={() => handleStepClick('Upload ID', 'Upload a clear image of your ID.')}
+                <button onClick={() => handleStepClick('document')}
                   className="w-full bg-blue-100 text-blue-800 px-4 py-2 rounded-md">
                   Upload ID
                 </button>
               </li>
               <li>
-                <button onClick={() => handleStepClick('Take Selfie', 'Take a clear selfie in good light.')}
+                <button onClick={() => handleStepClick('selfie')}
                   className="w-full bg-blue-100 text-blue-800 px-4 py-2 rounded-md">
                   Take Selfie
                 </button>
               </li>
               <li>
-                <button onClick={() => handleStepClick('Enter PAN', 'Enter your PAN details accurately.')}
+                <button onClick={() => handleStepClick('pan')}
                   className="w-full bg-blue-100 text-blue-800 px-4 py-2 rounded-md">
                   Enter PAN
                 </button>
               </li>
             </ul>
+            <input type="file" ref={fileInputRef} className="hidden" accept="image/*,application/pdf" />
           </div>
         )}
 
@@ -151,14 +188,26 @@ const KYCStatusPage = () => {
         )}
       </div>
 
+      {/* Footer Support Link */}
       <footer className="text-center text-sm text-white/90 py-4 z-10 relative">
-        Need help? <span className="underline">Contact Support</span>
+        Need help?{" "}
+        <span className="underline cursor-pointer" onClick={() => navigate("/supports")}>
+          Contact Support
+        </span>
       </footer>
 
+      {/* Popup */}
       {showPopup && (
-        <Popup title={popupContent.title} message={popupContent.message} onClose={() => setShowPopup(false)} />
+        <Popup
+          title={popupContent.title}
+          message={popupContent.message}
+          inputMode={popupContent.inputMode}
+          onClose={() => setShowPopup(false)}
+          onInputSubmit={handlePANInput}
+        />
       )}
 
+      {/* Bottom Navbar */}
       <div className="fixed bottom-0 left-0 right-0 z-20">
         <Navbar />
       </div>
