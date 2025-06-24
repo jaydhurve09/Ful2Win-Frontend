@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import countries from "i18n-iso-countries";
 import enLocale from "i18n-iso-countries/langs/en.json";
 import Select from "react-select";
@@ -17,6 +17,7 @@ const Account = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const fileInputRef = useRef(null);
   const location = useLocation();
+  const navigate = useNavigate();
 
   const initialFormData = {
     fullName: "Rohan Sharma",
@@ -89,7 +90,7 @@ const Account = () => {
   const fields = [
     { label: "Full Name", name: "fullName", editable: false },
     { label: "Username", name: "username", editable: true },
-    { label: "Email ID", name: "email", editable: true },
+    { label: "Email ID", name: "email", editable: false },
     { label: "Phone Number", name: "phone", editable: false },
     { label: "Date of Birth", name: "dob", type: "date", editable: true },
     { label: "Password", name: "password", type: "password", editable: true },
@@ -100,25 +101,35 @@ const Account = () => {
       <BackgroundBubbles />
       <div className="relative z-10">
         <Header />
-        <div className="pt-20 px-4 max-w-4xl mx-auto">
-          <div className="flex justify-center py-6">
-            <div className="relative transition-transform hover:scale-105 duration-300">
-              <img
-                src={avatar}
-                onClick={handleAvatarClick}
-                className="w-24 h-24 rounded-full border-4 border-yellow-400 shadow-lg object-cover cursor-pointer"
-                alt="avatar"
-              />
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleAvatarChange}
-                className="hidden"
-                accept="image/*"
-              />
+
+        <div className="pt-20 px-3 max-w-4xl mx-auto">
+
+          <div className="relative">
+            <button
+              onClick={() => navigate(-1)}
+              className="absolute left-0 top-0 text-white text-4xl px-4 py-4"
+            >
+              &#8249;
+            </button>
+
+            <div className="flex justify-center py-6">
+              <div className="relative transition-transform hover:scale-105 duration-300">
+                <img
+                  src={avatar}
+                  onClick={handleAvatarClick}
+                  className="w-24 h-24 rounded-full border-4 border-yellow-400 shadow-lg object-cover cursor-pointer"
+                  alt="avatar"
+                />
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleAvatarChange}
+                  className="hidden"
+                  accept="image/*"
+                />
+              </div>
             </div>
           </div>
-
           {!isEditing && (
             <div className="flex justify-center mb-4">
               <button
@@ -231,11 +242,10 @@ const Account = () => {
               <button
                 onClick={handleSave}
                 disabled={!hasChanges || Object.values(errors).some((err) => err)}
-                className={`w-full py-3 rounded-full font-bold shadow-md transition-transform duration-300 hover:scale-105 ${
-                  !hasChanges || Object.values(errors).some((err) => err)
-                    ? "bg-gray-400 cursor-not-allowed"
-                    : "bg-yellow-400 text-blue-900 hover:bg-yellow-300"
-                }`}
+                className={`w-full py-3 rounded-full font-bold shadow-md transition-transform duration-300 hover:scale-105 ${!hasChanges || Object.values(errors).some((err) => err)
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-yellow-400 text-blue-900 hover:bg-yellow-300"
+                  }`}
               >
                 Save Changes
               </button>

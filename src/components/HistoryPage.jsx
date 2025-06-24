@@ -95,7 +95,16 @@ const HistoryPage = () => {
       <div className="relative z-10">
         <Header />
 
-        <div className="px-4 pt-20 space-y-6 max-w-md mx-auto">
+        <div className="pt-20 px-4 max-w-md mx-auto">
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-2 text-sm bg-white/10 px-3 py-2 rounded-full hover:bg-white/20"
+          >
+            <FaArrowLeft size={18} /> <span className="hidden sm:inline">Back</span>
+          </button>
+        </div>
+
+        <div className="px-4 pt-6 space-y-6 max-w-md mx-auto">
           <div className="bg-blue-600 rounded-xl px-4 py-3 flex justify-between items-center shadow-inner">
             <div>
               <p className="text-sm">Wallet Balance</p>

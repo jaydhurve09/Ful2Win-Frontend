@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Header from '../components/Header';
 import Navbar from '../components/Navbar';
 import BackgroundBubbles from '../components/BackgroundBubbles';
+import { useNavigate } from 'react-router-dom';
 
 const Challenges = () => {
   const [isFormOpen, setIsFormOpen] = useState(true);
@@ -9,6 +10,8 @@ const Challenges = () => {
   const [gameInput, setGameInput] = useState('');
   const [challenges, setChallenges] = useState([]);
   const [incomingInvites, setIncomingInvites] = useState([]);
+
+  const navigate = useNavigate();
 
   const allFriends = [
     'Kevin Marshall',
@@ -87,7 +90,17 @@ const Challenges = () => {
       <div className="relative z-10">
         <Header />
 
-        <div className="pt-20 px-4 max-w-2xl mx-auto space-y-6">
+        {/* Back Button styled like Support Page */}
+        <div className="pt-16 px-4 max-w-2xl mx-auto flex items-center mb-2">
+          <button
+            onClick={() => navigate(-1)}
+            className="text-blue-400 hover:text-blue-500 text-lg font-semibold flex items-center"
+          >
+            <span className="text-2xl mr-1">&lt;</span>
+          </button>
+        </div>
+
+        <div className="px-4 max-w-2xl mx-auto space-y-6">
           {/* Challenge Form */}
           <div className="bg-white rounded-xl shadow-md p-4">
             <div className="text-black">
