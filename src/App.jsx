@@ -48,7 +48,7 @@ function App() {
             <Route path="/add" element={<Add />} /> 
             <Route path="/withdraw" element={<Withdraw />} />
             <Route path="/profile/:id" element={<ProfileScreen/>} />
-            <Route path="/ads" element={<Ads />} /
+            <Route path="/ads" element={<Ads />} />
             <Route path="/history" element={<HistoryPage />} />
             <Route path="/ClassicMode" element={<ClassicMode/>} />
             <Route path="/game-lobby" element={<GameLobby />} /> 
