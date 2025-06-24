@@ -3,7 +3,6 @@ import './App.css'
 import Home from './pages/Home'
 import Tournaments from './pages/Tournaments'
 import ProfileScreen from './pages/ProfileScreen'
-import SupportCenter from './pages/SupportCenter';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import ErrorBoundary from './components/ErrorBoundary';
 import Community from './pages/Community';
