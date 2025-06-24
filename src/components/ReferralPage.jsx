@@ -10,6 +10,7 @@ import {
   FaRupeeSign,
 } from 'react-icons/fa';
 
+import { useNavigate } from 'react-router-dom';
 import BackgroundBubbles from '../components/BackgroundBubbles';
 import BackgroundCircles from '../components/BackgroundCircles';
 import Header from '../components/Header';
@@ -24,6 +25,7 @@ const earningsHistory = [
 
 const ReferralPage = () => {
   const [copied, setCopied] = useState(false);
+  const navigate = useNavigate();
 
   const handleCopy = () => {
     navigator.clipboard.writeText(referralCode);
@@ -50,11 +52,20 @@ const ReferralPage = () => {
         <Header />
 
         <div className="container mx-auto px-4 pt-20">
-          {/* Top Section */}
-          <div className="text-center">
-            <h1 className="text-3xl font-bold mb-1">Refer & Earn</h1>
-            <p className="text-sm text-white/80">Invite friends and earn up to ₹50 per signup!</p>
+          {/* Top Bar with Back Button and Title */}
+          <div className="flex items-center justify-center gap-3 mb-6 relative">
+            <button
+              onClick={() => navigate(-1)}
+              className="absolute left-0 text-white text-3xl px-2"
+            >
+              &#8249;
+            </button>
+            <h1 className="text-3xl font-bold text-center">Refer & Earn</h1>
           </div>
+
+          <p className="text-sm text-white/80 text-center -mt-3">
+            Invite friends and earn up to ₹50 per signup!
+          </p>
 
           {/* Referral Code Card */}
           <div className="bg-white mt-6 rounded-xl shadow-md p-4 flex flex-col items-center">
@@ -77,7 +88,6 @@ const ReferralPage = () => {
 
           {/* Steps */}
           <div className="mt-8 flex items-center justify-between max-w-xl mx-auto">
-            {/* Step 1 */}
             <div className="flex flex-col items-center">
               <div className="bg-white p-3 rounded-full shadow-md">
                 <FaUserFriends className="text-blue-600 w-6 h-6" />
@@ -85,7 +95,6 @@ const ReferralPage = () => {
               <span className="text-sm mt-1">Invite</span>
             </div>
             <FaCheckCircle className="text-green-400 w-5 h-5 animate-bounce" />
-            {/* Step 2 */}
             <div className="flex flex-col items-center">
               <div className="bg-white p-3 rounded-full shadow-md">
                 <FaClipboard className="text-blue-400 w-6 h-6" />
@@ -93,7 +102,6 @@ const ReferralPage = () => {
               <span className="text-sm mt-1">Signup</span>
             </div>
             <FaCheckCircle className="text-green-400 w-5 h-5 animate-bounce animation-delay-1000" />
-            {/* Step 3 */}
             <div className="flex flex-col items-center">
               <div className="bg-white p-3 rounded-full shadow-md">
                 <FaRupeeSign className="text-yellow-500 w-6 h-6" />
@@ -107,10 +115,17 @@ const ReferralPage = () => {
             <h2 className="text-lg font-semibold mb-3">Referral Earnings</h2>
             <div className="space-y-3">
               {earningsHistory.map((entry) => (
-                <div key={entry.id} className="bg-white text-black rounded-lg p-3 flex justify-between items-center shadow-md">
+                <div
+                  key={entry.id}
+                  className="bg-white text-black rounded-lg p-3 flex justify-between items-center shadow-md"
+                >
                   <div>
                     <div className="font-bold text-blue-700 text-sm">{entry.name}</div>
-                    <div className={`text-xs font-medium mt-1 ${entry.status === 'Signed Up' ? 'text-green-500' : 'text-gray-500'}`}>
+                    <div
+                      className={`text-xs font-medium mt-1 ${
+                        entry.status === 'Signed Up' ? 'text-green-500' : 'text-gray-500'
+                      }`}
+                    >
                       {entry.status}
                     </div>
                   </div>
@@ -133,7 +148,9 @@ const ReferralPage = () => {
             <button className="bg-yellow-400 text-black font-bold px-6 py-3 rounded-xl shadow-lg hover:scale-95 transition">
               Invite Now
             </button>
-            <p className="text-sm mt-2 text-white/80">Each friend you invite gets you closer to bigger rewards!</p>
+            <p className="text-sm mt-2 text-white/80">
+              Each friend you invite gets you closer to bigger rewards!
+            </p>
           </div>
         </div>
       </div>

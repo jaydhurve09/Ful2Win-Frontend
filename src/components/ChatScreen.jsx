@@ -1,8 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { FiArrowLeft, FiSend } from 'react-icons/fi';
-import Navbar from './Navbar';
 import BackgroundBubbles from './BackgroundBubbles';
-import { useNavigate } from 'react-router-dom';
 
 const friendsList = [
   { id: 1, name: 'Alex Johnson', avatar: 'https://randomuser.me/api/portraits/men/32.jpg', online: true },
@@ -17,11 +15,9 @@ const friendsList = [
   { id: 10, name: 'Emily Martinez', avatar: 'https://randomuser.me/api/portraits/women/55.jpg', online: true },
 ];
 
-const ChatScreen = () => {
-  const [selectedFriend, setSelectedFriend] = useState(null);
+const ChatScreen = ({ selectedFriend, setSelectedFriend }) => {
   const [messages, setMessages] = useState({});
   const [message, setMessage] = useState('');
-  const navigate = useNavigate();
   const messagesEndRef = useRef(null);
 
   const handleFriendClick = (friend) => {
@@ -44,7 +40,6 @@ const ChatScreen = () => {
     if (e.key === 'Enter') sendMessage();
   };
 
-  // Scroll to bottom when messages change
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
@@ -52,35 +47,33 @@ const ChatScreen = () => {
   }, [messages, selectedFriend]);
 
   return (
-    <div className="min-h-screen w-full text-white relative flex flex-col" style={{
-      background: 'linear-gradient(to bottom, #0A2472 0%, #0D47A1 45%, #1565C0 100%)'
-    }}>
+    <div className="relative w-full h-screen overflow-hidden text-white">
       <BackgroundBubbles />
 
-      {/* Chat View */}
       {selectedFriend ? (
-        <div className="flex flex-col flex-1 relative">
+        <div className="w-full h-full">
 
-          {/* Fixed Friend Info Bar */}
-          <div className="fixed top-0 left-0 right-0 z-20 px-4 py-2 bg-blue-800 bg-opacity-50 backdrop-blur-md">
-            <div className="flex items-center max-w-2xl mx-auto">
-              <button onClick={() => setSelectedFriend(null)} className="mr-4 bg-white bg-opacity-20 p-2 rounded-full hover:bg-opacity-30">
-                <FiArrowLeft size={20} />
-              </button>
-              <img src={selectedFriend.avatar} alt={selectedFriend.name} className="w-10 h-10 rounded-full mr-3" />
-              <div>
-                <h3 className="font-semibold">{selectedFriend.name}</h3>
-                <p className={`text-sm ${selectedFriend.online ? 'text-green-300' : 'text-gray-300'}`}>
-                  {selectedFriend.online ? 'Online' : 'Offline'}
-                </p>
-              </div>
+          {/* Fixed Header */}
+          <div className="fixed top-0 left-0 right-0 h-[60px] bg-blue-800 bg-opacity-70 backdrop-blur-md z-20 flex items-center px-4">
+            <button onClick={() => setSelectedFriend(null)} className="mr-4 bg-white bg-opacity-20 p-2 rounded-full hover:bg-opacity-30">
+              <FiArrowLeft size={20} />
+            </button>
+            <img src={selectedFriend.avatar} alt={selectedFriend.name} className="w-10 h-10 rounded-full mr-3" />
+            <div>
+              <h3 className="font-semibold">{selectedFriend.name}</h3>
+              <p className={`text-sm ${selectedFriend.online ? 'text-green-300' : 'text-gray-300'}`}>
+                {selectedFriend.online ? 'Online' : 'Offline'}
+              </p>
             </div>
           </div>
 
-          {/* Scrollable Messages between Top Bar and Bottom Input */}
-          <div className="mt-20 mb-24 overflow-y-auto space-y-4 px-4 max-w-2xl mx-auto w-full" style={{ height: 'calc(100vh - 160px)' }}>
+          {/* Scrollable Messages */}
+          <div
+            className="absolute left-0 right-0 overflow-y-auto px-4 py-2"
+            style={{ top: '60px', bottom: '72px' }}
+          >
             {(messages[selectedFriend.id] || []).map((msg) => (
-              <div key={msg.id} className={`flex ${msg.sender === 'me' ? 'justify-end' : 'justify-start'}`}>
+              <div key={msg.id} className={`flex ${msg.sender === 'me' ? 'justify-end' : 'justify-start'} mb-2`}>
                 <div className={`max-w-xs px-4 py-2 rounded-2xl ${msg.sender === 'me' ? 'bg-blue-600 text-white' : 'bg-white text-gray-800'}`}>
                   {msg.text}
                 </div>
@@ -89,9 +82,9 @@ const ChatScreen = () => {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Typing Box (Fixed) */}
-          <div className="fixed bottom-5 left-0 w-full px-4">
-            <div className="flex items-center max-w-2xl mx-auto bg-white rounded-full p-2 shadow-md">
+          {/* Fixed Footer */}
+          <div className="fixed bottom-0 left-0 right-0 h-[72px] bg-blue-800 bg-opacity-70 backdrop-blur-md z-20 px-4 flex items-center">
+            <div className="flex items-center bg-white rounded-full p-2 shadow-md w-full max-w-3xl mx-auto">
               <input
                 type="text"
                 value={message}
@@ -110,17 +103,9 @@ const ChatScreen = () => {
           </div>
         </div>
       ) : (
-        /* Friends List View (Unchanged — perfect as per your requirement) */
-        <div className="flex flex-col flex-1 pb-20 px-4 overflow-hidden relative">
-          {/* Your Chats Heading */}
-          <div className="fixed top-0 left-0 right-0 z-20 px-4">
-            <div className="flex items-center max-w-2xl mx-auto mt-6">
-              <h2 className="text-2xl font-bold flex-1 text-center">Your Chats</h2>
-            </div>
-          </div>
-
-          {/* Scrollable Friend List (below the heading) */}
-          <div className="mt-20 max-w-2xl mx-auto w-full overflow-y-auto space-y-4" style={{ height: 'calc(100vh - 160px)' }}>
+        // Friend list screen
+        <div className="flex flex-col w-full h-full overflow-y-auto px-4 pt-4 pb-20">
+          <div className="mt-4 space-y-4 w-full max-w-3xl mx-auto">
             {friendsList.map((friend) => (
               <div
                 key={friend.id}
@@ -136,11 +121,6 @@ const ChatScreen = () => {
                 </div>
               </div>
             ))}
-          </div>
-
-          {/* Navbar (Only in Friends List) */}
-          <div className="fixed bottom-0 left-0 right-0 z-20">
-            <Navbar />
           </div>
         </div>
       )}

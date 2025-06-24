@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Navbar from './Navbar';
 import BackgroundBubbles from './BackgroundBubbles';
 import BackgroundCircles from './BackgroundCircles';
+import { FaArrowLeft } from 'react-icons/fa';
 
 const STATUS = {
   NOT_SUBMITTED: {
@@ -90,9 +91,7 @@ const KYCStatusPage = () => {
   const statusObj = STATUS[status];
 
   const handleStepClick = (step) => {
-    if (step === 'document') {
-      fileInputRef.current.click();
-    } else if (step === 'selfie') {
+    if (step === 'document' || step === 'selfie') {
       fileInputRef.current.click();
     } else if (step === 'pan') {
       setPopupContent({
@@ -109,15 +108,26 @@ const KYCStatusPage = () => {
   };
 
   return (
-    <div className="min-h-screen w-full text-white overflow-hidden relative" style={{
-      background: 'linear-gradient(to bottom, #0A2472 0%, #0D47A1 45%, #1565C0 100%)'
-    }}>
+    <div
+      className="min-h-screen w-full text-white overflow-hidden relative"
+      style={{
+        background: 'linear-gradient(to bottom, #0A2472 0%, #0D47A1 45%, #1565C0 100%)',
+      }}
+    >
       <BackgroundCircles />
       <BackgroundBubbles />
 
       <div className="relative z-10 px-4 pt-16 pb-24">
-        {/* Removed Back Button */}
-        <h1 className="text-xl font-semibold text-center mb-6">KYC Status</h1>
+        {/* Back Button and Title */}
+        <div className="flex items-center justify-center gap-3 mb-6 relative">
+          <button
+            onClick={() => navigate(-1)}
+            className="absolute left-0 text-white text-2xl px-2"
+          >
+            <FaArrowLeft />
+          </button>
+          <h1 className="text-xl font-semibold text-center">KYC Status</h1>
+        </div>
 
         <div className={`rounded-xl p-6 text-center bg-white text-gray-800 shadow-lg mb-6 ${statusObj.cardClass}`}>
           <div className="text-4xl mb-2">{statusObj.icon}</div>
@@ -132,20 +142,17 @@ const KYCStatusPage = () => {
             </button>
             <ul className="space-y-3 text-left">
               <li>
-                <button onClick={() => handleStepClick('document')}
-                  className="w-full bg-blue-100 text-blue-800 px-4 py-2 rounded-md">
+                <button onClick={() => handleStepClick('document')} className="w-full bg-blue-100 text-blue-800 px-4 py-2 rounded-md">
                   Upload ID
                 </button>
               </li>
               <li>
-                <button onClick={() => handleStepClick('selfie')}
-                  className="w-full bg-blue-100 text-blue-800 px-4 py-2 rounded-md">
+                <button onClick={() => handleStepClick('selfie')} className="w-full bg-blue-100 text-blue-800 px-4 py-2 rounded-md">
                   Take Selfie
                 </button>
               </li>
               <li>
-                <button onClick={() => handleStepClick('pan')}
-                  className="w-full bg-blue-100 text-blue-800 px-4 py-2 rounded-md">
+                <button onClick={() => handleStepClick('pan')} className="w-full bg-blue-100 text-blue-800 px-4 py-2 rounded-md">
                   Enter PAN
                 </button>
               </li>

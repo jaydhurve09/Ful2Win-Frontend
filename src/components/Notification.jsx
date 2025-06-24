@@ -1,11 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import {
-  FaGamepad,
-  FaTrophy,
-  FaUserFriends,
-  FaTimesCircle,
-} from 'react-icons/fa';
-
+import { FaGamepad, FaTrophy, FaUserFriends, FaTimesCircle } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Navbar from '../components/Navbar';
 import BackgroundBubbles from '../components/BackgroundBubbles';
@@ -46,25 +41,26 @@ const iconMap = {
 const filterOptions = ['all', 'game', 'achievement', 'followers'];
 
 const Notification = () => {
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState([]);
   const [expanded, setExpanded] = useState(null);
   const [filter, setFilter] = useState('all');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const res = await fetch(`${API_BASE}/notifications`);
-        if (!res.ok) throw new Error('Backend not responding');
-        const data = await res.json();
-        setNotifications(data);
+        // Simulate fetch with fallback
+        // const res = await fetch(`${API_BASE}/notifications`);
+        // if (!res.ok) throw new Error('Backend not responding');
+        // const data = await res.json();
+        // setNotifications(data);
+        setNotifications(dummyNotifications);
       } catch (err) {
-        
-        setNotifications(dummyNotifications); // fallback to dummy
-        
+        setError('Could not fetch notifications. Showing demo data.');
+        setNotifications(dummyNotifications);
       } finally {
         setLoading(false);
       }
@@ -75,12 +71,9 @@ const Notification = () => {
 
   const removeNotification = async (id) => {
     try {
-      const res = await fetch(`${API_BASE}/notifications/${id}`, {
-        method: 'DELETE',
-      });
-      if (!res.ok) throw new Error('Delete failed');
+      // await fetch(`${API_BASE}/notifications/${id}`, { method: 'DELETE' });
     } catch (err) {
-      console.warn('Notification not deleted on backend:', err.message);
+      console.warn('Failed to delete from backend');
     } finally {
       setNotifications((prev) => prev.filter((n) => n.id !== id));
     }
@@ -92,13 +85,31 @@ const Notification = () => {
       : notifications.filter((n) => n.type === filter);
 
   return (
-    <div className="relative min-h-screen bg-blueGradient text-white pb-24 overflow-hidden">
+    <div className="relative min-h-screen bg-gradient-to-b from-[#0A2472] via-[#0D47A1] to-[#1565C0] text-white pb-24 overflow-hidden">
       <BackgroundBubbles />
       <div className="relative z-10">
         <Header />
 
         <div className="container mx-auto px-4 py-6 pt-16">
           <div className="max-w-4xl mx-auto">
+
+            {/* Back Button */}
+            <button
+              onClick={() => navigate(-1)}
+              className="flex items-center text-blue-200 hover:text-white mb-4"
+            >
+              <svg
+                className="h-5 w-5 mr-2"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+              </svg>
+              
+            </button>
+
             <h1 className="text-2xl font-bold mb-4">Notifications</h1>
 
             {/* Filter Tabs */}
@@ -194,4 +205,3 @@ const Notification = () => {
 };
 
 export default Notification;
-
