@@ -1,5 +1,5 @@
-
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import Navbar from "../components/Navbar";
 import BackgroundBubbles from "../components/BackgroundBubbles";
@@ -10,6 +10,7 @@ const FollowerPage = () => {
   const [followers, setFollowers] = useState([]);
   const [following, setFollowing] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchFollowers = async () => {
@@ -41,8 +42,10 @@ const FollowerPage = () => {
     );
   };
 
-  const filteredUsers = (activeTab === "followers" ? followers : followers.filter(user => following.includes(user.id)))
-    .filter((user) => user.name.toLowerCase().includes(search.toLowerCase()));
+  const filteredUsers = (activeTab === "followers"
+    ? followers
+    : followers.filter((user) => following.includes(user.id))
+  ).filter((user) => user.name.toLowerCase().includes(search.toLowerCase()));
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#0b3fae] via-[#1555d1] to-[#2583ff] text-white pb-24 overflow-hidden">
@@ -51,10 +54,20 @@ const FollowerPage = () => {
         <Header />
 
         <div className="pt-20 px-4 max-w-4xl mx-auto">
-          <h1 className="text-2xl sm:text-3xl font-bold text-center text-blue-100 mb-6">
-            My Followers
-          </h1>
+          {/* Back button + Heading */}
+          <div className="flex items-center justify-center gap-3 mb-6 relative">
+            <button
+              onClick={() => navigate(-1)}
+              className="absolute left-0 text-white text-3xl px-2"
+            >
+              &#8249;
+            </button>
+            <h1 className="text-2xl sm:text-3xl font-bold text-center text-blue-100">
+              My Followers
+            </h1>
+          </div>
 
+          {/* Tabs */}
           <div className="flex justify-center space-x-4 mb-6">
             <button
               onClick={() => setActiveTab("following")}
@@ -74,6 +87,7 @@ const FollowerPage = () => {
             </button>
           </div>
 
+          {/* Search */}
           <div className="flex justify-center mb-6">
             <input
               type="text"
@@ -84,6 +98,7 @@ const FollowerPage = () => {
             />
           </div>
 
+          {/* Users */}
           {loading ? (
             <p className="text-center text-white/70">Loading...</p>
           ) : (
