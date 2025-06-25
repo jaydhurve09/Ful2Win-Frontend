@@ -345,9 +345,22 @@ const logout = async () => {
 const getCurrentUserProfile = async () => {
   try {
     console.log('Fetching current user profile');
-    const response = await api.get('/me');
     
-    console.log('Current user profile response:', response.data);
+    // Make sure we're not duplicating the /api/users part
+    const endpoint = ENV.apiUrl.includes('/api/users') ? '/me' : '/api/users/me';
+    console.log('API URL:', ENV.apiUrl);
+    console.log('Using endpoint:', endpoint);
+    
+    const response = await api.get(endpoint, {
+      withCredentials: true,
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      }
+    });
+    
+    console.log('Current user profile response status:', response.status);
+    console.log('Response data:', response.data);
     
     // Extract user data from response
     const userData = response.data.data || response.data;
