@@ -27,6 +27,7 @@ import TournamentHistory from './components/TournamentHistory';
 import FlappyBall from './components/FlappyBall';
 import Login from './pages/Login';
 import SignUp from './pages/SignUp';
+import ComingSoon from './pages/ComingSoon';
 
 function App() {
   // const [count, setCount] = useState(0)
@@ -64,6 +65,7 @@ function App() {
             <Route path="/leaderboard" element={<LeaderboardPage />} />
             <Route path="/tournamenthistory" element={<TournamentHistory />} />
             <Route path="/supports" element={<SupportCenter />} />
+            <Route path="/coming-soon" element={<ComingSoon />} />
           </Routes>
         </ErrorBoundary>
       </BrowserRouter>

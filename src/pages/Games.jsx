@@ -5,6 +5,7 @@ import Navbar from '../components/Navbar';
 import GameCard from '../components/GameCard';
 import BackgroundBubbles from '../components/BackgroundBubbles';
 import { GravityHop } from '../components/GravityHop';
+import { useNavigate } from 'react-router-dom';
 
 // Game images
 import callBreak from '../assets/call-break.png';
@@ -29,6 +30,11 @@ const Games = () => {
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const categories = ['all', 'Card', 'Puzzle', 'Board'];
+  const navigate = useNavigate();
+
+  const handlePlayNow = () => {
+    navigate('/coming-soon');
+  };
 
   const filteredGames = games.filter((game) => {
     const matchesCategory = activeCategory === 'all' || game.category === activeCategory;
@@ -96,7 +102,7 @@ const Games = () => {
                 {filteredGames
                   .filter((game) => game.featured)
                   .map((game) => (
-                    <GameCard key={game.id} game={game} />
+                    <GameCard key={game.id} game={game} onPlayNow={handlePlayNow} />
                   ))}
               </div>
             </div>
@@ -116,7 +122,7 @@ const Games = () => {
               </div>
               <div className="grid grid-cols-3 gap-4">
                 {filteredGames.map((game) => (
-                  <GameCard key={game.id} game={game} />
+                  <GameCard key={game.id} game={game} onPlayNow={handlePlayNow} />
                 ))}
               </div>
             </div>
