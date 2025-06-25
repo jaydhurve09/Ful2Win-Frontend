@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { GiTwoCoins } from 'react-icons/gi';
 import { FaRedoAlt, FaPlay, FaBolt } from 'react-icons/fa';
@@ -9,7 +10,13 @@ import SpinWheelScreen from '../components/SpinWheelScreen';
 
 const Wallet = () => {
   const navigate = useNavigate();
-  const [walletData, setWalletData] = useState({ balance: 0, coins: 0, transactions: [] });
+  const [walletData, setWalletData] = useState({
+    deposit: 0,
+    winning: 0,
+    bonus: 0,
+    coins: 0,
+    transactions: [],
+  });
   const [loading, setLoading] = useState(true);
   const [showSpinWheel, setShowSpinWheel] = useState(false);
 
@@ -28,7 +35,9 @@ const Wallet = () => {
       } catch (error) {
         // fallback dummy data
         setWalletData({
-          balance: 1234.56,
+          deposit: 500,
+          winning: 600,
+          bonus: 134.56,
           coins: 12345,
           transactions: [
             { id: 1, type: 'Add', amount: 500 },
@@ -62,9 +71,10 @@ const Wallet = () => {
       <div className="relative z-10">
         <Header />
 
-        <div className="pt-20 px-4 max-w-4xl mx-auto space-y-6">
+        <div className="pt-20 mt-7  px-4 max-w-4xl mx-auto space-y-6">
           {/* Wallet Card */}
-          <div className="bg-white/10 backdrop-blur-lg p-6 rounded-2xl text-white text-center shadow-lg border border-white/20">
+          <div className="w-full border border-white/30 rounded-xl text-white text-center p-4">
+            {/* Logo */}
             <div className="w-20 h-20 rounded-full bg-yellow-400 mx-auto flex items-center justify-center overflow-hidden mb-4">
               <img
                 src="https://cdn-icons-png.flaticon.com/512/3069/3069172.png"
@@ -72,38 +82,59 @@ const Wallet = () => {
                 className="w-16 h-16 object-contain"
               />
             </div>
+            
 
-            <div className="text-left mt-2">
-              <p className="text-sm text-white/80">Wallet Balance</p>
-              <h2 className="text-2xl font-bold text-white">₹ {walletData.balance}</h2>
-              <hr className="my-2 border-white/30" />
-              <p className="text-sm text-white/80">Coins</p>
-              <h3 className="flex items-center gap-2 text-yellow-300 font-semibold text-lg">
-                {walletData.coins} <GiTwoCoins size={20} />
+            {/* Coins Section */}
+            <div className="flex flex-col items-center gap-1">
+              <p className="text-white/80 text-sm">Coins</p>
+              <h3 className="text-lg font-semibold text-yellow-300 flex items-center gap-1">
+                {walletData.coins} <GiTwoCoins size={18} />
               </h3>
-              <hr className="my-2 border-white/30" />
             </div>
 
+            <div className="my-3 h-[1px] w-full bg-white/30" />
+
+            {/* Row: Deposit | Winning | Bonus */}
+            <div className="flex justify-between text-sm sm:text-base font-medium">
+              <div className="flex-1">
+                <p className="text-white/80">Deposit</p>
+                <h2 className="text-lg font-bold">₹ {walletData.deposit}</h2>
+              </div>
+              <div className="flex-1">
+                <p className="text-white/80">Winning</p>
+                <h2 className="text-lg font-bold text-green-400">₹ {walletData.winning}</h2>
+              </div>
+              <div className="flex-1">
+                <p className="text-white/80">Bonus</p>
+                <h2 className="text-lg font-bold text-yellow-300">₹ {walletData.bonus}</h2>
+              </div>
+            </div>
+
+           <div className="my-3 h-[1px] w-full bg-white/30" />
+         
+
+          {/* Action Buttons */}
+          <div className="flex flex-col gap-3">
             <button
-              className="w-full mt-4 py-2 rounded-xl bg-yellow-400 text-blue-900 font-bold text-lg shadow-md hover:bg-yellow-300"
+              className="w-full py-3 rounded-xl bg-yellow-400 text-blue-900 font-bold text-lg shadow-md hover:bg-yellow-300 transition"
               onClick={() => navigate('/add')}
             >
               ADD ₹
             </button>
             <button
-              className="w-full mt-3 py-2 rounded-xl border border-blue-300 bg-blue-900/60 hover:bg-white/10 transition"
+              className="w-full py-3 rounded-xl border border-blue-300 bg-blue-900/60 text-white hover:bg-white/10 transition"
               onClick={() => navigate('/withdraw')}
             >
-              WITHDRAW ₹
+              WITHDRAW ₹ (Winning Only)
             </button>
-
-            <p className="text-xs text-yellow-100 mt-3 text-center">
+            <p className="text-xs text-yellow-100 text-center">
               After KYC<br />
-              Coins not Withdrawable
+              Only Winning Amount is Withdrawable
             </p>
           </div>
+           </div>
 
-          {/* Action Buttons */}
+          {/* Quick Access Buttons */}
           <div className="flex justify-center gap-4 mt-6 flex-wrap">
             {[
               { icon: <FaRedoAlt size={18} className="text-blue-900" />, label: 'Spin', onClick: handleSpinClick },
@@ -123,7 +154,7 @@ const Wallet = () => {
             ))}
           </div>
 
-          {/* History Button (Recent Transactions Removed) */}
+          {/* History Button */}
           <div className="w-full px-4 mt-4">
             <button
               onClick={() => navigate('/history')}

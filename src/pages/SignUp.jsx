@@ -5,6 +5,7 @@ import authService from '../services/api';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import axios from 'axios';
+import BackgroundBubbles from '../components/BackgroundBubbles';
 
 const Signup = () => {
   const [formData, setFormData] = useState({
@@ -95,8 +96,9 @@ const Signup = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-700 to-blue-500 flex flex-col justify-end relative">
+    <div className="min-h-screen bg-blueGradient flex flex-col justify-end relative">
       {/* Logo and Tagline */}
+      <BackgroundBubbles />
       <div className="absolute top-20 left-1/2 transform -translate-x-1/2 flex flex-col items-center">
         <img src={logo} alt="Ful2Win Logo" className="w-40 md:w-44 mb-3" />
         <p className="text-white text-sm font-semibold text-center">

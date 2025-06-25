@@ -4,6 +4,7 @@ import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import logo from '../assets/logo.png';
 import { useAuth } from '../contexts/AuthContext';
+import BackgroundBubbles from '../components/BackgroundBubbles';
 
 const Login = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -22,6 +23,61 @@ const Login = () => {
     }
   }, [isAuthenticated, navigate, location.state]);
 
+  const testBackendConnection = async () => {
+    const baseUrl = import.meta.env.VITE_API_BASE_URL.endsWith('/') 
+      ? import.meta.env.VITE_API_BASE_URL.slice(0, -1) 
+      : import.meta.env.VITE_API_BASE_URL;
+    const testUrl = `${baseUrl}/api/users/test-endpoint`;
+    console.log('=== Testing Backend Connection ===');
+    console.log('Test URL:', testUrl);
+    
+    try {
+      const response = await fetch(testUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ 
+          test: 'connection',
+          timestamp: new Date().toISOString()
+        }),
+        credentials: 'include',
+        mode: 'cors'
+      });
+      
+      const responseData = {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+        headers: Object.fromEntries([...response.headers.entries()])
+      };
+      
+      console.log('Test connection response:', responseData);
+      
+      let data;
+      try {
+        data = await response.json();
+        console.log('Test connection JSON data:', data);
+      } catch (jsonError) {
+        console.error('Failed to parse JSON response:', jsonError);
+        const text = await response.text();
+        console.log('Raw response text:', text);
+        data = { error: 'Invalid JSON response', raw: text };
+      }
+      
+      return { 
+        success: response.ok, 
+        status: response.status,
+        data,
+        response: responseData
+      };
+    } catch (error) {
+      console.error('Test connection failed:', error);
+      throw error;
+    }
+  };
+
   const handleLogin = async (e) => {
     e.preventDefault();
     
@@ -38,7 +94,26 @@ const Login = () => {
     try {
       setIsLoading(true);
       
-      console.log('=== Login Debug ===');
+      // First test the backend connection
+      console.log('=== Connection Test ===');
+      const connectionTest = await testBackendConnection();
+      console.log('Connection test result:', connectionTest);
+      
+      if (!connectionTest.success) {
+        if (connectionTest.status === 0) {
+          throw new Error('Network error: Unable to connect to the server. Please check your internet connection.');
+        } else if (connectionTest.status === 404) {
+          throw new Error('Server error: The requested endpoint was not found. Please check the API URL.');
+        } else if (connectionTest.status === 405) {
+          throw new Error('Server error: Method not allowed. The server rejected the request method.');
+        } else if (connectionTest.status >= 500) {
+          throw new Error('Server error: The server encountered an internal error. Please try again later.');
+        } else {
+          throw new Error(`Connection failed with status ${connectionTest.status}: ${connectionTest.statusText}`);
+        }
+      }
+      
+      console.log('=== Login Attempt ===');
       console.log('1. Attempting login with:', { phoneNumber });
       const userData = { phoneNumber, password };
       
@@ -72,8 +147,9 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-700 to-blue-500 flex flex-col justify-end relative">
+    <div className="min-h-screen bg-blueGradient flex flex-col justify-end relative">
       {/* Centered Logo and Tagline */}
+      <BackgroundBubbles />
       <div className="absolute top-40 left-1/2 transform -translate-x-1/2 flex flex-col items-center">
         <img src={logo} alt="Ful2Win Logo" className="w-45 md:w-44 mb-4" />
         <p className="text-white text-sm font-semibold text-center">

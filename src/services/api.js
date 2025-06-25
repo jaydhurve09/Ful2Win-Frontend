@@ -1,13 +1,32 @@
 import axios from 'axios';
 
-// Get base URL from environment variables
-const MODE = import.meta.env.MODE;
-const BASE_URL = MODE === 'development' ? import.meta.env.VITE_API_BASE_URL : import.meta.env.API_BASE_URL;
-const API_URL = MODE === 'development' ? import.meta.env.VITE_API_URL : import.meta.env.API_URL;
+// Helper function to normalize URL (remove trailing slashes)
+const normalizeUrl = (url) => {
+  if (!url) return '';
+  return url.endsWith('/') ? url.slice(0, -1) : url;
+};
+
+// Environment configuration
+const ENV = {
+  isProduction: import.meta.env.PROD,
+  isDevelopment: import.meta.env.DEV,
+  apiBaseUrl: normalizeUrl(import.meta.env.VITE_API_BASE_URL || ''),
+  apiUrl: normalizeUrl(import.meta.env.VITE_API_URL || '')
+};
+
+// Log environment for debugging
+console.log('Environment Configuration:', {
+  ...ENV,
+  env: process.env.NODE_ENV,
+  mode: import.meta.env.MODE,
+  baseUrl: ENV.apiBaseUrl,
+  apiUrl: ENV.apiUrl
+});
 
 // Create axios instance with base URL
 const api = axios.create({
-  baseURL: BASE_URL + '/api',
+  baseURL: ENV.apiBaseUrl,
+  timeout: 10000, // 10 seconds timeout
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json'
@@ -88,31 +107,119 @@ const register = async (userData) => {
   }
 };
 
+// Test backend connection
+const testBackendConnection = async () => {
+  const testUrl = `${import.meta.env.VITE_API_BASE_URL}/api/users/test-body`;
+  console.log('Testing backend connection at:', testUrl);
+  
+  try {
+    const response = await fetch(testUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({ test: 'connection' }),
+      credentials: 'include',
+      mode: 'cors'
+    });
+    
+    console.log('Test response status:', response.status);
+    const data = await response.json().catch(() => ({}));
+    console.log('Test response data:', data);
+    
+    return {
+      status: response.status,
+      ok: response.ok,
+      data
+    };
+  } catch (error) {
+    console.error('Test connection error:', error);
+    throw error;
+  }
+};
+
 // Login user
 const login = async (userData) => {
+  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+  const loginUrl = `${baseUrl}/api/users/login`;
+  
+  console.log('=== Login Debug ===');
+  console.log('Using base URL:', baseUrl);
+  console.log('Full login URL:', loginUrl);
+  console.log('Request method: POST');
+  console.log('Request payload:', { 
+    phoneNumber: userData.phoneNumber,
+    password: userData.password ? '[HIDDEN]' : 'undefined' 
+  });
+  
   try {
-    console.log('API: Sending login request with:', { phoneNumber: userData.phoneNumber, password: '[HIDDEN]' });
-    const response = await api.post('/users/login', userData);
-    console.log('API: Login response:', response.data);
-    
-    if (response.data && response.data.token) {
-      // Store the token and user data
-      const { token, user } = response.data;
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
-      
-      // Set default auth header for subsequent requests
-      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      
-      return { user, token };
-    }
-    throw new Error('Invalid response format from server');
-  } catch (error) {
-    console.error('API: Login error:', {
-      message: error.message,
-      response: error.response?.data,
-      status: error.response?.status,
+    const response = await fetch(loginUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({
+        phoneNumber: userData.phoneNumber,
+        password: userData.password
+      }),
+      credentials: 'include',
+      mode: 'cors'
     });
+    
+    console.log('Response status:', response.status);
+    console.log('Response headers:', Object.fromEntries([...response.headers.entries()]));
+    
+    let responseData;
+    try {
+      responseData = await response.json();
+      console.log('Response data:', responseData);
+    } catch (jsonError) {
+      console.error('Failed to parse JSON response:', jsonError);
+      const textResponse = await response.text();
+      console.error('Raw response:', textResponse);
+      throw new Error('Invalid JSON response from server');
+    }
+    
+    if (!response.ok) {
+      const errorMessage = responseData.message || 
+                         responseData.error || 
+                         `HTTP error! status: ${response.status}`;
+      throw new Error(errorMessage);
+    }
+    
+    if (!responseData.token) {
+      throw new Error('No token received in response');
+    }
+    
+    // Store the token and user data
+    const { token, user } = responseData;
+    localStorage.setItem('token', token);
+    localStorage.setItem('user', JSON.stringify(user));
+    
+    // Set default auth header for subsequent requests
+    api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    
+    console.log('Login successful for user:', user.phoneNumber);
+    return { user, token };
+    
+  } catch (error) {
+    console.error('=== Login Error ===');
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
+    console.error('Error name:', error.name);
+    
+    // More specific error handling
+    if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+      throw new Error('Unable to connect to the server. Please check your internet connection.');
+    }
+    
+    // Re-throw with a more user-friendly message if needed
+    if (error.message.includes('401')) {
+      throw new Error('Invalid phone number or password');
+    }
+    
     throw error;
   }
 };
@@ -343,8 +450,8 @@ const authService = {
         password: '[HIDDEN]' // Never log actual password
       });
       
-      console.log('Sending to URL:', '/users/login');
-      const response = await api.post('/users/login', requestData, {
+      console.log('Sending to URL:', '/api/users/login');
+      const response = await api.post('/api/users/login', requestData, {
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
@@ -406,7 +513,7 @@ const authService = {
       // Make the API call to invalidate the token on the server
       try {
         console.log('AuthService: Making logout API call');
-        const response = await api.post('/users/logout');
+        const response = await api.post('/api/users/logout');
         console.log('AuthService: Logout successful');
         return response.data;
       } catch (apiError) {
