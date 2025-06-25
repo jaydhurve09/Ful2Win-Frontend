@@ -13,6 +13,7 @@ import BackgroundBubbles from './BackgroundBubbles';
 import '../App.css';
 import countries from 'i18n-iso-countries';
 import enLocale from 'i18n-iso-countries/langs/en.json';
+import defaultProfile from '../assets/default-profile.jpg';
 
 // Initialize countries
 countries.registerLocale(enLocale);
@@ -275,9 +276,13 @@ const Account = () => {
                 <div className="md:col-span-2 flex flex-col items-center">
                   <div className="relative group">
                     <img
-                      src={formData.profilePicture || "https://i.pravatar.cc/150?img=12"}
+                      src={formData.profilePicture || defaultProfile}
                       alt="Profile"
                       className="w-32 h-32 rounded-full object-cover border-4 border-blue-400"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = defaultProfile;
+                      }}
                     />
                     {isEditing && (
                       <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">

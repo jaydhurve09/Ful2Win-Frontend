@@ -61,6 +61,7 @@ const Signup = () => {
       const userData = {
         fullName: formData.fullName,
         phoneNumber: formData.phoneNumber,
+        email: formData.email,
         password: formData.password
       };
       
@@ -125,7 +126,7 @@ const Signup = () => {
               placeholder="Enter your name"
               value={formData.fullName}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-300"
+              className="w-full px-4 py-2 text-gray-500 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-300"
               required
             />
           </div>
@@ -143,7 +144,25 @@ const Signup = () => {
               placeholder="Enter your phone number"
               value={formData.phoneNumber}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-300"
+              className="w-full px-4 py-2 text-gray-500 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-300"
+              required
+            />
+          </div>
+
+          {/* Email */}
+          <div className="mb-4">
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+              Email Address
+            </label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              autoComplete="email"
+              placeholder="Enter your email"
+              value={formData.email}
+              onChange={handleChange}
+              className="w-full px-4 py-2 text-gray-500 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-300"
               required
             />
           </div>
@@ -161,7 +180,7 @@ const Signup = () => {
               placeholder="Enter your password"
               value={formData.password}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-300"
+              className="w-full px-4 py-2 text-gray-500 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-300"
               required
             />
           </div>
@@ -176,10 +195,10 @@ const Signup = () => {
               name="confirmPassword"
               type="password"
               autoComplete="new-password"
-              placeholder="Enter your confirm password"
+              placeholder="Confirm your password"
               value={formData.confirmPassword}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-300"
+              className="w-full px-4 py-2 text-gray-500 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-300"
               required
             />
           </div>

@@ -434,6 +434,38 @@ const getAuthHeader = () => {
 
 const authService = {
   /**
+   * Register a new user
+   * @param {Object} userData - User registration data
+   * @returns {Promise<Object>} Registration response
+   */
+  register: async (userData) => {
+    try {
+      console.log('Registering user with data:', userData);
+      const response = await api.post('/api/users/register', userData);
+      
+      console.log('Registration response:', response.data);
+      
+      if (response.data && response.data.success) {
+        return {
+          success: true,
+          message: 'Registration successful! Please login.',
+          user: response.data.data
+        };
+      } else {
+        throw new Error(response.data?.message || 'Registration failed');
+      }
+    } catch (error) {
+      console.error('Registration error:', error);
+      throw new Error(
+        error.response?.data?.message ||
+        error.message ||
+        'Failed to register. Please try again.'
+      );
+    }
+  },
+  
+  // Existing authService methods...
+  /**
    * Login user with phone number and password
    * @param {Object} userData - User credentials
    * @returns {Promise<{user: Object, token: string}>} User data and JWT token

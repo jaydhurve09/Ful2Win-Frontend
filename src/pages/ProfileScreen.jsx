@@ -1,20 +1,10 @@
 import React, { useState, useEffect } from "react";
-import {
-  FiUser,
-  FiUsers,
-  FiDollarSign,
-  FiEdit,
-  FiShare2,
-  FiLogOut,
-  FiMessageSquare,
-  FiMail,
-  FiHeadphones,
-  FiHelpCircle,
-} from "react-icons/fi";
+import { FiUser, FiUsers, FiDollarSign, FiEdit, FiShare2, FiLogOut, FiMessageSquare, FiMail, FiHeadphones, FiHelpCircle } from "react-icons/fi";
 import { FaTrophy, FaGamepad, FaRupeeSign } from "react-icons/fa";
 import { IoMdPerson } from "react-icons/io";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
 import Navbar from "../components/Navbar";
+import defaultProfile from "../assets/default-profile.jpg";
 import BackgroundBubbles from "../components/BackgroundBubbles";
 import Account from "../components/Account";
 import { useAuth } from "../contexts/AuthContext";
@@ -148,9 +138,13 @@ const ProfileScreen = () => {
         {/* Profile Picture */}
         <div className="w-20 h-20 mx-auto mt-4 mb-1 rounded-full bg-yellow-300 flex items-center justify-center overflow-hidden">
           <img
-            src="https://cdn-icons-png.flaticon.com/512/3069/3069172.png"
+            src={currentUser?.profilePicture || defaultProfile}
             alt="Profile"
-            className="w-16 h-16 object-contain"
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = defaultProfile;
+            }}
           />
         </div>
 
