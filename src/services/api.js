@@ -86,8 +86,21 @@ api.interceptors.response.use(
 const register = async (userData, retries = 2) => {
   const makeRequest = async (attempt) => {
     try {
-      console.log(`Registering user (attempt ${attempt + 1}/${retries + 1})`);
+      console.log(`[Auth] Register attempt ${attempt + 1}/${retries + 1}`, {
+        email: userData.email,
+        phoneNumber: userData.phoneNumber,
+        timestamp: new Date().toISOString()
+      });
       
+      console.log('[Auth] Sending registration request to:', api.defaults.baseURL + '/register');
+      console.log('[Auth] Request headers:', {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache'
+      });
+      
+      const startTime = Date.now();
       const response = await api.post('/register', userData, {
         timeout: 15000, // 15 seconds timeout for registration
         headers: {
@@ -96,6 +109,13 @@ const register = async (userData, retries = 2) => {
           'Cache-Control': 'no-cache',
           'Pragma': 'no-cache'
         }
+      });
+      
+      const endTime = Date.now();
+      console.log(`[Auth] Registration response received in ${endTime - startTime}ms`, {
+        status: response.status,
+        statusText: response.statusText,
+        data: response.data
       });
       
       console.log('Registration response:', response.data);
@@ -110,21 +130,55 @@ const register = async (userData, retries = 2) => {
         throw new Error(response.data?.message || 'Registration failed');
       }
     } catch (error) {
-      console.error(`Registration attempt ${attempt + 1} failed:`, error);
+      console.error('[Auth] Registration error:', {
+        name: error.name,
+        message: error.message,
+        code: error.code,
+        isAxiosError: error.isAxiosError,
+        config: {
+          url: error.config?.url,
+          method: error.config?.method,
+          timeout: error.config?.timeout,
+          withCredentials: error.config?.withCredentials,
+          headers: error.config?.headers
+        },
+        response: error.response ? {
+          status: error.response.status,
+          statusText: error.response.statusText,
+          data: error.response.data,
+          headers: error.response.headers
+        } : undefined,
+        request: error.request ? {
+          readyState: error.request.readyState,
+          status: error.request.status,
+          responseText: error.request.responseText?.substring(0, 500) // Limit response text length
+        } : undefined,
+        stack: error.stack
+      });
       
       // If this was the last attempt, rethrow the error
       if (attempt >= retries) {
         let errorMessage = 'Registration failed. Please try again later.';
+        let errorDetails = {};
         
         if (error.code === 'ECONNABORTED') {
           errorMessage = 'Request timed out. Please check your internet connection and try again.';
+          errorDetails = { code: 'timeout', timeout: error.config?.timeout };
         } else if (error.response) {
           // Server responded with an error status
           errorMessage = error.response.data?.message || error.message;
+          errorDetails = {
+            status: error.response.status,
+            data: error.response.data,
+            headers: error.response.headers
+          };
         } else if (error.request) {
           // Request was made but no response received
           errorMessage = 'Unable to connect to the server. Please check your internet connection.';
+          errorDetails = { noResponse: true };
         }
+        
+        console.error('[Auth] Final registration error:', { errorMessage, ...errorDetails });
         
         throw new Error(errorMessage);
       }
@@ -176,86 +230,103 @@ const testBackendConnection = async () => {
 
 // Login user
 const login = async (userData) => {
-  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
-  const loginUrl = `${baseUrl}/api/users/login`;
-  
-  console.log('=== Login Debug ===');
-  console.log('Using base URL:', baseUrl);
-  console.log('Full login URL:', loginUrl);
-  console.log('Request method: POST');
-  console.log('Request payload:', { 
-    phoneNumber: userData.phoneNumber,
-    password: userData.password ? '[HIDDEN]' : 'undefined' 
+  console.log('[Auth] Login attempt started', {
+    timestamp: new Date().toISOString(),
+    hasPhoneNumber: !!userData.phoneNumber,
+    hasEmail: !!userData.email
   });
   
   try {
-    const response = await fetch(loginUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
-      body: JSON.stringify({
-        phoneNumber: userData.phoneNumber,
-        password: userData.password
-      }),
-      credentials: 'include',
-      mode: 'cors'
+    const requestData = {
+      phoneNumber: userData.phoneNumber,
+      email: userData.email,
+      password: userData.password
+    };
+    
+    console.log('[Auth] Sending login request to:', api.defaults.baseURL + '/login');
+    console.log('[Auth] Request headers:', {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Cache-Control': 'no-cache',
+      'Pragma': 'no-cache'
     });
     
-    console.log('Response status:', response.status);
-    console.log('Response headers:', Object.fromEntries([...response.headers.entries()]));
+    const startTime = Date.now();
+    const response = await api.post('/login', requestData, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache'
+      },
+      withCredentials: true
+    });
     
-    let responseData;
-    try {
-      responseData = await response.json();
-      console.log('Response data:', responseData);
-    } catch (jsonError) {
-      console.error('Failed to parse JSON response:', jsonError);
-      const textResponse = await response.text();
-      console.error('Raw response:', textResponse);
-      throw new Error('Invalid JSON response from server');
+    const endTime = Date.now();
+    console.log(`[Auth] Login response received in ${endTime - startTime}ms`, {
+      status: response.status,
+      statusText: response.statusText,
+      hasToken: !!response.data?.token,
+      hasUser: !!response.data?.user,
+      timestamp: new Date().toISOString()
+    });
+    
+    console.log('API: Login response status:', response.status);
+    console.log('API: Login response headers:', response.headers);
+    console.log('API: Login response data:', response.data);
+    
+    if (response.data && response.data.success) {
+      // Ensure we have both token and user data
+      if (!response.data.token || !response.data.data) {
+        console.error('API: Missing token or user data in response');
+        throw new Error('Incomplete authentication data received');
+      }
+      
+      const { token, data: user } = response.data;
+      
+      // Store token and user data in localStorage
+      localStorage.setItem('token', token);
+      if (user) {
+        localStorage.setItem('user', JSON.stringify(user));
+      }
+      
+      // Set the auth token for future requests
+      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      
+      console.log('Login successful, token stored:', { 
+        hasToken: !!token,
+        hasUser: !!user,
+        tokenLength: token ? token.length : 0 
+      });
+      
+      return {
+        ...response,
+        data: {
+          ...response.data,
+          success: true
+        }
+      };
     }
     
-    if (!response.ok) {
-      const errorMessage = responseData.message || 
-                         responseData.error || 
-                         `HTTP error! status: ${response.status}`;
-      throw new Error(errorMessage);
-    }
-    
-    if (!responseData.token) {
-      throw new Error('No token received in response');
-    }
-    
-    // Store the token and user data
-    const { token, user } = responseData;
-    localStorage.setItem('token', token);
-    localStorage.setItem('user', JSON.stringify(user));
-    
-    // Set default auth header for subsequent requests
-    api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-    
-    console.log('Login successful for user:', user.phoneNumber);
-    return { user, token };
-    
+    throw new Error(response.data?.message || 'Authentication failed');
   } catch (error) {
-    console.error('=== Login Error ===');
-    console.error('Error message:', error.message);
-    console.error('Error stack:', error.stack);
-    console.error('Error name:', error.name);
+    console.error('API: Login error details:', {
+      message: error.message,
+      status: error.response?.status,
+      responseData: error.response?.data,
+      config: {
+        url: error.config?.url,
+        method: error.config?.method,
+        headers: error.config?.headers,
+        data: error.config?.data
+      }
+    });
     
-    // More specific error handling
-    if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
-      throw new Error('Unable to connect to the server. Please check your internet connection.');
-    }
-    
-    // Re-throw with a more user-friendly message if needed
-    if (error.message.includes('401')) {
-      throw new Error('Invalid phone number or password');
-    }
-    
-    throw error;
+    // Format the error to include the server's error message if available
+    const errorMessage = error.response?.data?.message || error.message || 'Login failed';
+    const formattedError = new Error(errorMessage);
+    formattedError.response = error.response;
+    throw formattedError;
   }
 };
 
@@ -506,24 +577,45 @@ const authService = {
    * @returns {Promise<{user: Object, token: string}>} User data and JWT token
    */
   login: async (userData) => {
+    console.log('[Auth] Login attempt started', {
+      timestamp: new Date().toISOString(),
+      hasPhoneNumber: !!userData.phoneNumber,
+      hasEmail: !!userData.email
+    });
+    
     try {
       const requestData = {
         phoneNumber: userData.phoneNumber,
+        email: userData.email,
         password: userData.password
       };
-
-      console.log('API: Sending login request with:', { 
-        ...requestData,
-        password: '[HIDDEN]' // Never log actual password
+      
+      console.log('[Auth] Sending login request to:', api.defaults.baseURL + '/login');
+      console.log('[Auth] Request headers:', {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache'
       });
       
-      console.log('Sending to URL:', '/login');
+      const startTime = Date.now();
       const response = await api.post('/login', requestData, {
         headers: {
           'Content-Type': 'application/json',
-          'Accept': 'application/json'
+          'Accept': 'application/json',
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
         },
-        withCredentials: true // Important for cookies
+        withCredentials: true
+      });
+      
+      const endTime = Date.now();
+      console.log(`[Auth] Login response received in ${endTime - startTime}ms`, {
+        status: response.status,
+        statusText: response.statusText,
+        hasToken: !!response.data?.token,
+        hasUser: !!response.data?.user,
+        timestamp: new Date().toISOString()
       });
       
       console.log('API: Login response status:', response.status);
