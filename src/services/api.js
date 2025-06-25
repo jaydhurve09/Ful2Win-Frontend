@@ -25,13 +25,19 @@ console.log('Environment Configuration:', {
 
 // Create axios instance with base URL
 const api = axios.create({
-  baseURL: ENV.apiBaseUrl,
-  timeout: 10000, // 10 seconds timeout
+  baseURL: ENV.apiUrl, // Using apiUrl which includes /api/users
+  timeout: 30000, // Increased to 30 seconds for production
   headers: {
     'Content-Type': 'application/json',
-    'Accept': 'application/json'
+    'Accept': 'application/json',
+    'Cache-Control': 'no-cache',
+    'Pragma': 'no-cache',
+    'Expires': '0'
   },
-  withCredentials: true, // Important for cookies if using them
+  withCredentials: true,
+  validateStatus: function (status) {
+    return status >= 200 && status < 500; // Resolve only if status code is less than 500
+  }
 });
 
 // Request interceptor to add auth token to requests
@@ -76,35 +82,64 @@ api.interceptors.response.use(
   }
 );
 
-// Register user
-const register = async (userData) => {
-  try {
-    console.log('Registering user with data:', userData);
-    const response = await axios.post(`${API_URL}/register`, userData, {
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
-      withCredentials: true
-    });
-    
-    console.log('Registration response:', response.data);
-    
-    if (response.data && response.data.success) {
-      // Don't log in the user automatically, just return success
-      return {
-        success: true,
-        message: 'Registration successful! Please login.',
-        user: response.data
-      };
-    } else {
-      throw new Error(response.data?.message || 'Registration failed');
+// Register user with retry logic
+const register = async (userData, retries = 2) => {
+  const makeRequest = async (attempt) => {
+    try {
+      console.log(`Registering user (attempt ${attempt + 1}/${retries + 1})`);
+      
+      const response = await api.post('/register', userData, {
+        timeout: 15000, // 15 seconds timeout for registration
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
+      });
+      
+      console.log('Registration response:', response.data);
+      
+      if (response.data && response.data.success) {
+        return {
+          success: true,
+          message: response.data.message || 'Registration successful! Please login.',
+          user: response.data.user
+        };
+      } else {
+        throw new Error(response.data?.message || 'Registration failed');
+      }
+    } catch (error) {
+      console.error(`Registration attempt ${attempt + 1} failed:`, error);
+      
+      // If this was the last attempt, rethrow the error
+      if (attempt >= retries) {
+        let errorMessage = 'Registration failed. Please try again later.';
+        
+        if (error.code === 'ECONNABORTED') {
+          errorMessage = 'Request timed out. Please check your internet connection and try again.';
+        } else if (error.response) {
+          // Server responded with an error status
+          errorMessage = error.response.data?.message || error.message;
+        } else if (error.request) {
+          // Request was made but no response received
+          errorMessage = 'Unable to connect to the server. Please check your internet connection.';
+        }
+        
+        throw new Error(errorMessage);
+      }
+      
+      // Wait before retrying (exponential backoff)
+      const delayMs = 1000 * Math.pow(2, attempt);
+      console.log(`Retrying in ${delayMs}ms...`);
+      await new Promise(resolve => setTimeout(resolve, delayMs));
+      
+      // Recursively retry
+      return makeRequest(attempt + 1);
     }
-  } catch (error) {
-    console.error('Registration error:', error);
-    const errorMessage = error.response?.data?.message || error.message || 'Registration failed';
-    throw new Error(errorMessage);
-  }
+  };
+  
+  return makeRequest(0);
 };
 
 // Test backend connection
@@ -482,8 +517,8 @@ const authService = {
         password: '[HIDDEN]' // Never log actual password
       });
       
-      console.log('Sending to URL:', '/api/users/login');
-      const response = await api.post('/api/users/login', requestData, {
+      console.log('Sending to URL:', '/login');
+      const response = await api.post('/login', requestData, {
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
@@ -565,7 +600,7 @@ const authService = {
       // Make the API call to invalidate the token on the server
       try {
         console.log('AuthService: Making logout API call');
-        const response = await api.post('/api/users/logout');
+        const response = await api.post('/logout');
         console.log('AuthService: Logout successful');
         return response.data;
       } catch (apiError) {
