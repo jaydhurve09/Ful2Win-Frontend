@@ -2,17 +2,17 @@ import axios from 'axios';
 
 const API_URL = 'http://localhost:5001/api/users';
 
-// Create axios instance with default config
+// Create axios instance with base URL
 const api = axios.create({
   baseURL: 'http://localhost:5001/api',
-  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json'
-  }
+  },
+  withCredentials: true, // Important for cookies if using them
 });
 
-// Add request interceptor to include auth token
+// Request interceptor to add auth token to requests
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
@@ -26,92 +26,91 @@ api.interceptors.request.use(
   }
 );
 
-// Add response interceptor to handle 401 Unauthorized
+// Response interceptor to handle 401 Unauthorized responses
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      // Handle unauthorized access (e.g., redirect to login)
-      console.log('Unauthorized access - redirecting to login');
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
+  async (error) => {
+    const originalRequest = error.config;
+    
+    // If error is 401 and we haven't tried to refresh the token yet
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+      
+      try {
+        // Clear auth data
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        
+        // Redirect to login
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
+      } catch (error) {
+        console.error('Error handling 401:', error);
+      }
     }
+    
     return Promise.reject(error);
   }
 );
 
 // Register user
 const register = async (userData) => {
-  const response = await axios.post(`${API_URL}/register`, userData);
-  
-  if (response.data) {
-    localStorage.setItem('user', JSON.stringify(response.data));
+  try {
+    console.log('Registering user with data:', userData);
+    const response = await axios.post(`${API_URL}/register`, userData, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      withCredentials: true
+    });
+    
+    console.log('Registration response:', response.data);
+    
+    if (response.data && response.data.success) {
+      // Don't log in the user automatically, just return success
+      return {
+        success: true,
+        message: 'Registration successful! Please login.',
+        user: response.data
+      };
+    } else {
+      throw new Error(response.data?.message || 'Registration failed');
+    }
+  } catch (error) {
+    console.error('Registration error:', error);
+    const errorMessage = error.response?.data?.message || error.message || 'Registration failed';
+    throw new Error(errorMessage);
   }
-  
-  return response.data;
 };
 
 // Login user
 const login = async (userData) => {
   try {
-    console.log('Attempting login with data:', {
-      phoneNumber: userData.phoneNumber,
-      hasPassword: !!userData.password
-    });
-    
+    console.log('API: Sending login request with:', { phoneNumber: userData.phoneNumber, password: '[HIDDEN]' });
     const response = await api.post('/users/login', userData);
-    console.log('Login API Response:', response.data);
+    console.log('API: Login response:', response.data);
     
-    const responseData = response.data;
-    
-    if (responseData.success && responseData.token) {
-      console.log('Login successful');
+    if (response.data && response.data.token) {
+      // Store the token and user data
+      const { token, user } = response.data;
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
       
-      // Store the token
-      localStorage.setItem('token', responseData.token);
+      // Set default auth header for subsequent requests
+      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       
-      // Fetch complete user profile
-      const userProfile = await getCurrentUserProfile();
-      
-      if (userProfile) {
-        // Store user data in localStorage
-        localStorage.setItem('user', JSON.stringify(userProfile));
-        console.log('User data stored in localStorage:', userProfile);
-        return userProfile;
-      }
-      
-      throw new Error('Failed to fetch user profile after login');
-    } else {
-      throw new Error(responseData.message || 'Login failed. Please check your credentials.');
+      return { user, token };
     }
+    throw new Error('Invalid response format from server');
   } catch (error) {
-    console.error('Login error:', {
+    console.error('API: Login error:', {
       message: error.message,
       response: error.response?.data,
-      status: error.response?.status
+      status: error.response?.status,
     });
-    
-    // Provide more specific error messages
-    let errorMessage = 'Login failed. Please try again.';
-    
-    if (error.response) {
-      // Server responded with a status code outside 2xx
-      if (error.response.status === 401) {
-        errorMessage = 'Invalid phone number or password. Please try again.';
-      } else if (error.response.status === 400) {
-        errorMessage = error.response.data?.message || 'Invalid request. Please check your input.';
-      } else if (error.response.data?.message) {
-        errorMessage = error.response.data.message;
-      }
-    } else if (error.request) {
-      // Request was made but no response received
-      errorMessage = 'No response from server. Please check your connection.';
-    }
-    
-    const loginError = new Error(errorMessage);
-    loginError.response = error.response;
-    throw loginError;
+    throw error;
   }
 };
 
@@ -324,18 +323,185 @@ const getAuthHeader = () => {
 };
 
 const authService = {
-  register: (userData) => api.post('/users/register', userData).then(res => res.data),
-  login: (userData) => api.post('/users/login', userData).then(res => res.data),
-  logout: () => {
+  /**
+   * Login user with phone number and password
+   * @param {Object} userData - User credentials
+   * @returns {Promise<{user: Object, token: string}>} User data and JWT token
+   */
+  login: async (userData) => {
+    try {
+      const requestData = {
+        phoneNumber: userData.phoneNumber,
+        password: userData.password
+      };
+
+      console.log('API: Sending login request with:', { 
+        ...requestData,
+        password: '[HIDDEN]' // Never log actual password
+      });
+      
+      console.log('Sending to URL:', '/users/login');
+      const response = await api.post('/users/login', requestData, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        withCredentials: true // Important for cookies
+      });
+      
+      console.log('API: Login response status:', response.status);
+      console.log('API: Login response headers:', response.headers);
+      console.log('API: Login response data:', response.data);
+      
+      if (response.data && response.data.success) {
+        // Ensure we have both token and user data
+        if (!response.data.token || !response.data.data) {
+          console.error('API: Missing token or user data in response');
+          throw new Error('Incomplete authentication data received');
+        }
+        
+        // Set the auth token for future requests
+        api.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
+        
+        return response;
+      }
+      
+      throw new Error(response.data?.message || 'Authentication failed');
+      
+    } catch (error) {
+      console.error('API: Login error details:', {
+        message: error.message,
+        status: error.response?.status,
+        responseData: error.response?.data,
+        config: {
+          url: error.config?.url,
+          method: error.config?.method,
+          headers: error.config?.headers,
+          data: error.config?.data
+        }
+      });
+      
+      // Format the error to include the server's error message if available
+      const errorMessage = error.response?.data?.message || error.message || 'Login failed';
+      const formattedError = new Error(errorMessage);
+      formattedError.response = error.response;
+      throw formattedError;
+    }
+  },
+
+  /**
+   * Logout user and clear all auth data
+   * @returns {Promise<Object>} Logout response
+   */
+  logout: async function() {
+    try {
+      console.log('AuthService: Starting logout process');
+      
+      // Clear auth data first to ensure it happens even if the API call fails
+      this.clearAuthData();
+      
+      // Make the API call to invalidate the token on the server
+      try {
+        console.log('AuthService: Making logout API call');
+        const response = await api.post('/users/logout');
+        console.log('AuthService: Logout successful');
+        return response.data;
+      } catch (apiError) {
+        console.warn('AuthService: Logout API call failed, but continuing with local cleanup', {
+          error: apiError.message,
+          status: apiError.response?.status
+        });
+        // We still want to resolve the promise since we've cleared local data
+        return { success: true, message: 'Logged out locally (server logout failed)' };
+      }
+    } catch (error) {
+      console.error('AuthService: Unexpected error during logout:', error);
+      // Ensure we still clear auth data even if something unexpected happens
+      this.clearAuthData();
+      // Re-throw the error to be handled by the caller
+      throw error;
+    }
+  },
+  
+  /**
+   * Clear all authentication data from storage and memory
+   */
+  clearAuthData: function() {
+    console.log('AuthService: Clearing authentication data');
+    
+    // Remove token and user data from localStorage
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    return api.post('/users/logout');
+    
+    // Clear sessionStorage as well if used
+    sessionStorage.clear();
+    
+    // Remove token from axios default headers
+    delete api.defaults.headers.common['Authorization'];
+    
+    // Clear any cookies that might be set
+    document.cookie.split(';').forEach(c => {
+      document.cookie = c.trim().split('=')[0] + '=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/';
+    });
+    
+    console.log('AuthService: Authentication data cleared');
   },
-  getCurrentUserProfile,
-  getUserProfile: (userId) => api.get(`/users/profile/${userId}`).then(res => res.data),
-  updateUserProfile: (userId, userData) => api.put(`/users/profile/${userId}`, userData).then(res => res.data),
-  testToken: () => api.get('/users/test-token').then(res => res.data),
-  getAuthHeader
+  
+  /**
+   * Get current user's profile data
+   * @returns {Promise<Object>} User profile data
+   */
+  getCurrentUserProfile: async () => {
+    try {
+      const response = await api.get('/users/me');
+      return response.data;
+    } catch (error) {
+      // If unauthorized, clear auth data
+      if (error.response?.status === 401) {
+        this.clearAuthData();
+      }
+      console.error('Error fetching user profile:', error);
+      throw error;
+    }
+  },
+  
+  /**
+   * Get user profile by ID
+   * @param {string} userId - User ID
+   * @returns {Promise<Object>} User profile data
+   */
+  getUserProfile: async (userId) => {
+    try {
+      const response = await api.get(`/users/profile/${userId}`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching profile for user ${userId}:`, error);
+      throw error;
+    }
+  },
+  
+  /**
+   * Update user profile
+   * @param {string} userId - User ID
+   * @param {Object} userData - Updated user data
+   * @returns {Promise<Object>} Updated user data
+   */
+  updateUserProfile: async (userId, userData) => {
+    try {
+      const response = await api.put(`/users/profile/${userId}`, userData);
+      
+      // If the updated profile is for the current user, update local storage
+      const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+      if (currentUser?._id === userId) {
+        localStorage.setItem('user', JSON.stringify(response.data));
+      }
+      
+      return response.data;
+    } catch (error) {
+      console.error('Error updating user profile:', error);
+      throw error;
+    }
+  }
 };
 
 export default authService;

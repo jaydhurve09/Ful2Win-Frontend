@@ -1,369 +1,227 @@
-import React, { useState, useEffect, useRef } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
-import countries from "i18n-iso-countries";
-import enLocale from "i18n-iso-countries/langs/en.json";
-import Select from "react-select";
-import { FiUser, FiMail, FiLock, FiEye, FiEyeOff, FiCamera } from "react-icons/fi";
-import { FaTrophy, FaGamepad, FaRupeeSign } from "react-icons/fa";
-import { IoMdPerson } from "react-icons/io";
-import Header from "./Header";
-import Navbar from "./Navbar";
-import BackgroundBubbles from "./BackgroundBubbles";
-import authService from "../services/api";
-import "../App.css";
+import React, { useState, useEffect, useRef, useContext } from 'react';
+import { useNavigate, Navigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import { 
+  FiUser, FiMail, FiLock, FiEye, FiEyeOff, FiCamera, 
+  FiCalendar, FiGlobe, FiEdit2, FiSave, FiX 
+} from 'react-icons/fi';
+import { FaTrophy, FaGamepad, FaRupeeSign } from 'react-icons/fa';
+import { useAuth } from '../contexts/AuthContext';
+import Header from './Header';
+import Navbar from './Navbar';
+import BackgroundBubbles from './BackgroundBubbles';
+import '../App.css';
+import countries from 'i18n-iso-countries';
+import enLocale from 'i18n-iso-countries/langs/en.json';
 
+// Initialize countries
 countries.registerLocale(enLocale);
 
 const Account = () => {
-  const [isEditing, setIsEditing] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [errors, setErrors] = useState({});
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [originalData, setOriginalData] = useState(null);
-  const fileInputRef = useRef(null);
-  const location = useLocation();
+  const { user, updateUser, isAuthenticated } = useAuth();
   const navigate = useNavigate();
-
+  
+  // Redirect to login if not authenticated
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  // Form state
   const [formData, setFormData] = useState({
-    fullName: "",
-    phoneNumber: "",
-    email: "",
-    dateOfBirth: "",
-    gender: "",
-    country: "",
-    bio: "",
-    profilePicture: "",
-    balance: 0
+    fullName: '',
+    phoneNumber: '',
+    email: '',
+    dateOfBirth: '',
+    gender: '',
+    country: '',
+    bio: '',
+    profilePicture: '',
+    password: '',
+    confirmPassword: ''
   });
   
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [showPassword, setShowPassword] = useState(false);
+  const [errors, setErrors] = useState({});
   const [countryOptions, setCountryOptions] = useState([]);
-
+  const fileInputRef = useRef(null);
+  const [originalData, setOriginalData] = useState(null);
+  
   // Initialize country list
   useEffect(() => {
     try {
-      const countryList = Object.entries(countries.getNames("en", { select: "official" })).map(
-        ([code, name]) => ({ value: code, label: name })
-      );
+      const countryList = Object.entries(countries.getNames("en", { select: "official" }))
+        .map(([code, name]) => ({
+          value: code,
+          label: name
+        }));
       setCountryOptions(countryList);
     } catch (error) {
       console.error('Error loading country list:', error);
     }
   }, []);
-
-  // Fetch user data
+  
+  // Initialize form with user data
   useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        setIsLoading(true);
-        console.log('Fetching user data...');
-        
-        // Show loading state immediately
-        setFormData(prev => ({ ...prev, isLoading: true }));
-        
-        // Try to get fresh data from the server first
-        try {
-          const userData = await authService.getCurrentUserProfile();
-          console.log('Fetched fresh user data:', userData);
-          updateFormData(userData);
-        } catch (serverError) {
-          console.warn('Failed to fetch fresh data, using cached data if available');
-          // If server fetch fails, try to use cached data
-          const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
-          if (storedUser && storedUser._id) {
-            console.log('Using cached user data:', storedUser);
-            updateFormData(storedUser);
-          } else {
-            throw serverError; // Re-throw if no cached data available
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching user data:', {
-          message: error.message,
-          response: error.response?.data,
-          status: error.response?.status
-        });
-        toast.error('Failed to load profile data. Please refresh the page.');
-      } finally {
-        setIsLoading(false);
-        setFormData(prev => ({ ...prev, isLoading: false }));
-      }
-    };
-    
-    fetchUserData();
-  }, []);
-  
-  // Helper function to update form data
-  const updateFormData = (userData) => {
-    const userProfile = {
-      fullName: userData.fullName || "",
-      phoneNumber: userData.phoneNumber || "",
-      email: userData.email || "",
-      dateOfBirth: userData.dateOfBirth ? formatDate(userData.dateOfBirth) : "",
-      gender: userData.gender || "",
-      country: userData.country || "",
-      bio: userData.bio || "",
-      profilePicture: userData.profilePicture || "",
-      balance: userData.balance || 0
-    };
-    
-    console.log('Updating form data with:', userProfile);
-    setFormData(userProfile);
-    setOriginalData(userProfile);
-  };
-  
-  // Helper function to format date
-  const formatDate = (dateString) => {
-    try {
-      if (!dateString) return "";
-      const date = new Date(dateString);
-      return date.toISOString().split('T')[0];
-    } catch (error) {
-      console.error('Error formatting date:', error);
-      return "";
+    if (user) {
+      const userData = {
+        fullName: user.fullName || '',
+        phoneNumber: user.phoneNumber || '',
+        email: user.email || '',
+        dateOfBirth: user.dateOfBirth ? new Date(user.dateOfBirth).toISOString().split('T')[0] : '',
+        gender: user.gender || '',
+        country: user.country || '',
+        bio: user.bio || '',
+        profilePicture: user.profilePicture || '',
+        password: '',
+        confirmPassword: ''
+      };
+      
+      setFormData(userData);
+      setOriginalData(userData);
+      setIsLoading(false);
+    } else {
+      // Redirect to login if no user is logged in
+      navigate('/login', { state: { from: '/account' } });
     }
-  };
+  }, [user, navigate]);
 
   const handleChange = (e) => {
-    const { name, value, files, type, checked } = e.target;
+    const { name, value, files } = e.target;
     
-    // Handle file inputs
-    if (type === 'file' && files && files[0]) {
-      const file = files[0];
-      
-      // Validate file type
-      if (!file.type.startsWith('image/')) {
-        toast.error('Please upload a valid image file (JPEG, PNG, etc.)');
-        return;
-      }
-      
-      // Check file size (max 2MB)
-      const maxSize = 2 * 1024 * 1024; // 2MB
-      if (file.size > maxSize) {
-        toast.error(`Image size should be less than ${maxSize / (1024 * 1024)}MB`);
-        return;
-      }
-      
-      // Create preview URL and update form data
+    if (name === 'profilePicture' && files && files[0]) {
       const reader = new FileReader();
-      reader.onloadstart = () => {
-        // Show loading state if needed
-      };
-      reader.onload = () => {
+      reader.onloadend = () => {
         setFormData(prev => ({
           ...prev,
-          [name]: reader.result,
-          [`${name}File`]: file // Store the actual file for upload
+          profilePicture: reader.result
         }));
       };
-      reader.onerror = () => {
-        console.error('Error reading file');
-        toast.error('Error reading image file');
-      };
-      reader.readAsDataURL(file);
-    } 
-    // Handle checkbox inputs
-    else if (type === 'checkbox') {
-      setFormData(prev => ({
-        ...prev,
-        [name]: checked
-      }));
-    }
-    // Handle all other inputs
-    else {
+      reader.readAsDataURL(files[0]);
+    } else {
       setFormData(prev => ({
         ...prev,
         [name]: value
       }));
     }
-  };
-
-  const validateForm = () => {
-    const newErrors = {};
-    let hasPasswordField = false;
     
-    // Check if any password field is being modified
-    if (formData.password || confirmPassword) {
-      hasPasswordField = true;
-      
-      // Only validate password if it's being changed
-      if (formData.password) {
-        if (formData.password.length < 6) {
-          newErrors.password = 'Password must be at least 6 characters';
-        }
-        
-        if (formData.password !== confirmPassword) {
-          newErrors.confirmPassword = 'Passwords do not match';
-        }
-      } else {
-        // If confirm password is entered but password is empty
-        if (confirmPassword) {
-          newErrors.password = 'Please enter a new password';
-        }
+    // Clear error when user types
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
+  };
+  
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    // Validate form
+    const validationErrors = {};
+    
+    if (!formData.fullName.trim()) {
+      validationErrors.fullName = 'Full name is required';
+    }
+    
+    if (!formData.phoneNumber.trim()) {
+      validationErrors.phoneNumber = 'Phone number is required';
+    }
+    
+    // Only validate password if it's being changed
+    if (formData.password) {
+      if (formData.password.length < 6) {
+        validationErrors.password = 'Password must be at least 6 characters';
+      } else if (formData.password !== formData.confirmPassword) {
+        validationErrors.confirmPassword = 'Passwords do not match';
       }
     }
     
-    // Email validation
-    if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email address';
-    }
-    
-    // Only update errors if there are actual errors to show
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-    } else {
-      setErrors({});
-    }
-    
-    return newErrors;
-  };
-
-  const handleSubmit = async (e) => {
-    console.log('Save button clicked - handleSubmit called');
-    e.preventDefault();
-    
-    if (isSubmitting) {
-      console.log('Form submission already in progress');
-      return;
-    }
-    
-    console.log('Form submitted, validating...');
-    
-    // Only validate password fields if they are being changed
-    const validationErrors = validateForm();
-    console.log('Validation errors:', validationErrors);
-    
-    // If there are validation errors, don't proceed with submission
     if (Object.keys(validationErrors).length > 0) {
-      console.log('Form validation failed');
-      const errorMessages = Object.values(validationErrors).join('\n');
-      toast.error(errorMessages || 'Please fix the form errors before submitting');
+      setErrors(validationErrors);
       return;
     }
     
-    // If we get here, there are no validation errors
-    console.log('No validation errors, proceeding with form submission');
     setIsSubmitting(true);
     
     try {
-      const userId = localStorage.getItem('userId');
-      if (!userId) {
-        throw new Error('User not authenticated');
-      }
-
-      const toastId = toast.loading('Updating profile...');
+      // Prepare the data to send
+      const userData = { ...formData };
       
-      // Create FormData for the request
-      const formDataToSend = new FormData();
-      
-      // Add all form fields to FormData
-      Object.entries(formData).forEach(([key, value]) => {
-        // Skip file objects and undefined values
-        if (value === undefined || value === null || value === '') return;
-        
-        // Handle file uploads
-        if (key.endsWith('File') && value instanceof File) {
-          // For file inputs, use the field name without 'File' suffix
-          const fieldName = key.replace(/File$/, '');
-          formDataToSend.append(fieldName, value);
-        } 
-        // Handle date fields - format them as ISO string
-        else if (key === 'dateOfBirth' && value) {
-          try {
-            const date = new Date(value);
-            if (!isNaN(date.getTime())) {
-              formDataToSend.append(key, date.toISOString());
-            }
-          } catch (dateError) {
-            console.error('Error formatting date:', dateError);
-          }
-        }
-        // Handle regular form fields
-        else if (typeof value !== 'object') {
-          formDataToSend.append(key, value);
-        }
-      });
-      
-      // Log FormData entries for debugging
-      console.log('FormData entries before sending:');
-      for (let [key, value] of formDataToSend.entries()) {
-        console.log(`  ${key}:`, value);
+      // Don't send password if it's not being changed
+      if (!userData.password) {
+        delete userData.password;
+        delete userData.confirmPassword;
       }
       
-      console.log('Making API call to update profile...');
-      console.log('User ID:', userId);
-      console.log('Is FormData:', true);
+      // Update user profile
+      await updateUser(userData);
       
-      // Make the API call
-      const response = await authService.updateUserProfile(userId, formDataToSend, true);
+      // Exit edit mode and show success message
+      setIsEditing(false);
+      toast.success('Profile updated successfully!');
       
-      // Update local state with the response
-      if (response && response.user) {
-        // If the backend returns the updated user, update our local state
-        const updatedUser = response.user;
-        updateFormData(updatedUser);
-        setOriginalData(updatedUser);
-        
-        // Update localStorage with the latest user data
-        const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
-        const newUserData = {
-          ...storedUser,
-          ...updatedUser
-        };
-        
-        // Preserve profile picture if it wasn't updated
-        if (!updatedUser.profilePicture && storedUser.profilePicture) {
-          newUserData.profilePicture = storedUser.profilePicture;
-        }
-        
-        localStorage.setItem('user', JSON.stringify(newUserData));
-        
-        // Show success message
-        toast.success('Profile updated successfully!', {
-          position: "top-right",
-          autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true
-        });
-        
-        // Exit edit mode and reset submission state
-        setIsEditing(false);
-        console.log('Profile update successful');
-      } else {
-        throw new Error('Invalid response from server');
-      }
     } catch (error) {
-      console.error('Error updating profile:', {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
-        stack: error.stack
-      });
-      
-      // Show error message
-      const errorMessage = error.response?.data?.message || 
-                          error.message || 
-                          'Failed to update profile. Please try again.';
-      
-      toast.error(errorMessage, {
-        position: "top-right",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true
-      });
-      
-      // Re-throw the error to be caught by error boundaries if needed
-      throw error;
+      console.error('Error updating profile:', error);
+      toast.error(error.message || 'Failed to update profile. Please try again.');
     } finally {
-      // Always reset the submitting state, whether successful or not
       setIsSubmitting(false);
     }
+  };
+  
+  const toggleEditMode = () => {
+    setIsEditing(!isEditing);
+    // Reset form to original values when canceling edit
+    if (isEditing && user) {
+      setFormData(prev => ({
+        ...prev,
+        fullName: user.fullName || '',
+        phoneNumber: user.phoneNumber || '',
+        email: user.email || '',
+        dateOfBirth: user.dateOfBirth ? new Date(user.dateOfBirth).toISOString().split('T')[0] : '',
+        gender: user.gender || '',
+        country: user.country || '',
+        bio: user.bio || '',
+        profilePicture: user.profilePicture || '',
+        password: '',
+        confirmPassword: ''
+      }));
+      setErrors({});
+    }
+  };
+  
+  if (!user) {
+    return <div className="flex items-center justify-center h-screen">Loading...</div>;
+  }
+
+
+
+  // Handle file upload
+  const handleFileUpload = (file) => {
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please upload a valid image file (JPEG, PNG, etc.)');
+      return null;
+    }
+    
+    // Check file size (max 2MB)
+    const maxSize = 2 * 1024 * 1024; // 2MB
+    if (file.size > maxSize) {
+      toast.error(`Image size should be less than ${maxSize / (1024 * 1024)}MB`);
+      return null;
+    }
+    
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => resolve(e.target.result);
+      reader.onerror = () => {
+        toast.error('Error reading file');
+        resolve(null);
+      };
+      reader.readAsDataURL(file);
+    });
   };
 
   const toggleEdit = (e) => {

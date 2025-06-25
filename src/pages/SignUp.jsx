@@ -55,25 +55,35 @@ const Signup = () => {
 
     try {
       setIsLoading(true);
-      const { confirmPassword, ...userData } = formData;
       
-      // Try using the authService first, fall back to direct axios if needed
-      try {
-        await authService.register(userData);
-        toast.success('Registration successful! Please login.');
+      // Prepare user data for the backend
+      const userData = {
+        fullName: formData.fullName,
+        phoneNumber: formData.phoneNumber,
+        password: formData.password
+      };
+      
+      console.log('Sending registration request with data:', userData);
+      
+      // Use authService for registration
+      const result = await authService.register(userData);
+      
+      if (result && result.success) {
+        console.log('Registration successful:', result);
+        toast.success(result.message || 'Registration successful! Please login.');
+        // Clear form
+        setFormData({
+          fullName: '',
+          name: '',
+          phoneNumber: '',
+          password: '',
+          confirmPassword: '',
+          agree: false
+        });
+        // Redirect to login page
         navigate('/login');
-      } catch (error) {
-        // Fallback to direct axios if authService fails
-        if (import.meta.env.VITE_BASE_URL) {
-          const response = await axios.post(
-            `${import.meta.env.VITE_BASE_URL}/user/register`, 
-            userData
-          );
-          toast.success('Registration successful! Please login.');
-          navigate('/login');
-        } else {
-          throw error;
-        }
+      } else {
+        throw new Error(result?.message || 'Registration failed');
       }
     } catch (error) {
       console.error('Signup failed:', error);

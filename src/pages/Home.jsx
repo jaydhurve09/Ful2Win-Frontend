@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from 'react';
+import { Navigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import Header from '../components/Header';
 import TrendingGames from '../components/TrendingGames';
 import MultiplayerGames from '../components/MultiplayerGames';
@@ -11,7 +13,13 @@ import BackgroundCircles from '../components/BackgroundCircles';
 
 
 const Home = () => {
+  const { isAuthenticated } = useAuth();
   const [showSpinWheel, setShowSpinWheel] = useState(false);
+  
+  // Redirect to login if not authenticated
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
 
   useEffect(() => {
     // Check session storage to show spin only once after login

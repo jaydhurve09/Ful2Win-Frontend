@@ -1,31 +1,73 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect, useContext } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import logo from '../assets/logo.png';
-import axios from 'axios';
+import { useAuth } from '../contexts/AuthContext';
 
 const Login = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
   const [agree, setAgree] = useState(false);
-  const [userData, setUserData] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { login, isAuthenticated } = useAuth();
+  
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      const from = location.state?.from?.pathname || '/';
+      navigate(from, { replace: true });
+    }
+  }, [isAuthenticated, navigate, location.state]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    
     if (!agree) {
-      alert('Please agree to the terms and privacy policy');
+      toast.error('Please agree to the terms and privacy policy');
       return;
     }
     
-    const userData = { phoneNumber, password };
-
+    if (!phoneNumber || !password) {
+      toast.error('Please enter both phone number and password');
+      return;
+    }
+    
     try {
-      const response = await axios.post(`${import.meta.env.VITE_BASE_URL}/user/login`, userData);
-      setUserData(response.data);
-      console.log('Login successful:', response.data);
-      localStorage.setItem('token', response.data.token);
-      //console.log(response.data.token);
+      setIsLoading(true);
+      
+      console.log('=== Login Debug ===');
+      console.log('1. Attempting login with:', { phoneNumber });
+      const userData = { phoneNumber, password };
+      
+      console.log('2. Calling login function...');
+      const result = await login(userData);
+      console.log('3. Login result:', result);
+      
+      if (result.success) {
+        console.log('4. Login successful, checking user data...');
+        toast.success('Login successful!');
+        
+        if (result.user) {
+          console.log('5. User data received:', result.user);
+          console.log('6. Location state:', location.state);
+          
+          // The useEffect hook will handle the redirection when isAuthenticated changes
+          console.log('7. Login successful, isAuthenticated should update');
+        } else {
+          console.error('9. Login successful but no user data received');
+          throw new Error('Login successful but unable to load user data');
+        }
+      } else {
+        throw new Error(result.message || 'Login failed');
+      }
     } catch (error) {
       console.error('Login failed:', error);
+      toast.error(error.message || 'Login failed. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -47,12 +89,12 @@ const Login = () => {
         <form onSubmit={handleLogin}>
           {/* Phone Number */}
           <div className="mb-4">
-            <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-1">
               Phone Number
             </label>
             <input
-              id="email"
-              name="Email"
+              id="phoneNumber"
+              name="phoneNumber"
               type="tel"
               autoComplete="tel"
               value={phoneNumber}
@@ -100,9 +142,18 @@ const Login = () => {
 
           <button
             type="submit"
-            className="w-full bg-blue-700 hover:bg-blue-800 text-white font-semibold py-2 rounded-md transition duration-200"
+            disabled={isLoading}
+            className={`w-full ${isLoading ? 'bg-blue-400' : 'bg-blue-600 hover:bg-blue-700'} text-white py-3 px-4 rounded-lg font-medium transition-colors flex justify-center items-center`}
           >
-            LOGIN
+            {isLoading ? (
+              <>
+                <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Logging in...
+              </>
+            ) : 'Login'}
           </button>
         </form>
 
