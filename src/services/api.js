@@ -502,10 +502,30 @@ const authService = {
           throw new Error('Incomplete authentication data received');
         }
         
-        // Set the auth token for future requests
-        api.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
+        const { token, data: user } = response.data;
         
-        return response;
+        // Store token and user data in localStorage
+        localStorage.setItem('token', token);
+        if (user) {
+          localStorage.setItem('user', JSON.stringify(user));
+        }
+        
+        // Set the auth token for future requests
+        api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        
+        console.log('Login successful, token stored:', { 
+          hasToken: !!token,
+          hasUser: !!user,
+          tokenLength: token ? token.length : 0 
+        });
+        
+        return {
+          ...response,
+          data: {
+            ...response.data,
+            success: true
+          }
+        };
       }
       
       throw new Error(response.data?.message || 'Authentication failed');
@@ -625,23 +645,103 @@ const authService = {
   /**
    * Update user profile
    * @param {string} userId - User ID
-   * @param {Object} userData - Updated user data
+   * @param {Object|FormData} userData - Updated user data (can be FormData for file uploads)
+   * @param {boolean} [isFormData=false] - Whether the data is FormData (for file uploads)
    * @returns {Promise<Object>} Updated user data
    */
-  updateUserProfile: async (userId, userData) => {
+  updateUserProfile: async (userId, userData, isFormData = false) => {
     try {
-      const response = await api.put(`/users/profile/${userId}`, userData);
+      // Get token from localStorage
+      const token = localStorage.getItem('token');
+      console.log('Token from localStorage:', token ? 'Token found' : 'No token found');
       
-      // If the updated profile is for the current user, update local storage
-      const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-      if (currentUser?._id === userId) {
-        localStorage.setItem('user', JSON.stringify(response.data));
+      if (!token) {
+        throw new Error('No authentication token found. Please log in again.');
+      }
+
+      // Set up request config
+      const config = {
+        headers: {
+          'Accept': 'application/json',
+        },
+        withCredentials: true,
+      };
+
+      // Add Authorization header
+      if (token) {
+        config.headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      // Only set Content-Type for non-FormData requests
+      if (!isFormData) {
+        config.headers['Content-Type'] = 'application/json';
+      } else {
+        // For FormData, let the browser set the Content-Type with boundary
+        delete config.headers['Content-Type'];
+      }
+
+      const apiUrl = `/api/users/profile/${userId}`;
+      console.log('Sending request with config:', {
+        url: apiUrl,
+        method: 'PUT',
+        headers: config.headers,
+        hasData: !!userData,
+        isFormData: isFormData
+      });
+
+      // Make the API request
+      const response = await api.put(apiUrl, userData, config);
+      
+      // If the response is successful and contains data
+      if (response.data) {
+        // Update local storage if this is the current user
+        const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+        if (currentUser?._id === userId) {
+          localStorage.setItem('user', JSON.stringify(response.data));
+        }
+        
+        return response.data;
       }
       
-      return response.data;
+      throw new Error('Invalid response from server');
+      
     } catch (error) {
-      console.error('Error updating user profile:', error);
-      throw error;
+      console.error('Error updating user profile:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+      });
+      
+      // Handle specific error cases
+      if (error.response?.status === 401) {
+        // Clear auth data and redirect to login
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+        throw new Error('Your session has expired. Please log in again.');
+      }
+      
+      // Handle validation errors
+      if (error.response?.data?.errors) {
+        const errorMessages = Object.values(error.response.data.errors)
+          .map(err => typeof err === 'string' ? err : err.message)
+          .filter(Boolean)
+          .join('\n');
+        throw new Error(errorMessages || 'Validation error occurred');
+      }
+      
+      // Handle other API errors
+      if (error.response?.data?.message) {
+        throw new Error(error.response.data.message);
+      }
+      
+      // Handle network errors
+      if (error.message === 'Network Error') {
+        throw new Error('Unable to connect to the server. Please check your internet connection.');
+      }
+      
+      // Default error
+      throw error.message || 'Failed to update profile. Please try again.';
     }
   }
 };

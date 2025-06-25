@@ -7,10 +7,12 @@ import {
 } from 'react-icons/fi';
 import { FaTrophy, FaGamepad, FaRupeeSign } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
+import authService from '../services/api';
 import Header from './Header';
 import Navbar from './Navbar';
 import BackgroundBubbles from './BackgroundBubbles';
 import '../App.css';
+import Select from 'react-select';
 import countries from 'i18n-iso-countries';
 import enLocale from 'i18n-iso-countries/langs/en.json';
 import defaultProfile from '../assets/default-profile.jpg';
@@ -19,7 +21,7 @@ import defaultProfile from '../assets/default-profile.jpg';
 countries.registerLocale(enLocale);
 
 const Account = () => {
-  const { user, updateUser, isAuthenticated } = useAuth();
+  const { user, updateUser, isAuthenticated, checkAuthState } = useAuth();
   const navigate = useNavigate();
   
   // Redirect to login if not authenticated
@@ -89,18 +91,17 @@ const Account = () => {
     }
   }, [user, navigate]);
 
-  const handleChange = (e) => {
+  const handleChange = async (e) => {
     const { name, value, files } = e.target;
     
     if (name === 'profilePicture' && files && files[0]) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData(prev => ({
-          ...prev,
-          profilePicture: reader.result
-        }));
-      };
-      reader.readAsDataURL(files[0]);
+      const file = files[0];
+      // Set the file object to state for later upload
+      setFormData(prev => ({
+        ...prev,
+        profilePictureFile: file,
+        profilePicture: URL.createObjectURL(file) // Create a preview URL
+      }));
     } else {
       setFormData(prev => ({
         ...prev,
@@ -148,21 +149,42 @@ const Account = () => {
     setIsSubmitting(true);
     
     try {
-      // Prepare the data to send
-      const userData = { ...formData };
+      // Create FormData for the request
+      const formDataToSend = new FormData();
       
-      // Don't send password if it's not being changed
-      if (!userData.password) {
-        delete userData.password;
-        delete userData.confirmPassword;
+      // Add all form data to FormData
+      Object.keys(formData).forEach(key => {
+        // Skip file object and empty passwords
+        if (key === 'profilePictureFile' || 
+            (key === 'password' && !formData[key]) ||
+            key === 'confirmPassword') {
+          return;
+        }
+        
+        // Handle file upload
+        if (key === 'profilePicture' && formData.profilePictureFile) {
+          formDataToSend.append('profilePicture', formData.profilePictureFile);
+        } else if (formData[key] !== null && formData[key] !== undefined) {
+          formDataToSend.append(key, formData[key]);
+        }
+      });
+      
+      // Update user profile using the API service
+      const response = await authService.updateUserProfile(user._id, formDataToSend, true);
+      
+      if (response.success) {
+        // Update local user data
+        await updateUser(response.data);
+        
+        // Exit edit mode and show success message
+        setIsEditing(false);
+        toast.success('Profile updated successfully!');
+        
+        // Refresh user data
+        await checkAuthState();
+      } else {
+        throw new Error(response.message || 'Failed to update profile');
       }
-      
-      // Update user profile
-      await updateUser(userData);
-      
-      // Exit edit mode and show success message
-      setIsEditing(false);
-      toast.success('Profile updated successfully!');
       
     } catch (error) {
       console.error('Error updating profile:', error);

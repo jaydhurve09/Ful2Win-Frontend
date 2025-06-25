@@ -1,5 +1,5 @@
-// SpinWheelScreen.jsx
 import React, { useState } from 'react';
+import RewardPopup from './RewardPopup'; // adjust path as needed
 
 const COLORS = [
   '#800080', '#FF1493', '#FFB6C1', '#FF0000',
@@ -9,7 +9,7 @@ const COLORS = [
 
 const SEGMENT_COUNT = COLORS.length;
 const SEGMENT_DEGREE = 360 / SEGMENT_COUNT;
-const LABELS = Array.from({ length: SEGMENT_COUNT }, (_, i) => `${(i + 1) * 50}`); // 50, 100, ..., 600
+const LABELS = Array.from({ length: SEGMENT_COUNT }, (_, i) => `${(i + 1) * 50}`);
 
 function getConicGradient() {
   let currentDeg = 0;
@@ -135,32 +135,7 @@ const SpinWheelScreen = ({ onClose, isVisible, initialSpins = 5 }) => {
       </div>
 
       {/* Reward Popup */}
-      {showReward && (
-        <div
-          className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
-          onClick={handleCloseReward}
-        >
-          <div
-            className="bg-white rounded-2xl w-full max-w-xs shadow-xl overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="bg-gradient-to-r from-purple-600 to-blue-600 py-3 px-4">
-              <h3 className="text-white font-bold text-lg text-center">🎉 Reward Unlocked!</h3>
-            </div>
-            <div className="p-6 text-center">
-              <p className="text-gray-700 mb-4 text-base">Congratulations! You have won:</p>
-              <p className="text-2xl font-bold text-green-600 mb-6">{currentReward}</p>
-              <button
-                onClick={handleCloseReward}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition-colors"
-                autoFocus
-              >
-                OK
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <RewardPopup reward={currentReward} onClose={handleCloseReward} />
     </div>
   );
 };

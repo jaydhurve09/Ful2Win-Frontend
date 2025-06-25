@@ -29,6 +29,8 @@ import Login from './pages/Login';
 import SignUp from './pages/SignUp';
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import ColorSmash from './components/ColorSmash';
+import ComingSoon from './components/ComingSoon';
 
 function App() {
   return (
@@ -62,11 +64,13 @@ function App() {
               <Route path="/notifications" element={<Notification />} />
               <Route path="/refer" element={<ReferralPage />} />
               <Route path="/flappyball" element={<FlappyBall />} />
+              <Route path="/colorsmash" element={<ColorSmash />} />
               <Route path="/chat" element={<ChatScreen />} />
               <Route path="/kyc" element={<KYCStatusPage />} />
               <Route path="/followers" element={<FollowerPage />} />
               <Route path="/leaderboard" element={<LeaderboardPage />} />
               <Route path="/tournamenthistory" element={<TournamentHistory />} />
+              <Route path="/comingsoon" element={<ComingSoon />} />
             </Route>
             
             {/* 404 - Not Found */}

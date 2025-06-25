@@ -5,16 +5,16 @@ const scoreData = {
   userId: "12345", // Replace with actual user ID
   score: 0, // This will be updated dynamically
   roomId: "67890", // Replace with actual room ID
-  gameName: "Flappy Bird", // Replace with actual game name
+  gameName: "Color Smash", // Replace with actual game name
 };
 
-const FlappyBall = () => {
+const ColorSmash = () => {
   const [gameOn, setGameOn] = React.useState(false);
 
   useEffect(() => {
     const handleMessage = (event) => {
       // ✅ Check origin to prevent security issues
-      // if (event.origin !== "http://localhost:4000") return;
+     // if (event.origin !== "http://localhost:4000") return;
 
       const { type, score } = event.data;
 
@@ -54,7 +54,7 @@ const FlappyBall = () => {
       <div>
         <h2>Play Game</h2>
         <iframe
-          src="https://bird-lac-omega.vercel.app/"
+          src="https://colorsmash.vercel.app/"
           title="Game"
           width="100%"
           height="100%"
@@ -75,4 +75,4 @@ const FlappyBall = () => {
   );
 };
 
-export default FlappyBall;
+export default  ColorSmash;

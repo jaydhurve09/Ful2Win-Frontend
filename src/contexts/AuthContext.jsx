@@ -200,15 +200,33 @@ export const AuthProvider = ({ children }) => {
   }, [updateAuthState, navigate]);
 
   // Update user data
-  const updateUser = useCallback((userData) => {
-    setUser(prev => {
-      const updatedUser = { ...prev, ...userData };
-      if (isAuthenticated) {
-        localStorage.setItem('user', JSON.stringify(updatedUser));
+  const updateUser = useCallback(async (userData) => {
+    try {
+      // If we have a complete user object (from backend), use it directly
+      if (userData && userData._id) {
+        const updatedUser = { ...userData };
+        if (isAuthenticated) {
+          localStorage.setItem('user', JSON.stringify(updatedUser));
+        }
+        setUser(updatedUser);
+        return updatedUser;
       }
-      return updatedUser;
-    });
-  }, [isAuthenticated]);
+      
+      // For partial updates, merge with existing user data
+      setUser(prev => {
+        const updatedUser = { ...prev, ...userData };
+        if (isAuthenticated) {
+          localStorage.setItem('user', JSON.stringify(updatedUser));
+        }
+        return updatedUser;
+      });
+      
+      return user;
+    } catch (error) {
+      console.error('Error updating user data:', error);
+      throw error;
+    }
+  }, [isAuthenticated, user]);
 
   // Check auth state on mount
   useEffect(() => {
