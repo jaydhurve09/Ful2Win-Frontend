@@ -1,11 +1,13 @@
 import axios from 'axios';
 
-// Use environment variable if available, otherwise use production URL
-const API_URL = import.meta.env.VITE_API_URL || 'https://ful2win-backend.onrender.com/api/users';
+// Get base URL from environment variables
+const MODE = import.meta.env.MODE;
+const BASE_URL = MODE === 'development' ? import.meta.env.VITE_API_BASE_URL : import.meta.env.API_BASE_URL;
+const API_URL = MODE === 'development' ? import.meta.env.VITE_API_URL : import.meta.env.API_URL;
 
 // Create axios instance with base URL
 const api = axios.create({
-  baseURL: 'http://localhost:5001/api',
+  baseURL: BASE_URL + '/api',
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json'
