@@ -239,7 +239,7 @@ const logout = async () => {
 const getCurrentUserProfile = async () => {
   try {
     console.log('Fetching current user profile');
-    const response = await api.get('/users/me');
+    const response = await api.get('/me');
     
     console.log('Current user profile response:', response.data);
     
@@ -615,7 +615,7 @@ const authService = {
    */
   getCurrentUserProfile: async () => {
     try {
-      const response = await api.get('/users/me');
+      const response = await api.get('/api/users/me');
       return response.data;
     } catch (error) {
       // If unauthorized, clear auth data
@@ -663,24 +663,29 @@ const authService = {
       const config = {
         headers: {
           'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
         withCredentials: true,
       };
 
-      // Add Authorization header
-      if (token) {
-        config.headers['Authorization'] = `Bearer ${token}`;
-      }
-
-      // Only set Content-Type for non-FormData requests
+      // For FormData, let the browser set the Content-Type with boundary
       if (!isFormData) {
         config.headers['Content-Type'] = 'application/json';
       } else {
-        // For FormData, let the browser set the Content-Type with boundary
+        // Remove Content-Type header to let the browser set it with the correct boundary
         delete config.headers['Content-Type'];
       }
 
       const apiUrl = `/api/users/profile/${userId}`;
+      
+      // Log the FormData contents if it's a FormData object
+      if (isFormData && userData instanceof FormData) {
+        console.log('FormData contents:');
+        for (let pair of userData.entries()) {
+          console.log(pair[0] + ': ', pair[1]);
+        }
+      }
+
       console.log('Sending request with config:', {
         url: apiUrl,
         method: 'PUT',
@@ -689,8 +694,17 @@ const authService = {
         isFormData: isFormData
       });
 
-      // Make the API request
-      const response = await api.put(apiUrl, userData, config);
+      // Make the API request with the correct content type
+      const response = await axios({
+        method: 'put',
+        url: `${ENV.apiBaseUrl}${apiUrl}`,
+        data: userData,
+        headers: {
+          ...config.headers,
+          'Authorization': `Bearer ${token}`
+        },
+        withCredentials: true
+      });
       
       // If the response is successful and contains data
       if (response.data) {

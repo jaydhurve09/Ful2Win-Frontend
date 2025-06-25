@@ -92,22 +92,52 @@ const Account = () => {
   }, [user, navigate]);
 
   const handleChange = async (e) => {
-    const { name, value, files } = e.target;
-    
-    if (name === 'profilePicture' && files && files[0]) {
-      const file = files[0];
-      // Set the file object to state for later upload
-      setFormData(prev => ({
-        ...prev,
-        profilePictureFile: file,
-        profilePicture: URL.createObjectURL(file) // Create a preview URL
-      }));
-    } else {
+    // Handle country selection from react-select
+    if (e && e.target === undefined && e.value) {
+      const { value, name } = e;
+      console.log('Country selected:', { name, value });
+      
       setFormData(prev => ({
         ...prev,
         [name]: value
       }));
+      return;
     }
+    
+    const { name, value, files, type } = e.target;
+    
+    console.log('Input changed:', { name, type, value, files: files ? Array.from(files) : 'no files' });
+    
+    if (name === 'profilePicture' && files && files[0]) {
+      const file = files[0];
+      console.log('File selected:', { 
+        name: file.name, 
+        type: file.type, 
+        size: file.size,
+        isFile: file instanceof File
+      });
+      
+      // Create a preview URL for the image
+      const previewUrl = URL.createObjectURL(file);
+      
+      // Update form data with both the file and preview URL
+      setFormData(prev => {
+        const newData = {
+          ...prev,
+          profilePicture: previewUrl,  // Set preview URL for display
+          profilePictureFile: file     // Store the actual file for upload
+        };
+        console.log('Updated formData with file:', newData);
+        return newData;
+      });
+      return;
+    }
+    
+    // For other fields, just update the value
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
     
     // Clear error when user types
     if (errors[name]) {
@@ -152,22 +182,28 @@ const Account = () => {
       // Create FormData for the request
       const formDataToSend = new FormData();
       
-      // Add all form data to FormData
-      Object.keys(formData).forEach(key => {
-        // Skip file object and empty passwords
-        if (key === 'profilePictureFile' || 
-            (key === 'password' && !formData[key]) ||
-            key === 'confirmPassword') {
-          return;
-        }
-        
-        // Handle file upload
-        if (key === 'profilePicture' && formData.profilePictureFile) {
-          formDataToSend.append('profilePicture', formData.profilePictureFile);
-        } else if (formData[key] !== null && formData[key] !== undefined) {
-          formDataToSend.append(key, formData[key]);
+      // Add profile picture file if it exists
+      if (formData.profilePictureFile) {
+        // Ensure we're appending the actual File object
+        formDataToSend.append('profilePicture', formData.profilePictureFile);
+      } else if (formData.profilePicture && !formData.profilePicture.startsWith('blob:')) {
+        // If it's not a blob URL, it's a regular URL that should be sent as a string
+        formDataToSend.append('profilePicture', formData.profilePicture);
+      }
+      
+      // Add other form fields
+      const formFields = ['fullName', 'email', 'phoneNumber', 'bio', 'dateOfBirth', 'gender', 'country', 'password'];
+      formFields.forEach(field => {
+        if (formData[field] !== undefined && formData[field] !== '') {
+          formDataToSend.append(field, formData[field]);
         }
       });
+      
+      // Log the form data being sent
+      console.log('Form data entries:');
+      for (let [key, val] of formDataToSend.entries()) {
+        console.log(key, val instanceof File ? `File: ${val.name} (${val.size} bytes, ${val.type})` : val);
+      }
       
       // Update user profile using the API service
       const response = await authService.updateUserProfile(user._id, formDataToSend, true);
@@ -183,12 +219,11 @@ const Account = () => {
         // Refresh user data
         await checkAuthState();
       } else {
-        throw new Error(response.message || 'Failed to update profile');
+        toast.error(response.message || 'Failed to update profile');
       }
-      
     } catch (error) {
       console.error('Error updating profile:', error);
-      toast.error(error.message || 'Failed to update profile. Please try again.');
+      toast.error(error.message || 'An error occurred while updating your profile');
     } finally {
       setIsSubmitting(false);
     }
@@ -316,6 +351,7 @@ const Account = () => {
                             accept="image/*"
                             onChange={handleChange}
                             className="hidden"
+                            ref={fileInputRef}
                           />
                         </label>
                       </div>
@@ -425,14 +461,13 @@ const Account = () => {
                     <Select
                       options={countryOptions}
                       value={countryOptions.find(option => option.value === formData.country) || null}
-                      onChange={(selected) =>
-                        handleChange({
-                          target: {
-                            name: 'country',
-                            value: selected ? selected.value : ''
-                          }
-                        })
-                      }
+                      onChange={(selected) => {
+                        console.log('Country selected:', selected);
+                        setFormData(prev => ({
+                          ...prev,
+                          country: selected ? selected.value : ''
+                        }));
+                      }}
                       className="react-select-container"
                       classNamePrefix="react-select"
                       isClearable
