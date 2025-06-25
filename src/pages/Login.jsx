@@ -21,6 +21,8 @@ const Login = () => {
       const response = await axios.post(`${import.meta.env.VITE_BASE_URL}/user/login`, userData);
       setUserData(response.data);
       console.log('Login successful:', response.data);
+      localStorage.setItem('token', response.data.token);
+      //console.log(response.data.token);
     } catch (error) {
       console.error('Login failed:', error);
     }

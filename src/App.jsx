@@ -53,14 +53,14 @@ function App() {
              <Route path="/challenges" element={<Challenges />} />
              <Route path="/notifications" element={<Notification />} />
              <Route path="/refer" element={<ReferralPage />} />
-             <Route path="/chat" element={<ChatScreen />} />
-             <Route path="/kyc" element={<KYCStatusPage />} />
-             <Route path="/account" element={<Account />} />
-             <Route path="/followers" element={<FollowerPage />} />
-            <Route path="/supports" element={<SupportCenter/>} />
-            <Route path="/leaderboard" element={<LeaderboardPage/>} />
-            <Route path="/tournamenthistory" element={<TournamentHistory/>} />
-  
+             <Route path="/chat" element={<ChatScreen />} />
+             <Route path="/kyc" element={<KYCStatusPage />} />
+             <Route path="/account" element={<Account />} />
+             <Route path="/followers" element={<FollowerPage />} />
+            <Route path="/supports" element={<SupportCenter />} />
+            <Route path="/leaderboard" element={<LeaderboardPage />} />
+            <Route path="/tournamenthistory" element={<TournamentHistory />} />
+
             <Route path="/flappyball" element={<FlappyBall />} />
             {/* Add more routes as needed */}
             
