@@ -10,13 +10,15 @@ import {
   FiMail,
   FiHeadphones,
   FiHelpCircle,
-
 } from "react-icons/fi";
 import { FaTrophy, FaGamepad, FaRupeeSign } from "react-icons/fa";
 import { IoMdPerson } from "react-icons/io";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import BackgroundBubbles from "../components/BackgroundBubbles";
+import Account from "../components/Account";
+import authService from "../services/api";
+import { toast } from "react-toastify";
 
 const ProfileScreen = () => {
   const navigate = useNavigate();
@@ -24,17 +26,28 @@ const ProfileScreen = () => {
 
   const [activeSection, setActiveSection] = useState("profile");
   const [activeProfileAction, setActiveProfileAction] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
+  const { userId } = useParams();
+
+  // Get current user from localStorage
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (user) {
+      setCurrentUser(user);
+    }
+  }, []);
 
   useEffect(() => {
     const path = location.pathname;
     if (path.includes("wallet")) setActiveSection("wallet");
     else if (path.includes("tournamenthistory")) setActiveSection("tournament");
     else if (path.includes("followers")) setActiveSection("followers");
+    else if (path.includes("account")) setActiveSection("account");
     else setActiveSection("profile");
   }, [location.pathname]);
 
   const navItems = [
-    { id: "profile", label: "Account", icon: <FiUser />, path: "/account" },
+    { id: "account", label: "Account", icon: <FiUser />, path: "/account" },
     { id: "tournament", label: "Tournament Log", icon: <FaTrophy />, path: "/tournamenthistory" },
     { id: "followers", label: "Followers", icon: <FiUsers />, path: "/followers" },
     { id: "wallet", label: "Wallet", icon: <FaRupeeSign />, path: "/wallet" },
@@ -81,6 +94,17 @@ const ProfileScreen = () => {
     },
   ];
 
+  const handleLogout = async () => {
+    try {
+      await authService.logout();
+      toast.success("Logged out successfully");
+      navigate("/login");
+    } catch (error) {
+      console.error("Logout error:", error);
+      toast.error("Failed to log out. Please try again.");
+    }
+  };
+
   const handleProfileAction = (action) => {
     setActiveProfileAction(action);
     switch (action) {
@@ -101,8 +125,7 @@ const ProfileScreen = () => {
         break;
       case "logout":
         if (window.confirm("Are you sure you want to log out?")) {
-          alert("Logging out...");
-          // Add your logout logic here
+          handleLogout();
         }
         break;
       default:
@@ -112,7 +135,7 @@ const ProfileScreen = () => {
 
   return (
     <div
-      className="min-h-screen w-full text-white overflow-x-hidden relative px-4"
+      className="min-h-screen w-full text-white overflow-x-hidden relative px-4 py-8"
       style={{
         background:
           "linear-gradient(to bottom, #0A2472 0%, #0D47A1 45%, #1565C0 100%)",
@@ -120,9 +143,9 @@ const ProfileScreen = () => {
     >
       <BackgroundBubbles />
 
-      <div className="relative z-10 pt-20 pb-32 max-w-2xl mx-auto">
+      <div className="relative z-10 py-4 max-w-2xl mx-auto px-4">
         {/* Profile Picture */}
-        <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-yellow-300 flex items-center justify-center overflow-hidden">
+        <div className="w-20 h-20 mx-auto mt-4 mb-1 rounded-full bg-yellow-300 flex items-center justify-center overflow-hidden">
           <img
             src="https://cdn-icons-png.flaticon.com/512/3069/3069172.png"
             alt="Profile"
@@ -131,11 +154,18 @@ const ProfileScreen = () => {
         </div>
 
         {/* Nav Icons */}
-        <div className="flex justify-around mb-6 px-3">
+        <div className="flex justify-around mb-2 mt-4 px-3">
           {navItems.map((item) => (
             <button
               key={item.id}
-              onClick={() => navigate(item.path)}
+              onClick={() => {
+                setActiveSection(item.id);
+                if (item.id === 'profile') {
+                  navigate('/account');
+                } else {
+                  navigate(item.path);
+                }
+              }}
               className="flex flex-col items-center space-y-1"
             >
               <div
@@ -160,8 +190,31 @@ const ProfileScreen = () => {
           ))}
         </div>
 
+        {/* Account Section - Only show when account is explicitly selected */}
+        {activeSection === 'account' && (
+          <div className="mb-6 mt-4">
+            <Account />
+          </div>
+        )}
+
+        {/* Other Sections */}
+        {/* {activeSection !== 'account' && (
+          <div className="bg-white rounded-2xl p-6 mb-6">
+            <h2 className="text-xl font-bold text-gray-800 mb-4">
+              {activeSection === 'wallet' && 'Wallet'}
+              {activeSection === 'tournament' && 'Tournament History'}
+              {activeSection === 'followers' && 'Followers'}
+            </h2>
+            <p className="text-gray-600">
+              {activeSection === 'wallet' && 'Wallet content will be displayed here.'}
+              {activeSection === 'tournament' && 'Your tournament history will appear here.'}
+              {activeSection === 'followers' && 'Your followers will be shown here.'}
+            </p>
+          </div>
+        )} */}
+
         {/* Stats */}
-        <div className="grid grid-cols-2 gap-4 mb-6">
+        <div className="grid grid-cols-2 gap-3 mb-4 mt-4">
           {stats.map((stat, i) => (
             <div
               key={i}

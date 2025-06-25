@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import logo from '../assets/logo.png'; // Adjust path if needed
@@ -5,12 +6,37 @@ import axios from 'axios'; // Ensure axios is installed in your project
 const Signup = () => {
   const [formData, setFormData] = useState({
     name: '',
+=======
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import logo from '../assets/logo.png';
+import authService from '../services/api';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
+const Signup = () => {
+  const [formData, setFormData] = useState({
+    fullName: '',
+>>>>>>> 0624e5b8f9e426275b2cdbc210990892b1236e07
     phoneNumber: '',
     password: '',
     confirmPassword: '',
-    agree: false,
   });
+<<<<<<< HEAD
   const [userData, setUserData] = useState({});
+=======
+  const [agree, setAgree] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Redirect if user is already logged in
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (user) {
+      navigate('/');
+    }
+  }, [navigate]);
+>>>>>>> 0624e5b8f9e426275b2cdbc210990892b1236e07
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -20,6 +46,7 @@ const Signup = () => {
     }));
   };
 
+<<<<<<< HEAD
   const handleSignup = async(e) => {
     e.preventDefault();
     const { name, phoneNumber, password, confirmPassword, agree } = formData;
@@ -33,6 +60,37 @@ const Signup = () => {
       setUserData(response.data);
     } catch (error) {
       console.error('Signup failed:', error);
+=======
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!formData.agree) {
+      toast.error('Please agree to the terms and privacy policy');
+      return;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      toast.error('Passwords do not match');
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      toast.error('Password must be at least 6 characters long');
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      const { confirmPassword, ...userData } = formData;
+      await authService.register(userData);
+      toast.success('Registration successful! Please login.');
+      navigate('/login');
+    } catch (error) {
+      const message = error.response?.data?.message || 'Registration failed. Please try again.';
+      toast.error(message);
+    } finally {
+      setIsLoading(false);
+>>>>>>> 0624e5b8f9e426275b2cdbc210990892b1236e07
     }
   };
 
@@ -51,19 +109,19 @@ const Signup = () => {
         <h2 className="text-2xl font-bold mb-1">Welcome!</h2>
         <p className="text-gray-500 mb-5">Sign up to continue</p>
 
-        <form onSubmit={handleSignup}>
+        <form onSubmit={handleSubmit}>
           {/* Full Name */}
           <div className="mb-4">
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-1">
               Full Name
             </label>
             <input
-              id="name"
-              name="name"
+              id="fullName"
+              name="fullName"
               type="text"
               autoComplete="name"
               placeholder="Enter your name"
-              value={formData.name}
+              value={formData.fullName}
               onChange={handleChange}
               className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-300"
               required
@@ -143,9 +201,10 @@ const Signup = () => {
 
           <button
             type="submit"
-            className="w-full bg-blue-700 hover:bg-blue-800 text-white font-semibold py-2 rounded-md transition duration-200"
+            disabled={isLoading}
+            className={`w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition-colors ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
-            SIGN UP
+            {isLoading ? 'Creating Account...' : 'Sign Up'}
           </button>
         </form>
 

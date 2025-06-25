@@ -15,6 +15,7 @@ const Login = () => {
       alert('Please agree to the terms and privacy policy');
       return;
     }
+    
     const userData = { phoneNumber, password };
 
     try {
