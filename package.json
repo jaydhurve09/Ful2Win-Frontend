@@ -10,6 +10,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
+<<<<<<< HEAD
+    "axion": "^0.1.0",
+=======
+>>>>>>> 0624e5b8f9e426275b2cdbc210990892b1236e07
     "axios": "^1.10.0",
     "i18n-iso-countries": "^7.14.0",
     "lucide-react": "^0.518.0",

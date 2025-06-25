@@ -1,59 +1,31 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import logo from '../assets/logo.png';
-import authService from '../services/api';
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import axios from 'axios';
 
 const Login = () => {
-  const [formData, setFormData] = useState({
-    phoneNumber: '',
-    password: '',
-  });
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [password, setPassword] = useState('');
   const [agree, setAgree] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const navigate = useNavigate();
-
-  const { phoneNumber, password } = formData;
-
-  useEffect(() => {
-    // Redirect if user is already logged in
-    const user = JSON.parse(localStorage.getItem('user'));
-    if (user) {
-      navigate('/');
-    }
-  }, [navigate]);
-
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
+  const [userData, setUserData] = useState({});
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    
     if (!agree) {
-      toast.error('Please agree to the terms and privacy policy');
+      alert('Please agree to the terms and privacy policy');
       return;
     }
-
-    if (!phoneNumber || !password) {
-      toast.error('Please fill in all fields');
-      return;
-    }
+    
+    const userData = { phoneNumber, password };
 
     try {
-      setIsLoading(true);
-      await authService.login({ phoneNumber, password });
-      toast.success('Login successful!');
-      navigate('/');
+      const response = await axios.post(`${import.meta.env.VITE_BASE_URL}/user/login`, userData);
+      setUserData(response.data);
+      console.log('Login successful:', response.data);
+      localStorage.setItem('token', response.data.token);
+      //console.log(response.data.token);
     } catch (error) {
-      const message = error.response?.data?.message || 'Login failed. Please try again.';
-      toast.error(message);
-    } finally {
-      setIsLoading(false);
+      console.error('Login failed:', error);
     }
   };
 
@@ -79,12 +51,12 @@ const Login = () => {
               Phone Number
             </label>
             <input
-              id="phoneNumber"
-              name="phoneNumber"
+              id="email"
+              name="Email"
               type="tel"
               autoComplete="tel"
               value={phoneNumber}
-              onChange={handleChange}
+              onChange={(e) => setPhoneNumber(e.target.value)}
               placeholder="Enter your phone number"
               className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-300"
               required
@@ -98,12 +70,13 @@ const Login = () => {
             </label>
             <input
               id="password"
-              type="password"
               name="password"
-              placeholder="Password"
+              type="password"
+              autoComplete="current-password"
               value={password}
-              onChange={handleChange}
-              className="w-full p-2 border rounded-md"
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter your password"
+              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-300"
               required
             />
           </div>
@@ -127,10 +100,9 @@ const Login = () => {
 
           <button
             type="submit"
-            disabled={isLoading}
-            className={`w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition-colors ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+            className="w-full bg-blue-700 hover:bg-blue-800 text-white font-semibold py-2 rounded-md transition duration-200"
           >
-            {isLoading ? 'Logging in...' : 'Login'}
+            LOGIN
           </button>
         </form>
 

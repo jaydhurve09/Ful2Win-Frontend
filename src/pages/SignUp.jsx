@@ -1,3 +1,12 @@
+<<<<<<< HEAD
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
+import logo from '../assets/logo.png'; // Adjust path if needed
+import axios from 'axios'; // Ensure axios is installed in your project
+const Signup = () => {
+  const [formData, setFormData] = useState({
+    name: '',
+=======
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import logo from '../assets/logo.png';
@@ -8,10 +17,14 @@ import 'react-toastify/dist/ReactToastify.css';
 const Signup = () => {
   const [formData, setFormData] = useState({
     fullName: '',
+>>>>>>> 0624e5b8f9e426275b2cdbc210990892b1236e07
     phoneNumber: '',
     password: '',
     confirmPassword: '',
   });
+<<<<<<< HEAD
+  const [userData, setUserData] = useState({});
+=======
   const [agree, setAgree] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
@@ -23,6 +36,7 @@ const Signup = () => {
       navigate('/');
     }
   }, [navigate]);
+>>>>>>> 0624e5b8f9e426275b2cdbc210990892b1236e07
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -32,6 +46,21 @@ const Signup = () => {
     }));
   };
 
+<<<<<<< HEAD
+  const handleSignup = async(e) => {
+    e.preventDefault();
+    const { name, phoneNumber, password, confirmPassword, agree } = formData;
+
+    if (!agree) return alert('Please agree to the Terms and Privacy Policy.');
+    if (password !== confirmPassword) return alert('Passwords do not match.');
+    const userData = { name, phoneNumber, password };
+    console.log(userData);
+    try {
+      const response = await axios.post(`${import.meta.env.VITE_BASE_URL}/user/register`, userData);
+      setUserData(response.data);
+    } catch (error) {
+      console.error('Signup failed:', error);
+=======
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -61,6 +90,7 @@ const Signup = () => {
       toast.error(message);
     } finally {
       setIsLoading(false);
+>>>>>>> 0624e5b8f9e426275b2cdbc210990892b1236e07
     }
   };
 

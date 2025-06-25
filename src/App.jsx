@@ -24,6 +24,7 @@ import FollowerPage from './components/FollowerPage'
 import SupportCenter from './pages/SupportCenter';
 import LeaderboardPage from './components/LeaderboardPage';
 import TournamentHistory from './components/TournamentHistory';
+import FlappyBall from './components/FlappyBall';
 import Login from './pages/Login';
 import SignUp from './pages/SignUp';
 
@@ -53,6 +54,22 @@ function App() {
             <Route path="/classic-mode" element={<ClassicMode/>} />
             <Route path="/game-lobby" element={<GameLobby />} /> 
             <Route path="/history" element={<HistoryPage />} /> 
+<<<<<<< HEAD
+             <Route path="/challenges" element={<Challenges />} />
+             <Route path="/notifications" element={<Notification />} />
+             <Route path="/refer" element={<ReferralPage />} />
+             <Route path="/chat" element={<ChatScreen />} />
+             <Route path="/kyc" element={<KYCStatusPage />} />
+             <Route path="/account" element={<Account />} />
+             <Route path="/followers" element={<FollowerPage />} />
+            <Route path="/supports" element={<SupportCenter />} />
+            <Route path="/leaderboard" element={<LeaderboardPage />} />
+            <Route path="/tournamenthistory" element={<TournamentHistory />} />
+
+            <Route path="/flappyball" element={<FlappyBall />} />
+            {/* Add more routes as needed */}
+            
+=======
             <Route path="/challenges" element={<Challenges />} />
             <Route path="/notifications" element={<Notification />} />
             <Route path="/refer" element={<ReferralPage />} />
@@ -63,6 +80,7 @@ function App() {
             <Route path="/supports" element={<SupportCenter/>} />
             <Route path="/leaderboard" element={<LeaderboardPage/>} />
             <Route path="/tournamenthistory" element={<TournamentHistory/>} />
+>>>>>>> 0624e5b8f9e426275b2cdbc210990892b1236e07
           </Routes>
         </ErrorBoundary>
       </BrowserRouter>
