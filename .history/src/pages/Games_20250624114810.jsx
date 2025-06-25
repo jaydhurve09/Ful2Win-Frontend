@@ -12,17 +12,15 @@ import rummy from '../assets/rummy.png';
 import mazeRunner from '../assets/maze-runner.png';
 import poker from '../assets/poker.png';
 import ludo from '../assets/ludo.png';
-import SportBall from '../assets/Sports-Ball.png';
 
 // Game data
 const games = [
-  { id: 1, title: 'Flappy-Boll', category: 'Puzzle', players: '10K+', image: SportBall, path: 'flappyball', featured: true },
+  { id: 1, title: 'Call Break', category: 'Card', players: '10K+', image: callBreak, featured: true },
   { id: 2, title: 'Rummy', category: 'Card', players: '25K+', image: rummy, featured: true },
   { id: 3, title: 'Maze Runner', category: 'Puzzle', players: '8K+', image: mazeRunner, featured: true },
   { id: 4, title: 'Poker', category: 'Card', players: '15K+', image: poker, featured: false },
   { id: 5, title: 'Ludo', category: 'Board', players: '30K+', image: ludo, featured: true },
-  { id: 6, title: 'Gravity Hop', category: 'Puzzle', players: '5K+', featured: false , to: 'GravityHop' },
-  
+  { id: 6, title: 'Gravity Hop', category: 'Puzzle', players: '5K+', featured: false , to: 'GravityHop'},
 ];
 
 const Games = () => {

@@ -1,21 +1,35 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import logo from '../assets/logo.png';
+
 import BackgroundBubbles from '../components/BackgroundBubbles';
+import axios from 'axios';
+
 
 const Login = () => {
-  const [phone, setPhone] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
   const [agree, setAgree] = useState(false);
+  const [userData, setUserData] = useState({});
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     if (!agree) {
       alert('Please agree to the terms and privacy policy');
       return;
     }
-    console.log({ phone, password });
-    // Perform login logic
+    
+    const userData = { phoneNumber, password };
+
+    try {
+      const response = await axios.post(`${import.meta.env.VITE_BASE_URL}/user/login`, userData);
+      setUserData(response.data);
+      console.log('Login successful:', response.data);
+      localStorage.setItem('token', response.data.token);
+      //console.log(response.data.token);
+    } catch (error) {
+      console.error('Login failed:', error);
+    }
   };
 
   return (
@@ -46,12 +60,12 @@ const Login = () => {
               Phone Number
             </label>
             <input
-              id="phone"
-              name="phone"
+              id="email"
+              name="Email"
               type="tel"
               autoComplete="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value)}
               placeholder="Enter your phone number"
               className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-300"
               required
