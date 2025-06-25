@@ -555,6 +555,21 @@ const getAuthHeader = () => {
 
 const authService = {
   /**
+   * Check if a username is available
+   * @param {string} username - Username to check
+   * @returns {Promise<{available: boolean}>} Whether the username is available
+   */
+  async checkUsername(username) {
+    try {
+      const response = await api.get(`/api/users/check-username?username=${encodeURIComponent(username)}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error checking username availability:', error);
+      throw error;
+    }
+  },
+
+  /**
    * Register a new user
    * @param {Object} userData - User registration data
    * @returns {Promise<Object>} Registration response
@@ -605,7 +620,8 @@ const authService = {
         password: userData.password
       };
       
-      console.log('[Auth] Sending login request to:', api.defaults.baseURL + '/login');
+      const loginUrl = '/api/users/login';
+      console.log('[Auth] Sending login request to:', api.defaults.baseURL + loginUrl);
       console.log('[Auth] Request headers:', {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
@@ -614,7 +630,7 @@ const authService = {
       });
       
       const startTime = Date.now();
-      const response = await api.post('/login', requestData, {
+      const response = await api.post(loginUrl, requestData, {
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',

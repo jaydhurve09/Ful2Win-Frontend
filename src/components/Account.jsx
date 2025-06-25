@@ -31,6 +31,7 @@ const Account = () => {
   
   // Form state
   const [formData, setFormData] = useState({
+    username: '',
     fullName: '',
     phoneNumber: '',
     email: '',
@@ -42,6 +43,7 @@ const Account = () => {
     password: '',
     confirmPassword: ''
   });
+  const [isCheckingUsername, setIsCheckingUsername] = useState(false);
   
   const [isEditing, setIsEditing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -66,10 +68,24 @@ const Account = () => {
     }
   }, []);
   
+  // Check if username is available
+  const checkUsernameAvailability = async (username) => {
+    if (!username || username === user?.username) return { available: true };
+    
+    try {
+      const response = await authService.checkUsername(username);
+      return { available: response.available };
+    } catch (error) {
+      console.error('Error checking username:', error);
+      return { available: false, error: 'Error checking username availability' };
+    }
+  };
+
   // Initialize form with user data
   useEffect(() => {
     if (user) {
       const userData = {
+        username: user.username || '',
         fullName: user.fullName || '',
         phoneNumber: user.phoneNumber || '',
         email: user.email || '',
@@ -162,6 +178,29 @@ const Account = () => {
       validationErrors.phoneNumber = 'Phone number is required';
     }
     
+    // Validate username if it's being changed
+    if (formData.username !== user?.username) {
+      if (!formData.username.trim()) {
+        validationErrors.username = 'Username is required';
+      } else if (!/^[a-z0-9._-]+$/.test(formData.username)) {
+        validationErrors.username = 'Username can only contain letters, numbers, dots, underscores, and hyphens';
+      } else {
+        // Check username availability
+        setIsCheckingUsername(true);
+        try {
+          const { available, error } = await checkUsernameAvailability(formData.username);
+          if (!available) {
+            validationErrors.username = error || 'Username is already taken';
+          }
+        } catch (err) {
+          console.error('Error checking username:', err);
+          validationErrors.username = 'Error checking username availability';
+        } finally {
+          setIsCheckingUsername(false);
+        }
+      }
+    }
+    
     // Only validate password if it's being changed
     if (formData.password) {
       if (formData.password.length < 6) {
@@ -192,7 +231,7 @@ const Account = () => {
       }
       
       // Add other form fields
-      const formFields = ['fullName', 'email', 'phoneNumber', 'bio', 'dateOfBirth', 'gender', 'country', 'password'];
+      const formFields = ['username', 'fullName', 'email', 'phoneNumber', 'bio', 'dateOfBirth', 'gender', 'country', 'password'];
       formFields.forEach(field => {
         if (formData[field] !== undefined && formData[field] !== '') {
           formDataToSend.append(field, formData[field]);
@@ -235,6 +274,7 @@ const Account = () => {
     if (isEditing && user) {
       setFormData(prev => ({
         ...prev,
+        username: user.username || '',
         fullName: user.fullName || '',
         phoneNumber: user.phoneNumber || '',
         email: user.email || '',
@@ -330,6 +370,37 @@ const Account = () => {
           <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6">
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="md:col-span-2">
+                  <div className="mb-4">
+                    <label htmlFor="username" className="block text-sm font-medium mb-1">
+                      Username
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        id="username"
+                        name="username"
+                        value={formData.username}
+                        onChange={handleChange}
+                        disabled={!isEditing || isCheckingUsername}
+                        className={`w-full px-4 py-2 rounded-lg bg-white/10 border ${errors.username ? 'border-red-500' : 'border-white/20'} focus:ring-2 focus:ring-blue-400 focus:border-transparent`}
+                        placeholder="Choose a username"
+                      />
+                      {isCheckingUsername && (
+                        <div className="absolute right-3 top-2.5">
+                          <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-blue-400"></div>
+                        </div>
+                      )}
+                    </div>
+                    {errors.username && (
+                      <p className="mt-1 text-sm text-red-400">{errors.username}</p>
+                    )}
+                    {!errors.username && formData.username && formData.username !== user?.username && (
+                      <p className="mt-1 text-xs text-green-400">Username available!</p>
+                    )}
+                  </div>
+                </div>
+                
                 <div className="md:col-span-2 flex flex-col items-center">
                   <div className="relative group">
                     <img
