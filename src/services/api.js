@@ -1,6 +1,45 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5001/api/users'; // Update this with your backend URL
+const API_URL = 'http://localhost:5001/api/users';
+
+// Create axios instance with default config
+const api = axios.create({
+  baseURL: 'http://localhost:5001/api',
+  withCredentials: true,
+  headers: {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
+  }
+});
+
+// Add request interceptor to include auth token
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Add response interceptor to handle 401 Unauthorized
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Handle unauthorized access (e.g., redirect to login)
+      console.log('Unauthorized access - redirecting to login');
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
 
 // Register user
 const register = async (userData) => {
@@ -16,42 +55,35 @@ const register = async (userData) => {
 // Login user
 const login = async (userData) => {
   try {
-    console.log('Attempting login with data:', userData);
-    const response = await axios.post(`${API_URL}/login`, userData, {
-      withCredentials: true
+    console.log('Attempting login with data:', {
+      phoneNumber: userData.phoneNumber,
+      hasPassword: !!userData.password
     });
     
+    const response = await api.post('/users/login', userData);
     console.log('Login API Response:', response.data);
     
-    if (response.data && response.data.success && response.data.data) {
-      const { data } = response.data;
-      console.log('Login successful, user data:', data);
+    const responseData = response.data;
+    
+    if (responseData.success && responseData.token) {
+      console.log('Login successful');
       
-      // Store the token if available (might be in httpOnly cookie)
-      const token = response.data.token || response.headers['authorization']?.split(' ')[1];
+      // Store the token
+      localStorage.setItem('token', responseData.token);
       
-      if (token) {
-        localStorage.setItem('token', token);
-        
-        // Store user data
-        const user = {
-          _id: data._id,
-          fullName: data.fullName,
-          phoneNumber: data.phoneNumber,
-          balance: data.balance,
-          // Add any other fields you need
-        };
-        
-        localStorage.setItem('userId', user._id);
-        localStorage.setItem('user', JSON.stringify(user));
-        console.log('User data stored in localStorage:', user);
-      } else {
-        console.warn('No token received in login response');
+      // Fetch complete user profile
+      const userProfile = await getCurrentUserProfile();
+      
+      if (userProfile) {
+        // Store user data in localStorage
+        localStorage.setItem('user', JSON.stringify(userProfile));
+        console.log('User data stored in localStorage:', userProfile);
+        return userProfile;
       }
       
-      return response.data.data;
+      throw new Error('Failed to fetch user profile after login');
     } else {
-      throw new Error(response.data?.message || 'Login failed');
+      throw new Error(responseData.message || 'Login failed. Please check your credentials.');
     }
   } catch (error) {
     console.error('Login error:', {
@@ -59,7 +91,27 @@ const login = async (userData) => {
       response: error.response?.data,
       status: error.response?.status
     });
-    throw error;
+    
+    // Provide more specific error messages
+    let errorMessage = 'Login failed. Please try again.';
+    
+    if (error.response) {
+      // Server responded with a status code outside 2xx
+      if (error.response.status === 401) {
+        errorMessage = 'Invalid phone number or password. Please try again.';
+      } else if (error.response.status === 400) {
+        errorMessage = error.response.data?.message || 'Invalid request. Please check your input.';
+      } else if (error.response.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+    } else if (error.request) {
+      // Request was made but no response received
+      errorMessage = 'No response from server. Please check your connection.';
+    }
+    
+    const loginError = new Error(errorMessage);
+    loginError.response = error.response;
+    throw loginError;
   }
 };
 
@@ -77,55 +129,37 @@ const logout = async () => {
 // Get current user profile
 const getCurrentUserProfile = async () => {
   try {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      console.error('No authentication token found');
-      throw new Error('Authentication required');
-    }
-    
     console.log('Fetching current user profile');
-    const response = await axios.get(`${API_URL}/me`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      withCredentials: true
-    });
+    const response = await api.get('/users/me');
     
     console.log('Current user profile response:', response.data);
     
-    // Handle both response formats: { success, data } and direct user object
-    let userData = response.data;
+    // Extract user data from response
+    const userData = response.data.data || response.data;
     
-    if (userData && typeof userData === 'object') {
-      // If response has a data property, use that
-      if (userData.data) {
-        userData = userData.data;
-      }
-      
-      // Ensure we have required fields
-      const userProfile = {
-        _id: userData._id || '',
-        fullName: userData.fullName || userData.name || '',
-        phoneNumber: userData.phoneNumber || userData.phone || '',
-        email: userData.email || '',
-        dateOfBirth: userData.dateOfBirth || '',
-        gender: userData.gender || '',
-        country: userData.country || '',
-        bio: userData.bio || '',
-        profilePicture: userData.profilePicture || userData.avatar || '',
-        balance: userData.balance || userData.walletBalance || 0
-      };
-      
-      console.log('Processed user profile:', userProfile);
-      
-      // Update localStorage with the processed data
-      localStorage.setItem('user', JSON.stringify(userProfile));
-      
-      return userProfile;
+    if (!userData) {
+      throw new Error('No user data received');
     }
     
-    throw new Error('Invalid user data received from server');
+    // Format user profile data
+    const userProfile = {
+      _id: userData._id,
+      fullName: userData.fullName || '',
+      phoneNumber: userData.phoneNumber || '',
+      email: userData.email || '',
+      dateOfBirth: userData.dateOfBirth || '',
+      gender: userData.gender || '',
+      country: userData.country || '',
+      bio: userData.bio || '',
+      profilePicture: userData.profilePicture || '',
+      balance: userData.balance || 0,
+      isVerified: userData.isVerified || false,
+      isActive: userData.isActive !== false // Default to true if not specified
+    };
+    
+    console.log('Processed user profile:', userProfile);
+    return userProfile;
+    
   } catch (error) {
     console.error('Error in getCurrentUserProfile:', {
       message: error.message,
@@ -201,6 +235,9 @@ const updateUserProfile = async (userId, userData, isFormData = false) => {
     // Only set Content-Type for non-FormData requests
     if (!isFormData) {
       config.headers['Content-Type'] = 'application/json';
+    } else {
+      // For FormData, let the browser set the Content-Type with boundary
+      delete config.headers['Content-Type'];
     }
 
     // Log FormData content for debugging
@@ -219,15 +256,12 @@ const updateUserProfile = async (userId, userData, isFormData = false) => {
 
     console.log('Profile update response:', response.data);
     
-    // Update local storage with new user data if available
-    if (response.data && response.data.user) {
-      const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-      localStorage.setItem('user', JSON.stringify({
-        ...currentUser,
-        ...response.data.user
-      }));
+    // Check if the response has the expected structure
+    if (!response.data) {
+      throw new Error('Invalid response from server');
     }
-
+    
+    // Return the entire response data
     return response.data;
   } catch (error) {
     console.error('Error updating profile:', {
@@ -283,12 +317,25 @@ const updateUserProfile = async (userId, userData, isFormData = false) => {
   }
 };
 
+// Helper function to get authentication headers
+const getAuthHeader = () => {
+  const token = localStorage.getItem('token');
+  return token ? { 'Authorization': `Bearer ${token}` } : {};
+};
+
 const authService = {
-  register,
-  login,
-  logout,
-  getUserProfile,
-  updateUserProfile,
+  register: (userData) => api.post('/users/register', userData).then(res => res.data),
+  login: (userData) => api.post('/users/login', userData).then(res => res.data),
+  logout: () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    return api.post('/users/logout');
+  },
+  getCurrentUserProfile,
+  getUserProfile: (userId) => api.get(`/users/profile/${userId}`).then(res => res.data),
+  updateUserProfile: (userId, userData) => api.put(`/users/profile/${userId}`, userData).then(res => res.data),
+  testToken: () => api.get('/users/test-token').then(res => res.data),
+  getAuthHeader
 };
 
 export default authService;
