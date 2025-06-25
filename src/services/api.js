@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5001/api/users';
+// Use environment variable if available, otherwise use production URL
+const API_URL = import.meta.env.VITE_API_URL || 'https://ful2win-backend.onrender.com/api/users';
 
 // Create axios instance with base URL
 const api = axios.create({
