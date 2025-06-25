@@ -1,14 +1,36 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import GameLogo from './GameLogo';
 import { IoPerson } from "react-icons/io5";
 import { FaBell } from "react-icons/fa";
 import { IoMdWallet } from "react-icons/io";
 import logo from '../assets/logo.png';
+import defaultProfile from '../assets/default-profile.jpg';
+import { useAuth } from '../contexts/AuthContext';
+import authService from '../services/api';
 
 const Header = () => {
   const navigate = useNavigate();
-  const balance = 24; 
+  const { user, isAuthenticated } = useAuth();
+  const [profilePicture, setProfilePicture] = useState(defaultProfile);
+  const balance = 24;
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (isAuthenticated) {
+        try {
+          const userData = await authService.getCurrentUserProfile();
+          if (userData.profilePicture) {
+            setProfilePicture(userData.profilePicture);
+          }
+        } catch (error) {
+          console.error('Error fetching user profile:', error);
+        }
+      }
+    };
+
+    fetchUserProfile();
+  }, [isAuthenticated]);
   return (
     <>
       {/* Desktop Header */}
@@ -35,10 +57,24 @@ const Header = () => {
 
             {/* Profile */}
             <button
-              onClick={() => navigate('/profile/:id')}
-              className="bg-yellow-500 p-2 rounded-full ml-2 text-black hover:opacity-90 transition-opacity"
+              onClick={() => navigate('/profile')}
+              className="w-10 h-10 rounded-full overflow-hidden ml-2 border-2 border-yellow-500 hover:opacity-90 transition-opacity"
             >
-              <IoPerson />
+              {profilePicture ? (
+                <img 
+                  src={profilePicture} 
+                  alt="Profile" 
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = defaultProfile;
+                  }}
+                />
+              ) : (
+                <div className="w-full h-full bg-yellow-500 flex items-center justify-center">
+                  <IoPerson className="text-black" />
+                </div>
+              )}
             </button>
           </div>
         </div>
@@ -69,10 +105,24 @@ const Header = () => {
 
             {/* Profile */}
             <button
-              onClick={() => navigate('/profile/:id')}
-              className="bg-yellow-500 p-1.5 rounded-full text-black hover:opacity-90 transition-opacity"
+              onClick={() => navigate('/profile')}
+              className="w-9 h-9 rounded-full overflow-hidden border-2 border-yellow-500 hover:opacity-90 transition-opacity"
             >
-              <IoPerson className="text-lg" />
+              {profilePicture ? (
+                <img 
+                  src={profilePicture} 
+                  alt="Profile" 
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = defaultProfile;
+                  }}
+                />
+              ) : (
+                <div className="w-full h-full bg-yellow-500 flex items-center justify-center">
+                  <IoPerson className="text-black text-lg" />
+                </div>
+              )}
             </button>
           </div>
         </div>
