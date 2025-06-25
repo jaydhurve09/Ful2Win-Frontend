@@ -25,8 +25,9 @@ console.log('Environment Configuration:', {
 
 // Create axios instance with base URL
 const api = axios.create({
-  baseURL: ENV.apiUrl, // Using apiUrl which includes /api/users
+  baseURL: ENV.apiBaseUrl, // Using apiBaseUrl which doesn't include /api/users
   timeout: 30000, // Increased to 30 seconds for production
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
@@ -346,16 +347,17 @@ const getCurrentUserProfile = async () => {
   try {
     console.log('Fetching current user profile');
     
-    // Make sure we're not duplicating the /api/users part
-    const endpoint = ENV.apiUrl.includes('/api/users') ? '/me' : '/api/users/me';
-    console.log('API URL:', ENV.apiUrl);
+    // Always use the full path since baseURL doesn't include /api/users
+    const endpoint = '/api/users/me';
+    console.log('API Base URL:', ENV.apiBaseUrl);
     console.log('Using endpoint:', endpoint);
     
     const response = await api.get(endpoint, {
-      withCredentials: true,
       headers: {
         'Content-Type': 'application/json',
-        'Accept': 'application/json'
+        'Accept': 'application/json',
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache'
       }
     });
     
