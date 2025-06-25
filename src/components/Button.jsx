@@ -12,7 +12,7 @@ const Button = ({
   type = 'button',
 }) => {
   const baseStyles = 'font-semibold rounded-lg transition-all duration-200 ease-in-out';
-  
+
   const variants = {
     primary: 'bg-active hover:bg-white text-black',
     secondary: 'bg-blue-600 hover:bg-blue-700 text-white',
@@ -46,7 +46,7 @@ Button.propTypes = {
   children: PropTypes.node.isRequired,
   onClick: PropTypes.func,
   className: PropTypes.string,
-  variant: PropTypes.oneOf(['primary', 'secondary', 'outline']),
+  variant: PropTypes.oneOf(['primary', 'secondary', 'outline', 'gradient']),
   size: PropTypes.oneOf(['sm', 'md', 'lg']),
   disabled: PropTypes.bool,
   fullWidth: PropTypes.bool,

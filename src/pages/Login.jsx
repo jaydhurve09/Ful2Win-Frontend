@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import logo from '../assets/logo.png';
+import BackgroundBubbles from '../components/BackgroundBubbles';
 
 const Login = () => {
   const [phone, setPhone] = useState('');
@@ -19,11 +20,17 @@ const Login = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-700 to-blue-500 flex flex-col justify-end relative">
+      <BackgroundBubbles />
       {/* Centered Logo and Tagline */}
       <div className="absolute top-40 left-1/2 transform -translate-x-1/2 flex flex-col items-center">
-        <img src={logo} alt="Ful2Win Logo" className="w-45 md:w-44 mb-4" />
-        <p className="text-white text-sm font-semibold text-center">
-          Entertainment. <span className="text-yellow-300">Earning.</span> <span className="text-pink-400">Fame</span>
+        <img
+          src={logo}
+          alt="Ful2Win Logo"
+          className="w-36 md:w-44 mb-4 animate-pulse-slow"
+        />
+        <p className="text-white text-sm font-semibold text-center animate-pulse-slow">
+          Entertainment. <span className="text-yellow-300">Earning.</span>{' '}
+          <span className="text-pink-400">Fame</span>
         </p>
       </div>
 
@@ -104,4 +111,3 @@ const Login = () => {
 };
 
 export default Login;
-
