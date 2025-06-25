@@ -1,12 +1,8 @@
+
 import React, { useState, useEffect } from "react";
 import {
-  FiUser,
-  FiUsers,
-  FiDollarSign,
-  FiEdit,
-  FiShare2,
-  FiLogOut,
-  FiMessageSquare,
+  FiUser, FiUsers, FiDollarSign, FiEdit, FiShare2,
+  FiLogOut, FiMessageSquare
 } from "react-icons/fi";
 import { FaTrophy, FaGamepad, FaRupeeSign } from "react-icons/fa";
 import { IoMdPerson } from "react-icons/io";
@@ -19,6 +15,7 @@ const ProfileScreen = () => {
   const location = useLocation();
 
   const [activeSection, setActiveSection] = useState("profile");
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   useEffect(() => {
     const path = location.pathname;
@@ -45,29 +42,23 @@ const ProfileScreen = () => {
   const profileActions = [
     {
       icon: <FiEdit className="text-blue-600 group-hover:text-white transition-colors" />,
-      text: "Edit Info",
-      action: "edit",
+      text: "Edit Info", action: "edit",
     },
     {
       icon: <FiShare2 className="text-blue-600 group-hover:text-white transition-colors" />,
-      text: "Referrals",
-      action: "referrals",
+      text: "Referrals", action: "referrals",
     },
     {
       icon: <span className="text-blue-600 font-bold group-hover:text-white transition-colors">KYC</span>,
-      text: "KYC Status",
-      action: "kyc",
+      text: "KYC Status", action: "kyc",
     },
     {
       icon: <FiMessageSquare className="text-blue-600 group-hover:text-white transition-colors" />,
-      text: "Support",
-      action: "support",
+      text: "Support", action: "support",
     },
     {
       icon: <FiLogOut className="text-red-500 group-hover:text-white transition-colors" />,
-      text: "Log Out",
-      action: "logout",
-      isDanger: true,
+      text: "Log Out", action: "logout", isDanger: true,
     },
   ];
 
@@ -86,9 +77,7 @@ const ProfileScreen = () => {
         navigate("/supports");
         break;
       case "logout":
-        if (window.confirm("Are you sure you want to log out?")) {
-          alert("Logging out...");
-        }
+        setShowLogoutConfirm(true);
         break;
       default:
         break;
@@ -96,17 +85,42 @@ const ProfileScreen = () => {
   };
 
   return (
-    <div
-      className="min-h-screen w-full text-white overflow-x-hidden relative px-4"
+    <div className="min-h-screen w-full text-white overflow-x-hidden relative px-4"
       style={{
-        background:
-          "linear-gradient(to bottom, #0A2472 0%, #0D47A1 45%, #1565C0 100%)",
+        background: "linear-gradient(to bottom, #0A2472 0%, #0D47A1 45%, #1565C0 100%)",
       }}
     >
       <BackgroundBubbles />
 
+      {/* Logout Confirmation Modal */}
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-6 w-[90%] max-w-sm text-center shadow-lg">
+            <h2 className="text-lg font-semibold text-gray-800 mb-4">
+              Are you sure you want to logout?
+            </h2>
+            <div className="flex justify-center gap-4">
+              <button
+                onClick={() => {
+                  setShowLogoutConfirm(false);
+                  navigate("/login");
+                }}
+                className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600"
+              >
+                Yes
+              </button>
+              <button
+                onClick={() => setShowLogoutConfirm(false)}
+                className="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300"
+              >
+                No
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="relative z-10 pt-20 pb-32 max-w-2xl mx-auto">
-        {/* Profile Picture */}
         <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-yellow-300 flex items-center justify-center overflow-hidden">
           <img
             src="https://cdn-icons-png.flaticon.com/512/3069/3069172.png"
@@ -123,22 +137,14 @@ const ProfileScreen = () => {
               onClick={() => navigate(item.path)}
               className="flex flex-col items-center space-y-1"
             >
-              <div
-                className={`w-14 h-14 rounded-full flex items-center justify-center text-xl transition-all ${
-                  activeSection === item.id
-                    ? "bg-blue-400 text-white"
-                    : "bg-blue-500 text-white"
-                }`}
-              >
+              <div className={`w-14 h-14 rounded-full flex items-center justify-center text-xl transition-all ${
+                activeSection === item.id ? "bg-blue-400 text-white" : "bg-blue-500 text-white"
+              }`}>
                 {item.icon}
               </div>
-              <span
-                className={`text-sm transition-all ${
-                  activeSection === item.id
-                    ? "text-white font-semibold"
-                    : "text-white/80 font-medium"
-                }`}
-              >
+              <span className={`text-sm ${activeSection === item.id
+                  ? "text-white font-semibold"
+                  : "text-white/80 font-medium"}`}>
                 {item.label}
               </span>
             </button>
@@ -165,45 +171,34 @@ const ProfileScreen = () => {
           ))}
         </div>
 
-        {/* Actions */}
+        {/* Profile Actions */}
         <div className="bg-white rounded-2xl p-4">
           {profileActions.map((item, i, arr) => (
             <React.Fragment key={item.action}>
               <button
                 onClick={() => handleProfileAction(item.action)}
-                className={`w-full flex items-center p-4 rounded-xl transition-all group ${
+                className={`w-full flex items-center p-4 rounded-xl group ${
                   item.isDanger ? "hover:bg-red-50" : "hover:bg-blue-50"
                 }`}
               >
-                <div
-                  className={`w-10 h-10 flex items-center justify-center mr-3 rounded-full transition-colors ${
-                    item.isDanger
-                      ? "bg-red-50 group-hover:bg-red-100"
-                      : "bg-blue-50 group-hover:bg-blue-100"
-                  }`}
-                >
+                <div className={`w-10 h-10 flex items-center justify-center mr-3 rounded-full ${
+                  item.isDanger ? "bg-red-50 group-hover:bg-red-100" : "bg-blue-50 group-hover:bg-blue-100"
+                }`}>
                   {item.icon}
                 </div>
-                <div
-                  className={`flex-1 text-left text-sm sm:text-base font-medium ${
-                    item.isDanger ? "text-red-600" : "text-gray-800"
-                  }`}
-                >
+                <div className={`flex-1 text-left text-sm sm:text-base font-medium ${
+                  item.isDanger ? "text-red-600" : "text-gray-800"
+                }`}>
                   {item.text}
                 </div>
                 <div className="text-gray-400 group-hover:text-blue-600 text-lg">&gt;</div>
               </button>
-              {i < arr.length - 1 && (
-                <div className="px-4 py-1">
-                  <div className="w-full h-px bg-gray-200"></div>
-                </div>
-              )}
+              {i < arr.length - 1 && <div className="px-4 py-1"><div className="w-full h-px bg-gray-200"></div></div>}
             </React.Fragment>
           ))}
         </div>
       </div>
 
-      {/* Bottom Navbar */}
       <div className="fixed bottom-0 left-0 right-0 z-20">
         <div className="max-w-2xl mx-auto">
           <Navbar />
@@ -214,3 +209,4 @@ const ProfileScreen = () => {
 };
 
 export default ProfileScreen;
+
