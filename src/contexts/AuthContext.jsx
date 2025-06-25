@@ -162,18 +162,42 @@ export const AuthProvider = ({ children }) => {
   // Handle logout
   const logout = useCallback(async () => {
     try {
-      setIsLoading(true);
-      await authService.logout();
+      console.log('AuthContext: Starting logout process');
+      
+      // Clear auth data first
+      authService.clearAuthData();
+      
+      // Update the auth state immediately
+      updateAuthState(null, false);
+      
+      // Make the API call to invalidate the token on the server
+      try {
+        console.log('AuthContext: Making logout API call');
+        await authService.logout();
+        console.log('AuthContext: Logout successful');
+      } catch (apiError) {
+        console.warn('AuthContext: Logout API call failed, but continuing with local cleanup', apiError);
+        // Continue with the logout flow even if the API call fails
+      }
+      
+      // Clear any remaining state
+      setError(null);
+      
+      // Return success to indicate logout completed
+      return { success: true };
+      
     } catch (error) {
-      console.error('Logout error:', error);
-      // Continue with logout even if API call fails
-    } finally {
+      console.error('AuthContext: Error during logout:', error);
+      // Ensure we still clear auth data even if something unexpected happens
       authService.clearAuthData();
       updateAuthState(null, false);
+      setError(error.message || 'Logout failed');
+      throw error;
+    } finally {
       setIsLoading(false);
       navigate('/login', { replace: true });
     }
-  }, [navigate, updateAuthState]);
+  }, [updateAuthState, navigate]);
 
   // Update user data
   const updateUser = useCallback((userData) => {

@@ -17,12 +17,13 @@ import { useNavigate, useLocation, useParams } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import BackgroundBubbles from "../components/BackgroundBubbles";
 import Account from "../components/Account";
-import authService from "../services/api";
+import { useAuth } from "../contexts/AuthContext";
 import { toast } from "react-toastify";
 
 const ProfileScreen = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { logout } = useAuth();
 
   const [activeSection, setActiveSection] = useState("profile");
   const [activeProfileAction, setActiveProfileAction] = useState(null);
@@ -96,12 +97,12 @@ const ProfileScreen = () => {
 
   const handleLogout = async () => {
     try {
-      await authService.logout();
+      await logout();
       toast.success("Logged out successfully");
-      navigate("/login");
+      navigate("/login", { replace: true });
     } catch (error) {
       console.error("Logout error:", error);
-      toast.error("Failed to log out. Please try again.");
+      toast.error(error.message || "Failed to log out. Please try again.");
     }
   };
 
