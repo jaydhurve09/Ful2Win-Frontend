@@ -1,20 +1,91 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import GameLogo from './GameLogo';
 import { IoPerson } from "react-icons/io5";
 import { FaBell } from "react-icons/fa";
 import { IoMdWallet } from "react-icons/io";
+import { FiRefreshCw } from "react-icons/fi";
 import logo from '../assets/logo.png';
 import defaultProfile from '../assets/default-profile.jpg';
 import { useAuth } from '../contexts/AuthContext';
 import authService from '../services/api';
+import { toast } from 'react-toastify';
 
 const Header = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
   const [profilePicture, setProfilePicture] = useState(defaultProfile);
-  const balance = 24;
+  const [balance, setBalance] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  
+  // Format balance for display with proper error handling
+  const formattedBalance = useMemo(() => {
+    const safeBalance = Number(balance) || 0;
+    return safeBalance.toLocaleString('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).replace('₹', '₹ '); // Add space after currency symbol
+  }, [balance]);
 
+  const setLoadingBalance = (isLoading) => {
+    setIsLoading(isLoading);
+  };
+
+  const fetchWalletBalance = useCallback(async () => {
+    if (!isAuthenticated) {
+      setBalance(0);
+      return 0;
+    }
+    
+    try {
+      setLoadingBalance(true);
+      const result = await authService.getWalletBalance();
+      const balance = result?.balance || 0;
+      console.log('Setting wallet balance:', balance); // Debug log
+      setBalance(balance);
+      return balance;
+    } catch (error) {
+      console.error('Error in fetchWalletBalance:', error);
+      setBalance(0);
+      return 0;
+    } finally {
+      setLoadingBalance(false);
+    }
+  }, [isAuthenticated]);
+
+  // Function to refresh balance
+  const refreshBalance = useCallback(() => {
+    if (isAuthenticated) {
+      return fetchWalletBalance();
+    } else {
+      // If not authenticated, reset balance to 0
+      setBalance(0);
+      return Promise.resolve(0);
+    }
+  }, [isAuthenticated, fetchWalletBalance]);
+
+  // Initial load and refresh when authenticated state changes
+  useEffect(() => {
+    refreshBalance();
+  }, [refreshBalance]);
+
+  // Refresh balance when the tab becomes visible
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        refreshBalance();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [refreshBalance]);
+
+  // Fetch user profile data
   useEffect(() => {
     const fetchUserProfile = async () => {
       if (isAuthenticated) {
@@ -41,10 +112,28 @@ const Header = () => {
             {/* Wallet (clickable) */}
             <div
               onClick={() => navigate('/wallet')}
-              className="flex items-center justify-center mx-auto py-[2px] px-1 gap-2 rounded-2xl text-black bg-dullBlue cursor-pointer hover:opacity-90 transition"
+              className="flex items-center justify-center mx-auto py-[4px] px-2 gap-2 rounded-xl text-black bg-active cursor-pointer hover:opacity-90 transition"
             >
-              <IoMdWallet className="text-3xl bg-active rounded-full p-1" />
-              <span className="mr-4 text-lg">₹{balance.toFixed(2)}</span>
+              <div className='flex items-center gap-2'>
+                <div className='flex items-center gap-1 text-black font-semibold'>
+                  <IoMdWallet className='text-2xl' />
+                  {isLoading ? (
+                    <div className='h-4 w-12 bg-gray-600 animate-pulse rounded'></div>
+                  ) : (
+                    <span>{formattedBalance}</span>
+                  )}
+                </div>
+                {/* <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    refreshBalance();
+                  }}
+                  className='text-white/70 hover:text-white text-sm p-1 hover:bg-white/10 rounded-full transition-colors'
+                  title='Refresh balance'
+                >
+                  <FiRefreshCw className={`w-3 h-3 ${isLoading ? 'animate-spin' : ''}`} />
+                </button> */}
+              </div>
             </div>
 
             {/* Bell Notification */}
@@ -92,7 +181,11 @@ const Header = () => {
               className="flex items-center bg-dullBlue px-3 py-1.5 rounded-full cursor-pointer hover:opacity-90 transition"
             >
               <IoMdWallet className="bg-active rounded-full p-1 text-lg mr-1.5" />
-              <span className="text-black font-medium text-sm">₹{balance.toFixed(2)}</span>
+              {isLoading ? (
+                <div className='h-4 w-12 bg-gray-600 animate-pulse rounded'></div>
+              ) : (
+                <span className="text-black font-medium text-sm">{formattedBalance}</span>
+              )}
             </div>
 
             {/* Bell Notification */}

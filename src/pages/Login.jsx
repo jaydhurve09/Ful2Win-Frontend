@@ -125,6 +125,14 @@ const Login = () => {
               className="w-full px-4 py-2 text-gray-500 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-300"
               required
             />
+            <div className="text-right mt-1">
+              <Link 
+                to="/forgot-password" 
+                className="text-blue-600 hover:underline text-sm"
+              >
+                Forgot Password?
+              </Link>
+            </div>
           </div>
 
           {/* Terms Checkbox */}

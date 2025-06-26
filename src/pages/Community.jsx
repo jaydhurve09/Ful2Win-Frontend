@@ -146,34 +146,41 @@ const Community = () => {
         <div className="relative z-10">
           <Header />
 
-          <div className="pt-16 md:pt-0 w-full flex justify-center">
+          <div className="pt-20 md:pt-0 w-full flex justify-center">
             <div className="w-full max-w-3xl px-4">
-              <div className="hidden md:flex gap-2 mb-4 overflow-x-auto py-2">
+              <div className="hidden md:flex gap-2 mb-2 overflow-x-auto py-1 justify-end pr-1">
                 {communityTabs.map((tab) => (
                   <Button
                     key={tab.id}
                     variant={activeTab === tab.id ? 'primary' : 'gradient'}
                     onClick={() => handleTabChange(tab.id)}
-                    className="rounded-full flex items-center whitespace-nowrap"
+                    className="rounded-full px-4 py-2 flex items-center whitespace-nowrap text-sm"
                   >
-                    {tab.icon}
+                    {React.cloneElement(tab.icon, { className: 'mr-1.5' })}
                     {tab.label}
                   </Button>
                 ))}
               </div>
 
-              <div className="flex md:hidden gap-2 mb-4 overflow-x-auto py-2">
-                {communityTabs.map((tab) => (
-                  <Button
-                    key={tab.id}
-                    variant={activeTab === tab.id ? 'primary' : 'gradient'}
-                    onClick={() => handleTabChange(tab.id)}
-                    className="rounded-full text-xs px-3 py-1.5 flex items-center"
-                  >
-                    {React.cloneElement(tab.icon, { className: 'text-sm' })}
-                    <span className="ml-1">{tab.label}</span>
-                  </Button>
-                ))}
+              <div className="flex md:hidden w-full mb-2 py-1 px-1">
+                <div className="w-full flex justify-start space-x-1 pr-1">
+                  {communityTabs.map((tab) => (
+                    <Button
+                      key={tab.id}
+                      variant={activeTab === tab.id ? 'primary' : 'gradient'}
+                      onClick={() => handleTabChange(tab.id)}
+                      className={`rounded-full ${activeTab === tab.id ? 'px-3 py-1.5' : 'p-2.5'} flex items-center justify-center`}
+                      title={tab.label}
+                    >
+                      {React.cloneElement(tab.icon, { 
+                        className: `text-sm ${activeTab === tab.id ? 'mr-1' : ''}` 
+                      })}
+                      {activeTab === tab.id && (
+                        <span className="text-xs ml-0.5">{tab.label}</span>
+                      )}
+                    </Button>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
@@ -181,62 +188,99 @@ const Community = () => {
           <div className="w-full">
             {activeTab === 'feed' && (
               <div className="w-full max-w-3xl px-4 mx-auto mt-1">
-                <div className="flex gap-2 mb-4 overflow-x-auto py-2">
-                  {typeTabs.map((tab) => (
-                    <Button
-                      key={tab.id}
-                      variant={activeType === tab.id ? 'primary' : 'outline'}
-                      onClick={() => setActiveType(tab.id)}
-                      className="rounded-full text-sm px-4 py-1.5 flex items-center"
-                    >
-                      {tab.icon && React.cloneElement(tab.icon, { className: 'text-sm' })}
-                      <span className={tab.icon ? 'ml-1' : ''}>{tab.label}</span>
-                    </Button>
-                  ))}
+                <div className="w-full mb-2 py-1">
+                  <div className="flex justify-start space-x-1 pr-1">
+                    {typeTabs.map((tab) => (
+                      <Button
+                        key={tab.id}
+                        variant={activeType === tab.id ? 'primary' : 'outline'}
+                        onClick={() => setActiveType(tab.id)}
+                        className={`rounded-full text-sm ${activeType === tab.id ? 'px-3 py-1.5' : 'p-2.5'} flex items-center justify-center`}
+                        title={tab.label}
+                      >
+                        {tab.icon ? (
+                          <>
+                            {React.cloneElement(tab.icon, { 
+                              className: `text-sm ${activeType === tab.id ? 'mr-1' : ''}` 
+                            })}
+                            {activeType === tab.id && (
+                              <span className="text-xs">{tab.label}</span>
+                            )}
+                          </>
+                        ) : (
+                          <span className="text-xs">{tab.label}</span>
+                        )}
+                      </Button>
+                    ))}
+                  </div>
                 </div>
 
                 <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 mb-6 border border-white/10">
                   <h3 className="text-lg font-semibold mb-4">Create Post</h3>
-                  <div className="flex items-center mb-4">
-                    <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-white font-bold mr-3">U</div>
-                    <input
-                      type="text"
-                      placeholder="What's on your mind?"
-                      className="flex-1 bg-white/5 border border-white/10 rounded-full px-4 py-2 text-white"
-                      onClick={() => setShowCreatePost(true)}
-                      readOnly
-                    />
-                  </div>
-                  <div className="flex items-center justify-between border-t border-white/10 pt-3">
-                    <div className="flex space-x-2">
-                      <button className="flex items-center text-sm text-gray-300 hover:text-white"><FaImage className="mr-1" /> Photo</button>
-                      <button className="flex items-center text-sm text-gray-300 hover:text-white"><FaVideo className="mr-1" /> Video</button>
-                      <button className="flex items-center text-sm text-gray-300 hover:text-white"><FaPoll className="mr-1" /> Poll</button>
-                    </div>
-                    <button
-                      className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-1.5 rounded-full text-sm font-medium"
-                      onClick={() => setShowCreatePost(true)}
-                    >
-                      Post
-                    </button>
-                  </div>
-
-                  {showCreatePost && (
-                    <div className="mt-4">
-                      <textarea
-                        value={newPostContent}
-                        onChange={(e) => setNewPostContent(e.target.value)}
-                        placeholder="Share your thoughts..."
-                        className="w-full bg-white/10 border border-white/20 rounded-lg p-3 text-white mb-3"
-                        rows="3"
-                        autoFocus
-                      />
-                      <div className="flex justify-end space-x-2">
-                        <Button variant="outline" onClick={() => setShowCreatePost(false)} size="sm">Cancel</Button>
-                        <Button variant="primary" onClick={handleCreatePost} size="sm" disabled={!newPostContent.trim()}>Post</Button>
+                  <div className="flex items-start">
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-white font-bold mr-3 flex-shrink-0">U</div>
+                    <div className="flex-1">
+                      {!showCreatePost ? (
+                        <>
+                          <input
+                            type="text"
+                            placeholder="What's on your mind?"
+                            className="w-full bg-white/5 border border-white/10 rounded-full px-4 py-2 text-white mb-3 focus:outline-none focus:ring-0 focus:border-white/20"
+                            onClick={() => setShowCreatePost(true)}
+                            readOnly
+                          />
+                        </>
+                      ) : (
+                        <div>
+                          <textarea
+                            value={newPostContent}
+                            onChange={(e) => setNewPostContent(e.target.value)}
+                            placeholder="Share your thoughts..."
+                            className="w-full bg-white/10 border border-white/20 rounded-lg p-3 text-white mb-3 focus:outline-none focus:ring-0 focus:border-white/30 resize-none"
+                            rows="3"
+                            autoFocus
+                          />
+                        </div>
+                      )}
+                      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-white/10 pt-3">
+                        <div className="flex space-x-2">
+                          <button className="flex items-center text-sm text-gray-300 hover:text-white whitespace-nowrap">
+                            <FaImage className="mr-1" /> Photo
+                          </button>
+                          <button className="flex items-center text-sm text-gray-300 hover:text-white whitespace-nowrap">
+                            <FaVideo className="mr-1" /> Video
+                          </button>
+                          <button className="flex items-center text-sm text-gray-300 hover:text-white whitespace-nowrap">
+                            <FaPoll className="mr-1" /> Poll
+                          </button>
+                        </div>
+                        <div className="flex-shrink-0">
+                          {showCreatePost ? (
+                            <div className="flex space-x-2">
+                              <Button variant="outline" onClick={() => setShowCreatePost(false)} size="sm">
+                                Cancel
+                              </Button>
+                              <Button 
+                                variant="primary" 
+                                onClick={handleCreatePost} 
+                                size="sm" 
+                                disabled={!newPostContent.trim()}
+                              >
+                                Post
+                              </Button>
+                            </div>
+                          ) : (
+                            <button
+                              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap"
+                              onClick={() => setShowCreatePost(true)}
+                            >
+                              Post
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  )}
+                  </div>
                 </div>
 
                 <div className="space-y-4">

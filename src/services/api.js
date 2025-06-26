@@ -807,7 +807,7 @@ const authService = {
    * @param {boolean} [isFormData=false] - Whether the data is FormData (for file uploads)
    * @returns {Promise<Object>} Updated user data
    */
-  updateUserProfile: async (userId, userData, isFormData = false) => {
+  updateUserProfile: async function(userId, userData, isFormData = false) {
     try {
       // Get token from localStorage
       const token = localStorage.getItem('token');
@@ -855,46 +855,21 @@ const authService = {
       if (response.data) {
         // Update local storage if this is the current user
         const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-        if (currentUser?._id === userId) {
-          localStorage.setItem('user', JSON.stringify(response.data));
+        if (currentUser && currentUser._id === userId) {
+          const updatedUser = { ...currentUser, ...response.data };
+          localStorage.setItem('user', JSON.stringify(updatedUser));
         }
-        
-        return { success: true, data: response.data };
-      }
-      
-      throw new Error('Invalid response from server');
-      
-    } catch (error) {
-      console.error('Error updating user profile:', {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
-        config: error.config,
-        stack: error.stack
-      });
-      
-      // Handle specific error cases
-      if (error.response?.status === 401) {
-        // Clear auth data and redirect to login
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
+        return response.data;
+      } else if (response.status === 401) {
+        // Token expired or invalid - clear auth data and redirect to login
+        authService.clearAuthData();
         window.location.href = '/login';
-        throw new Error('Your session has expired. Please log in again.');
+        throw new Error('Session expired. Please log in again.');
+      } else {
+        throw new Error(response.data?.message || 'Failed to update profile');
       }
-      
-      // Handle validation errors
-      if (error.response?.data?.errors) {
-        const errorMessages = Object.values(error.response.data.errors)
-          .map(err => typeof err === 'string' ? err : err.message)
-          .filter(Boolean)
-          .join('\n');
-        throw new Error(errorMessages || 'Validation error occurred');
-      }
-      
-      // Handle other API errors
-      if (error.response?.data?.message) {
-        throw new Error(error.response.data.message);
-      }
+    } catch (error) {
+      console.error('Update profile error:', error);
       
       // Handle network errors
       if (error.message === 'Network Error') {
@@ -904,7 +879,269 @@ const authService = {
       // Default error
       throw error.message || 'Failed to update profile. Please try again.';
     }
+  },
+
+  /**
+   * Request a password reset OTP
+   * @param {Object} data - Should contain phoneNumber
+   * @returns {Promise<Object>} Response from the server
+   */
+  forgotPassword: async function(data) {
+    try {
+      const response = await api.post('/auth/forgot-password', data);
+      return response.data;
+    } catch (error) {
+      console.error('Forgot password error:', error);
+      throw error.response?.data?.message || 'Failed to send reset OTP';
+    }
+  },
+
+  /**
+   * Reset password with OTP
+   * @param {Object} data - Should contain phoneNumber, otp, and newPassword
+   * @returns {Promise<Object>} Response from the server
+   */
+  resetPassword: async function(data) {
+    try {
+      const response = await api.post('/auth/reset-password', data);
+      return response.data;
+    } catch (error) {
+      console.error('Reset password error:', error);
+      throw error.response?.data?.message || 'Failed to reset password';
+    }
+  },
+  
+  /**
+   * Get user's wallet balance
+   * @returns {Promise<{balance: number}>} User's wallet balance
+   */
+  getWalletBalance: async function() {
+    try {
+      // Use the main user profile endpoint which includes the balance
+      const response = await api.get('/api/users/me');
+      const userData = response.data.data || response.data;
+      
+      // The balance might be in the root or in a nested property
+      const balance = userData.balance || 0;
+      console.log('Wallet balance response:', { userData, balance }); // Debug log
+      
+      return { balance };
+    } catch (error) {
+      console.error('Error fetching wallet balance:', error);
+      
+      // If we get a 403, try to get the balance from the user data in local storage
+      if (error.response?.status === 403) {
+        console.log('Falling back to local storage for balance');
+        const user = JSON.parse(localStorage.getItem('user'));
+        return { 
+          balance: user?.balance || 0 
+        };
+      }
+      
+      return { balance: 0 };
+    }
+  },
+
+/**
+ * Clear all authentication data from storage and memory
+ */
+clearAuthData: function() {
+  console.log('AuthService: Clearing authentication data');
+  
+  // Remove token and user data from localStorage
+  localStorage.removeItem('token');
+  localStorage.removeItem('user');
+  
+  // Clear sessionStorage as well if used
+  sessionStorage.clear();
+  
+  // Remove token from axios default headers
+  delete api.defaults.headers.common['Authorization'];
+  
+  // Clear any cookies that might be set
+  document.cookie.split(';').forEach(c => {
+    document.cookie = c.trim().split('=')[0] + '=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/';
+  });
+  
+  console.log('AuthService: Authentication data cleared');
+},
+
+/**
+ * Get current user's profile data
+ * @returns {Promise<Object>} User profile data
+ */
+getCurrentUserProfile: async () => {
+  try {
+    const response = await api.get('/api/users/me');
+    return response.data;
+  } catch (error) {
+    // If unauthorized, clear auth data
+    if (error.response?.status === 401) {
+      this.clearAuthData();
+    }
+    console.error('Error fetching user profile:', error);
+    throw error;
   }
+},
+
+/**
+ * Get user profile by ID
+ * @param {string} userId - User ID
+ * @returns {Promise<Object>} User profile data
+ */
+getUserProfile: async (userId) => {
+  try {
+    const response = await api.get(`/api/users/profile/${userId}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching profile for user ${userId}:`, error);
+    if (error.response?.status === 404) {
+      // If profile not found, try to get the current user's profile instead
+      try {
+        const currentUser = await authService.getCurrentUserProfile();
+        if (currentUser?._id === userId) {
+          return currentUser;
+        }
+      } catch (e) {
+        console.error('Error fetching current user profile as fallback:', e);
+      }
+    }
+    throw error;
+  }
+},
+
+/**
+ * Update user profile
+ * @param {string} userId - User ID
+ * @param {Object|FormData} userData - Updated user data (can be FormData for file uploads)
+ * @param {boolean} [isFormData=false] - Whether the data is FormData (for file uploads)
+ * @returns {Promise<Object>} Updated user data
+ */
+updateUserProfile: async function(userId, userData, isFormData = false) {
+  try {
+    // Get token from localStorage
+    const token = localStorage.getItem('token');
+    console.log('Token from localStorage:', token ? 'Token found' : 'No token found');
+    
+    if (!token) {
+      throw new Error('No authentication token found. Please log in again.');
+    }
+
+    const apiUrl = `/api/users/profile/${userId}`;
+    
+    // Log the FormData contents if it's a FormData object
+    if (isFormData && userData instanceof FormData) {
+      console.log('FormData contents:');
+      for (let pair of userData.entries()) {
+        console.log(pair[0] + ': ', pair[1] instanceof File ? 
+          `File: ${pair[1].name} (${pair[1].size} bytes, ${pair[1].type})` : 
+          pair[1]);
+      }
+    }
+
+    console.log('Sending request with config:', {
+      url: apiUrl,
+      method: 'PUT',
+      hasData: !!userData,
+      isFormData: isFormData
+    });
+
+    // Make the API request
+    const response = await axios.put(
+      `${ENV.apiBaseUrl}${apiUrl}`,
+      userData,
+      {
+        headers: {
+          'Content-Type': isFormData ? 'multipart/form-data' : 'application/json',
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        withCredentials: true,
+        timeout: 60000 // 60 seconds timeout for file uploads
+      }
+    );
+    
+    // If the response is successful and contains data
+    if (response.data) {
+      // Update local storage if this is the current user
+      const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+      if (currentUser && currentUser._id === userId) {
+        const updatedUser = { ...currentUser, ...response.data };
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+      }
+      return response.data;
+    } else if (response.status === 401) {
+      // Token expired or invalid - clear auth data and redirect to login
+      authService.clearAuthData();
+      window.location.href = '/login';
+      throw new Error('Session expired. Please log in again.');
+    } else {
+      throw new Error(response.data?.message || 'Failed to update profile');
+    }
+  } catch (error) {
+    console.error('Update profile error:', error);
+    
+    // Handle network errors
+    if (error.message === 'Network Error') {
+      throw new Error('Unable to connect to the server. Please check your internet connection.');
+    }
+    
+    // Default error
+    throw error.message || 'Failed to update profile. Please try again.';
+  }
+},
+
+/**
+ * Request a password reset OTP
+ * @param {Object} data - Should contain phoneNumber
+ * @returns {Promise<Object>} Response from the server
+ */
+forgotPassword: async function(data) {
+  try {
+    const response = await api.post('/auth/forgot-password', data);
+    return response.data;
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    throw error.response?.data?.message || 'Failed to send reset OTP';
+  }
+},
+
+/**
+ * Reset password with OTP
+ * @param {Object} data - Should contain phoneNumber, otp, and newPassword
+ * @returns {Promise<Object>} Response from the server
+ */
+resetPassword: async function(data) {
+  try {
+    const response = await api.post('/auth/reset-password', data);
+    return response.data;
+  } catch (error) {
+    console.error('Reset password error:', error);
+    throw error.response?.data?.message || 'Failed to reset password';
+  }
+},
+
+/**
+ * Get user's wallet balance
+ * @returns {Promise<{balance: number}>} User's wallet balance
+ */
+getWalletBalance: async function() {
+  try {
+    const response = await api.get('/api/users/me');
+    const userData = response.data.data || response.data;
+    console.log('Wallet balance response:', userData);
+    return { balance: userData.balance || 0 };
+  } catch (error) {
+    console.error('Error fetching wallet balance:', error);
+    // Fallback to local storage if 403 error
+    if (error.response?.status === 403) {
+      const user = JSON.parse(localStorage.getItem('user'));
+      return { balance: user?.balance || 0 };
+    }
+    return { balance: 0 };
+  }
+}
+
 };
 
 export default authService;

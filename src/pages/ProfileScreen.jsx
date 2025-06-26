@@ -41,80 +41,80 @@ const ProfileScreen = () => {
   });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [userPosts, setUserPosts] = useState([]);
   const { userId } = useParams();
+
+  // Function to fetch user posts
+  const fetchUserPosts = useCallback(async (userId) => {
+    if (!userId) return;
+    
+    try {
+      // Since we don't have a direct endpoint for user posts, we'll use the user profile
+      // which might include posts or we can set an empty array if not available
+      const userData = await authService.getUserProfile(userId);
+      setUserPosts(userData.posts || []);
+    } catch (error) {
+      console.error('Error fetching user posts:', error);
+      setUserPosts([]);
+    }
+  }, []);
 
   // Fetch user data function that can be called directly
   const fetchUserData = useCallback(async (forceRefresh = false) => {
     try {
       setLoading(true);
-      const user = JSON.parse(localStorage.getItem('user') || '{}');
-      console.log('Current user from localStorage:', user);
+      let userData = null;
       
-      if (user?._id) {
-        try {
-          // Force a fresh fetch from the server
-          console.log('Fetching fresh user profile for ID:', user._id);
-          const response = await authService.getUserProfile(user._id);
-          console.log('API Response:', response);
+      // Try to get user data from local storage first for immediate UI update
+      const localUser = JSON.parse(localStorage.getItem('user') || '{}');
+      
+      // Always fetch fresh data from the server
+      try {
+        const response = await authService.getCurrentUserProfile();
+        if (response) {
+          userData = response;
+          // Update local storage with fresh data
+          localStorage.setItem('user', JSON.stringify(userData));
           
-          if (response) {
-            // Create updated user object with server data
-            const updatedUser = { 
-              ...user,
-              ...response,
-              // Handle profile picture - it might be a string URL or an object with url property
-              profilePicture: typeof response.profilePicture === 'string' 
-                ? response.profilePicture 
-                : response.profilePicture?.url || user.profilePicture,
-              // Ensure Balance is properly set (capital B from backend)
-              Balance: response.Balance !== undefined ? response.Balance : user.Balance,
-              // Ensure coins are properly set
-              coins: response.coins !== undefined ? response.coins : user.coins,
-              // Ensure stats are properly set
-              stats: {
-                wins: response.stats?.wins || user.stats?.wins || 0,
-                matches: response.stats?.matches || user.stats?.matches || 0,
-                ...response.stats,
-                ...(user.stats || {})
-              }
-            };
-            
-            console.log('Updated user data:', updatedUser);
-            
-            // Update user data in localStorage
-            localStorage.setItem('user', JSON.stringify(updatedUser));
-            
-            // Update state with latest stats
-            const stats = {
-              balance: updatedUser.Balance || 0,
-              coins: updatedUser.coins || 0,
-              followers: updatedUser.stats?.followerCount || 0,
-              wins: updatedUser.stats?.wins || 0,
-              matches: updatedUser.stats?.matches || 0
-            };
-            
-            console.log('Stats to be set:', stats);
-            setUserStats(stats);
-            setCurrentUser(updatedUser);
-          }
-        } catch (error) {
-          console.error('Error fetching user profile:', error);
-          // If there's an error, use the cached data but show an error message
-          toast.error('Failed to refresh profile data. Using cached data.');
-          
-          // Still update with cached data
+          // Update user stats with the latest data
           const stats = {
-            balance: user.Balance || 0,
-            coins: user.coins || 0,
-            // followers: Array.isArray(user.followers) ? user.followers.length : 0,
-            followers: user.stats?.followerCount || 0,
-            wins: user.stats?.wins || 0,
-            matches: user.stats?.matches || 0
+            balance: userData.balance || userData.Balance || 0,
+            coins: userData.coins || 0,
+            followers: userData.stats?.followerCount || 0,
+            wins: userData.stats?.wins || 0,
+            matches: userData.stats?.matches || 0
           };
+          
           setUserStats(stats);
+          setCurrentUser(userData);
+          
+          // Fetch user posts if we have a user ID
+          if (userData._id) {
+            await fetchUserPosts(userData._id);
+          }
+          
+          return; // Successfully fetched fresh data, exit early
         }
+      } catch (error) {
+        console.error('Error fetching user profile:', error);
+        // Continue to fallback logic below
+      }
+      
+      // Fallback to local storage if API call fails or no response
+      if (localUser?._id) {
+        setUserStats(prev => ({
+          ...prev,
+          balance: localUser.balance || localUser.Balance || 0,
+          coins: localUser.coins || 0,
+          followers: localUser.stats?.followerCount || 0,
+          wins: localUser.stats?.wins || 0,
+          matches: localUser.stats?.matches || 0
+        }));
+        setCurrentUser(localUser);
+        // Fetch posts for local user
+        await fetchUserPosts(localUser._id);
       } else {
-        console.error('No user ID found in localStorage');
+        // No user data available, redirect to login
         toast.error('Please log in again');
         navigate('/login');
       }
@@ -292,6 +292,31 @@ const ProfileScreen = () => {
             </div>
           </div>
 
+          {/* <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center space-x-2">
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  fetchUserData(true);
+                  setRefreshing(true);
+                  setTimeout(() => setRefreshing(false), 1000);
+                }}
+                className={`p-2 rounded-full bg-white/10 hover:bg-white/20 transition-all ${refreshing ? 'animate-spin' : ''}`}
+                disabled={refreshing}
+                title="Refresh balance"
+              >
+                <FiRefreshCw className="text-white text-lg" />
+              </button>
+              <button 
+                onClick={() => setActiveProfileAction('edit')}
+                className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-all"
+                title="Edit profile"
+              >
+                <FiEdit className="text-white text-lg" />
+              </button>
+            </div>
+          </div> */}
+
           {/* Action Buttons */}
           <div className="flex space-x-2">
             <button 
@@ -302,13 +327,13 @@ const ProfileScreen = () => {
             >
               <FiRefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
             </button>
-            <button 
+            {/* <button 
               onClick={() => navigate('/settings')}
               className="text-white p-2 rounded-full hover:bg-white/10 transition-colors"
               title="Settings"
             >
               <FiSettings className="w-5 h-5" />
-            </button>
+            </button> */}
           </div>
         </div>
 

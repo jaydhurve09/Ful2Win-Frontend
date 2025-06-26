@@ -27,9 +27,12 @@ import TournamentHistory from './components/TournamentHistory';
 import FlappyBall from './components/FlappyBall';
 import Login from './pages/Login';
 import SignUp from './pages/SignUp';
+import ForgotPassword from './pages/ForgotPassword';
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import ColorSmash from './components/ColorSmash';
+import Leaderboard from './components/Leaderboard';
+import TournamentLobby from './components/TournamentLobby';
 import ComingSoon from './components/ComingSoon';
 
 function App() {
@@ -41,6 +44,7 @@ function App() {
             {/* Public routes */}
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<SignUp />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
             
             {/* Protected routes */}
             <Route element={<ProtectedRoute />}>
@@ -70,6 +74,7 @@ function App() {
               <Route path="/followers" element={<FollowerPage />} />
               <Route path="/leaderboard" element={<LeaderboardPage />} />
               <Route path="/tournamenthistory" element={<TournamentHistory />} />
+              <Route path="/leaderboard_singlegame" element={<Leaderboard />} />
               <Route path="/comingsoon" element={<ComingSoon />} />
             </Route>
             
