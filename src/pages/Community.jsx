@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Header from '../components/Header';
@@ -21,9 +21,10 @@ import {
   FiUserPlus,
 } from 'react-icons/fi';
 import { RiSwordLine } from 'react-icons/ri';
-import { BsThreeDotsVertical } from 'react-icons/bs';
-import { FaImage, FaVideo, FaPoll } from 'react-icons/fa';
-
+import { BsThreeDotsVertical, BsHeart, BsChat, BsShare, BsBookmark, BsEmojiSmile } from 'react-icons/bs';
+import { FaRegComment, FaRegBookmark, FaBookmark, FaRegHeart, FaHeart, FaRegShareSquare, FaImage, FaVideo, FaPoll } from 'react-icons/fa';
+import { IoMdSend } from 'react-icons/io';
+import { formatTimeAgo } from '../utils/timeUtils';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import authService from '../services/api';
@@ -38,6 +39,10 @@ const Community = () => {
   const [isCreatingPost, setIsCreatingPost] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [posts, setPosts] = useState([]);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState('');
+  const [fileType, setFileType] = useState('');
+  const fileInputRef = useRef(null);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate(); // For Challenges redirect
 
@@ -133,6 +138,63 @@ const Community = () => {
     fetchData();
   }, []);
 
+  const handleFileChange = (e) => {
+    try {
+      console.log('File input changed, files:', e.target.files);
+      const file = e.target.files[0];
+      
+      if (!file) {
+        console.log('No file selected');
+        return;
+      }
+
+      console.log('Selected file:', {
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        lastModified: file.lastModified
+      });
+
+      // Check file type
+      if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
+        const errorMsg = `Unsupported file type: ${file.type}. Please upload an image or video file.`;
+        console.error(errorMsg);
+        toast.error(errorMsg);
+        return;
+      }
+
+      // Check file size (5MB max)
+      const maxSize = 5 * 1024 * 1024; // 5MB
+      if (file.size > maxSize) {
+        const errorMsg = `File size (${(file.size / (1024 * 1024)).toFixed(2)}MB) exceeds the 5MB limit`;
+        console.error(errorMsg);
+        toast.error('File size should be less than 5MB');
+        return;
+      }
+
+      console.log('File is valid, creating preview URL...');
+      const previewUrl = URL.createObjectURL(file);
+      console.log('Preview URL created:', previewUrl);
+      
+      setSelectedFile(file);
+      setFileType(file.type.startsWith('image/') ? 'image' : 'video');
+      setPreviewUrl(previewUrl);
+      
+    } catch (error) {
+      console.error('Error in handleFileChange:', error);
+      toast.error('Failed to process the selected file');
+    }
+  };
+
+  const handleRemoveFile = () => {
+    setSelectedFile(null);
+    setPreviewUrl('');
+    setFileType('');
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   const communityTabs = [
     { id: 'feed', label: 'Feed', icon: <FiHome className="mr-1" /> },
     { id: 'chats', label: 'Chats', icon: <FiMessageSquare className="mr-1" /> },
@@ -154,42 +216,152 @@ const Community = () => {
   }, [posts, activeType]);
 
   const handleCreatePost = async () => {
-    if (newPostContent.trim() === '') {
-      toast.error('Please enter some content for your post');
-      return;
-    }
-
-    if (!currentUser) {
-      toast.error('User information not available');
-      return;
-    }
-
-    setIsCreatingPost(true);
+    console.log('handleCreatePost called');
     
-    try {
-      const postData = {
-        content: newPostContent,
-        // Add any additional post data here (e.g., images, videos, etc.)
-      };
+    if (!newPostContent.trim() && !selectedFile) {
+      const errorMsg = 'Please add some content or a file to your post';
+      console.error(errorMsg);
+      toast.error(errorMsg);
+      return;
+    }
 
-      // Create the post
-      const createdPost = await authService.createPost(postData);
+    try {
+      console.log('Starting post creation...');
+      setIsCreatingPost(true);
       
-      // Fetch the full post with populated user data
-      const response = await authService.getCommunityPosts({ 
-        _id: createdPost._id,
-        populate: 'user' 
-      });
+      // Create FormData
+      const formData = new FormData();
       
-      console.log('New post created:', newPost); // Debug log
+      // Add file if selected
+      if (selectedFile) {
+        console.log('Adding file to FormData:', {
+          name: selectedFile.name,
+          type: selectedFile.type,
+          size: selectedFile.size
+        });
+        formData.append('media', selectedFile);
+      } else {
+        console.log('No file selected for upload');
+      }
       
-      setPosts([newPost, ...posts]);
+      // Add post content
+      console.log('Adding post content:', newPostContent);
+      formData.append('content', newPostContent);
+      
+      // Add any additional data needed by your API
+      const postData = {
+        type: 'post',
+        timestamp: new Date().toISOString()
+      };
+      formData.append('data', JSON.stringify(postData));
+      
+      // Log FormData contents
+      console.log('FormData contents:');
+      for (let [key, value] of formData.entries()) {
+        if (value instanceof File) {
+          console.log(`${key}: File - ${value.name} (${value.type}, ${value.size} bytes)`);
+        } else {
+          console.log(`${key}:`, value);
+        }
+      }
+      
+      console.log('Sending request to create post...');
+      const response = await authService.createPost(formData);
+      
+      if (!response) {
+        const errorMsg = 'No response from server';
+        console.error(errorMsg);
+        throw new Error(errorMsg);
+      }
+      
+      console.log('Server response:', response);
+      
+      // Get current user data
+      console.log('Fetching current user profile...');
+      const currentUser = await authService.getCurrentUserProfile();
+      console.log('Current user data:', currentUser);
+      
+      // Create new post object with proper media handling
+      const newPost = {
+        ...(response.data?.post || response), // Handle both response formats
+        _id: response.data?.post?._id || response._id || `temp-${Date.now()}`,
+        user: currentUser,
+        content: response.data?.post?.content || response.content || newPostContent,
+        createdAt: response.data?.post?.createdAt || response.createdAt || new Date().toISOString(),
+        likes: [],
+        comments: [],
+        media: {
+          url: response.data?.mediaUrl || response.mediaUrl || (selectedFile ? URL.createObjectURL(selectedFile) : null),
+          type: response.data?.mediaType || response.mediaType || (selectedFile ? selectedFile.type : null)
+        }
+      };
+      
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Created new post:', {
+          ...newPost,
+          media: newPost.media ? {
+            ...newPost.media,
+            // Don't log the entire URL if it's a blob URL as it can be very long
+            url: newPost.media.url?.startsWith('blob:') ? 
+                 '[Blob URL]' : 
+                 newPost.media.url
+          } : null
+        });
+      }
+      
+      // Update UI
+      setPosts(prevPosts => [newPost, ...prevPosts]);
       setNewPostContent('');
       setShowCreatePost(false);
+      setSelectedFile(null);
+      setPreviewUrl('');
+      setFileType('');
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+      
       toast.success('Post created successfully!');
     } catch (error) {
-      console.error('Error creating post:', error);
-      toast.error(error.message || 'Failed to create post. Please try again.');
+      console.error('Error in handleCreatePost:', error);
+      
+      // More specific error messages based on the error type
+      let errorMessage = 'Failed to create post. Please try again.';
+      
+      if (error.message.includes('File size exceeds 5MB')) {
+        errorMessage = 'File size exceeds 5MB limit. Please choose a smaller file.';
+      } else if (error.message.includes('Invalid file type')) {
+        errorMessage = 'Invalid file type. Please upload an image or video.';
+      } else if (error.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        console.error('Server responded with error:', error.response.data);
+        
+        if (error.response.status === 401) {
+          errorMessage = 'Session expired. Please log in again.';
+        } else if (error.response.status === 413) {
+          errorMessage = 'File is too large. Please choose a file smaller than 5MB.';
+        } else if (error.response.status === 400) {
+          errorMessage = 'Invalid file type. Please upload an image or video.';
+        } else if (error.response.status === 500) {
+          errorMessage = 'Server error. Please try again later.';
+        } else if (error.response.data?.message) {
+          errorMessage = error.response.data.message;
+        } else {
+          errorMessage = `Server error: ${error.response.status} ${error.response.statusText}`;
+        }
+      } else if (error.request) {
+        // The request was made but no response was received
+        console.error('No response from server:', error.request);
+        errorMessage = 'No response from server. Please check your connection.';
+      } else {
+        // Something happened in setting up the request
+        console.error('Request setup error:', error.message);
+        errorMessage = `Error: ${error.message}`;
+      }
+      
+      toast.error(errorMessage);
+    } finally {
+      setIsCreatingPost(false);
     }
   };
 
@@ -227,18 +399,8 @@ const Community = () => {
     }
 
     return filteredPosts.map((post) => {
-      console.log('Post data:', post); // Log the full post data
-      
       // Extract user data from the post
       const user = post.user || post.author || post.createdBy || { _id: 'unknown' };
-      
-      // Debug: Log the full post and user data
-      console.log('Post ID:', post._id);
-      console.log('Available user data in post:', {
-        postUser: post.user,
-        postAuthor: post.author,
-        postCreatedBy: post.createdBy
-      });
       
       // Handle different possible user name fields
       const userName = user?.fullName || user?.name || user?.username || 'Unknown User';
@@ -246,18 +408,12 @@ const Community = () => {
       const userAvatarUrl = user?.profilePicture || user?.avatar || null;
       const userInitial = userName.charAt(0).toUpperCase();
       
-      console.log('Extracted user data for post', post._id, ':', {
-        userName,
-        userUsername,
-        userAvatarUrl,
-        hasAvatar: !!userAvatarUrl
-      });
-      
       const avatarElement = userAvatarUrl ? (
         <img 
           src={userAvatarUrl} 
           alt={userName}
           className="w-10 h-10 rounded-full object-cover"
+          loading="lazy"
         />
       ) : (
         <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-white font-medium">
@@ -265,20 +421,11 @@ const Community = () => {
         </div>
       );
       
-      // Debug: Log the final post data
-      console.log('Rendering post:', {
-        postId: post._id,
-        userName,
-        userUsername,
-        hasAvatar: !!userAvatarUrl,
-        userData: user
-      });
-
       return (
         <div key={post._id} className="bg-white/10 backdrop-blur-sm rounded-xl p-4 mb-4 border border-white/10">
           <div className="flex items-start mb-3">
             <div 
-              className="cursor-pointer"
+              className="cursor-pointer mr-2"
               onClick={() => handleViewProfile(user?._id || user, post)}
             >
               {avatarElement}
@@ -288,8 +435,8 @@ const Community = () => {
                 <h4 className="font-semibold mr-2">
                   {userName}
                 </h4>
-                <span className="text-xs text-gray-400">
-                  {new Date(post.createdAt).toLocaleDateString()}
+                <span className="text-xs text-gray-400" title={new Date(post.createdAt).toLocaleString()}>
+                  {formatTimeAgo(post.createdAt)}
                 </span>
               </div>
               <p className="text-sm text-gray-300">
@@ -303,13 +450,104 @@ const Community = () => {
           
           <p className="mb-3">{post.content}</p>
           
-          {post.image && (
+          {/* Handle both old format (image) and new format (media) */}
+          {(post.image || (post.media && post.media.url) || (post.images && post.images.length > 0)) && (
             <div className="mb-3 rounded-lg overflow-hidden">
-              <img 
-                src={post.image} 
-                alt="Post content" 
-                className="w-full h-auto max-h-96 object-cover rounded-lg"
-              />
+              {process.env.NODE_ENV === 'development' && (
+                <div className="text-xs text-gray-500 mb-1">
+                  Post ID: {post._id}<br />
+                  Has image: {!!post.image}<br />
+                  Has media: {!!(post.media && post.media.url)}<br />
+                  Images count: {post.images?.length || 0}
+                </div>
+              )}
+              
+              {/* Handle single image from 'image' field (old format) */}
+              {post.image && (
+                <img 
+                  src={post.image} 
+                  alt="Post content" 
+                  className="w-full h-auto max-h-96 object-contain rounded-lg bg-black/20"
+                  onError={(e) => {
+                    console.error('Error loading image (old format):', {
+                      url: post.image,
+                      postId: post._id
+                    });
+                    e.target.style.display = 'none';
+                  }}
+                  onLoad={() => {
+                    if (process.env.NODE_ENV === 'development') {
+                      console.log('Image loaded (old format):', post.image);
+                    }
+                  }}
+                />
+              )}
+              
+              {/* Handle single media from 'media' field */}
+              {!post.image && post.media && post.media.url && (
+                <>
+                  {(!post.media.type || post.media.type.startsWith('image/')) ? (
+                    <img 
+                      src={post.media.url} 
+                      alt="Post content" 
+                      className="w-full h-auto max-h-96 object-contain rounded-lg bg-black/20"
+                      onError={(e) => {
+                        console.error('Error loading image (media format):', {
+                          url: post.media.url,
+                          type: post.media.type,
+                          postId: post._id
+                        });
+                        e.target.style.display = 'none';
+                      }}
+                      onLoad={() => {
+                        if (process.env.NODE_ENV === 'development') {
+                          console.log('Image loaded (media format):', post.media.url);
+                        }
+                      }}
+                    />
+                  ) : post.media.type.startsWith('video/') ? (
+                    <video 
+                      src={post.media.url}
+                      controls
+                      className="w-full max-h-96 rounded-lg"
+                      onError={(e) => {
+                        console.error('Error loading video:', {
+                          url: post.media.url,
+                          type: post.media.type,
+                          postId: post._id
+                        });
+                        e.target.style.display = 'none';
+                      }}
+                    />
+                  ) : (
+                    <div className="p-4 bg-gray-800/50 text-center text-gray-400 rounded-lg">
+                      Unsupported media type: {post.media.type || 'unknown'}
+                    </div>
+                  )}
+                </>
+              )}
+              
+              {/* Handle multiple images from 'images' array */}
+              {!post.image && !(post.media && post.media.url) && post.images && post.images.length > 0 && (
+                <div className="grid grid-cols-2 gap-2">
+                  {post.images.map((img, idx) => (
+                    <img
+                      key={idx}
+                      src={img.url || img}
+                      alt={`Post content ${idx + 1}`}
+                      className="w-full h-48 object-cover rounded-lg"
+                      onError={(e) => {
+                        console.error('Error loading image from images array:', {
+                          url: img.url || img,
+                          index: idx,
+                          postId: post._id
+                        });
+                        e.target.style.display = 'none';
+                      }}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           )}
           
@@ -464,15 +702,51 @@ const Community = () => {
                             rows="3"
                             autoFocus
                           />
+                          {previewUrl && (
+                            <div className="mt-2 relative">
+                              {fileType === 'image' ? (
+                                <img 
+                                  src={previewUrl} 
+                                  alt="Preview" 
+                                  className="max-h-60 w-auto rounded-lg object-contain"
+                                />
+                              ) : (
+                                <video 
+                                  src={previewUrl} 
+                                  controls 
+                                  className="max-h-60 w-auto rounded-lg"
+                                />
+                              )}
+                              <button
+                                type="button"
+                                onClick={handleRemoveFile}
+                                className="absolute top-2 right-2 bg-black/70 hover:bg-black/90 text-white rounded-full p-1"
+                                title="Remove media"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                                </svg>
+                              </button>
+                            </div>
+                          )}
                         </div>
                       )}
                       <div className="flex flex-wrap items-center justify-between gap-2 border-t border-white/10 pt-3">
                         <div className="flex space-x-2">
-                          <button className="flex items-center text-sm text-gray-300 hover:text-white whitespace-nowrap">
-                            <FaImage className="mr-1" /> Photo
-                          </button>
-                          <button className="flex items-center text-sm text-gray-300 hover:text-white whitespace-nowrap">
-                            <FaVideo className="mr-1" /> Video
+                          <input
+                            type="file"
+                            id="media-upload"
+                            ref={fileInputRef}
+                            className="hidden"
+                            accept="image/*,video/*"
+                            onChange={handleFileChange}
+                          />
+                          <button 
+                            type="button"
+                            className="flex items-center text-sm text-gray-300 hover:text-white whitespace-nowrap"
+                            onClick={() => document.getElementById('media-upload').click()}
+                          >
+                            <FaImage className="mr-1" /> {fileType === 'video' ? 'Change Media' : 'Photo/Video'}
                           </button>
                           <button className="flex items-center text-sm text-gray-300 hover:text-white whitespace-nowrap">
                             <FaPoll className="mr-1" /> Poll

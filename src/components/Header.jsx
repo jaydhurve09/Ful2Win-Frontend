@@ -115,10 +115,10 @@ const Header = () => {
               className="flex items-center justify-center mx-auto py-[4px] px-2 gap-2 rounded-xl text-black bg-active cursor-pointer hover:opacity-90 transition"
             >
               <div className='flex items-center gap-2'>
-                <div className='flex items-center gap-1 text-black font-semibold'>
+                <div className='flex items-center gap-1 text-gray-800 font-semibold'>
                   <IoMdWallet className='text-2xl' />
                   {isLoading ? (
-                    <div className='h-4 w-12 bg-gray-600 animate-pulse rounded'></div>
+                    <div className='h-4 w-12 bg-gray-800 animate-pulse rounded'></div>
                   ) : (
                     <span>{formattedBalance}</span>
                   )}
@@ -180,11 +180,11 @@ const Header = () => {
               onClick={() => navigate('/wallet')}
               className="flex items-center bg-active px-3 py-1.5 rounded-full cursor-pointer hover:opacity-90 transition"
             >
-              <IoMdWallet className=" rounded-full text-black text-xl mr-1.5" />
+              <IoMdWallet className=" rounded-full text-gray-800 text-xl mr-1.5" />
               {isLoading ? (
-                <div className='h-4 w-12 bg-gray-600 animate-pulse rounded'></div>
+                <div className='h-4 w-12 bg-gray-800 animate-pulse rounded'></div>
               ) : (
-                <span className="text-black font-medium text-md">{formattedBalance}</span>
+                <span className="text-gray-800 font-medium text-md">{formattedBalance}</span>
               )}
             </div>
 

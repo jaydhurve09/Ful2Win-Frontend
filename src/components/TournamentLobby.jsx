@@ -1,6 +1,9 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaArrowLeft, FaCoins, FaRupeeSign } from 'react-icons/fa';
+
+import Header from '../components/Header';
+import Navbar from '../components/Navbar';
 import BackgroundBubbles from '../components/BackgroundBubbles';
 
 const TournamentLobby = () => {
@@ -39,15 +42,13 @@ const TournamentLobby = () => {
         </div>
       </div>
 
-      {/* Dual Buttons */}
       <div className="flex gap-2 mt-2">
         <button
-          className={`w-1/2 py-1.5 rounded-full font-semibold text-sm transition
-            ${type === 'cash' ? 'bg-green-400 hover:bg-green-500 text-black' : 'bg-yellow-400 hover:bg-yellow-500 text-black'}`}
+          className={`w-1/2 py-1.5 rounded-full font-semibold text-sm transition 
+            ${type === 'cash' ? 'bg-green-400 hover:bg-green-500' : 'bg-yellow-400 hover:bg-yellow-500'} text-black`}
         >
           Join Tournament
         </button>
-
         <button
           onClick={() => navigate('/leaderboard_singlegame')}
           className="w-1/2 py-1.5 rounded-full font-semibold text-sm bg-white/20 hover:bg-white/30 text-white border border-white/20"
@@ -61,12 +62,15 @@ const TournamentLobby = () => {
   );
 
   return (
-    <div className="relative min-h-screen bg-blueGradient text-white px-4 py-4">
+    <div className="relative min-h-screen bg-blueGradient text-white">
       <BackgroundBubbles />
+      <Header />
 
-      <div className="relative z-10 max-w-md mx-auto">
-        {/* Header */}
-        <div className="flex items-center mb-4">
+      {/* Scrollable Content Below Header */}
+      <div className="relative z-10 max-w-md mx-auto h-[calc(100vh-64px)] px-4 pb-24 overflow-y-auto space-y-6">
+
+        {/* Back and Title */}
+        <div className="flex items-center mt-16 mb-2">
           <button onClick={() => navigate(-1)} className="text-white text-lg mr-3">
             <FaArrowLeft />
           </button>
@@ -77,7 +81,7 @@ const TournamentLobby = () => {
         </div>
 
         {/* Game Image */}
-        <div className="w-full mb-4 rounded-xl overflow-hidden border border-white/10 shadow-md">
+        <div className="w-full rounded-xl overflow-hidden border border-white/10 shadow-md">
           <img
             src="https://cdn.pixabay.com/photo/2020/05/01/06/05/snake-and-ladder-5117207_1280.jpg"
             alt="Snake and Ladder"
@@ -85,8 +89,8 @@ const TournamentLobby = () => {
           />
         </div>
 
-        {/* User Balances */}
-        <div className="mb-6 flex justify-between text-sm px-1">
+        {/* Wallet Balances */}
+        <div className="flex justify-between text-sm px-1">
           <div className="flex items-center gap-1">
             <FaRupeeSign className="text-yellow-300" />
             <span className="text-white/90 font-medium">1246.00</span>
@@ -97,37 +101,28 @@ const TournamentLobby = () => {
           </div>
         </div>
 
-        {/* Scrollable Tournament List */}
-        <div className="max-h-[calc(100vh-320px)] overflow-y-auto space-y-6 pr-1 pb-4">
-          {/* Cash Tournaments */}
-          <div>
-            <h2 className="text-white/90 text-base font-semibold mb-2">Cash Tournaments</h2>
-            <div className="space-y-4">
-              {cashTournaments.map((t) => (
-                <TournamentCard
-                  key={t.id}
-                  {...t}
-                  type="cash"
-                />
-              ))}
-            </div>
+        {/* Cash Tournaments */}
+        <div>
+          <h2 className="text-white/90 text-base font-semibold mb-2">Cash Tournaments</h2>
+          <div className="space-y-4">
+            {cashTournaments.map((t) => (
+              <TournamentCard key={t.id} {...t} type="cash" />
+            ))}
           </div>
+        </div>
 
-          {/* Coin Tournaments */}
-          <div>
-            <h2 className="text-white/90 text-base font-semibold mt-4 mb-2">Coin Tournaments</h2>
-            <div className="space-y-4">
-              {coinTournaments.map((t) => (
-                <TournamentCard
-                  key={t.id}
-                  {...t}
-                  type="coin"
-                />
-              ))}
-            </div>
+        {/* Coin Tournaments */}
+        <div>
+          <h2 className="text-white/90 text-base font-semibold mt-4 mb-2">Coin Tournaments</h2>
+          <div className="space-y-4">
+            {coinTournaments.map((t) => (
+              <TournamentCard key={t.id} {...t} type="coin" />
+            ))}
           </div>
         </div>
       </div>
+
+      <Navbar />
     </div>
   );
 };

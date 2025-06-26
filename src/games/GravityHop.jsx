@@ -5,7 +5,7 @@ const GravityHop = () => {
     useEffect(() => {
     const handleMessage = (event) => {
       // ✅ Check origin to prevent security issues
-      if (event.origin !== "http://localhost:4000") return;
+      // if (event.origin !== "http://localhost:4000") return;
 
       const { type, score } = event.data;
 
@@ -22,7 +22,7 @@ const GravityHop = () => {
   return (
     <div className="game">
       <iframe
-        src="http://localhost:4000"
+        src="https://gravity-hop-eth4.vercel.app/"
         title="2048 Game"
         width="100%"
         height="100%"

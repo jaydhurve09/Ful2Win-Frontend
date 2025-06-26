@@ -8,10 +8,11 @@ const GameCard = ({ game, size = 'md' }) => {
   return (
     <div className={`group ${isSmall ? '' : 'w-full'}`}>
       <div
-        className={`relative rounded-xl overflow-hidden mb-2 ${isSmall
-            ? 'aspect-[3/4]'
-            : 'aspect-[3/4] md:aspect-video'
-          }`}
+        className={`relative rounded-xl overflow-hidden mb-2 ${
+          isSmall
+            ? 'aspect-square'
+            : 'aspect-square md:aspect-square'
+        }`}
       >
         <img
           src={game.image}

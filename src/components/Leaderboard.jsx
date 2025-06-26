@@ -1,6 +1,9 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaArrowLeft } from 'react-icons/fa';
+
+import Header from '../components/Header';
+import Navbar from '../components/Navbar';
 import BackgroundBubbles from '../components/BackgroundBubbles';
 
 const leaderboardData = [
@@ -22,12 +25,14 @@ const Leaderboard = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="relative h-screen bg-blueGradient text-white px-4 py-4 overflow-hidden">
+    <div className="relative min-h-screen bg-blueGradient text-white">
       <BackgroundBubbles />
+      <Header />
 
-      <div className="relative z-10 max-w-md mx-auto flex flex-col h-full">
-        {/* Header */}
-        <div className="flex items-center mb-4">
+      {/* Scrollable Content */}
+      <div className="relative z-10 max-w-md mx-auto px-4 pt-14 pb-24 flex flex-col h-[calc(100vh-64px)] overflow-y-auto">
+        {/* Back & Title */}
+        <div className="flex items-center mt-6 mb-4">
           <button onClick={() => navigate(-1)} className="text-white text-lg mr-3">
             <FaArrowLeft />
           </button>
@@ -45,8 +50,8 @@ const Leaderboard = () => {
           <div className="w-3/12 text-right">Prize Won</div>
         </div>
 
-        {/* Scrollable List */}
-        <div className="flex-1 overflow-y-auto space-y-2 pr-1 pb-4">
+        {/* Leaderboard Entries */}
+        <div className="space-y-2 pr-1 pb-4">
           {leaderboardData.map((player, index) => (
             <div
               key={player.id}
@@ -61,7 +66,7 @@ const Leaderboard = () => {
             </div>
           ))}
 
-          {/* Your Own Player Card - matches the design */}
+          {/* User Placeholder Card */}
           <div className="bg-white/10 backdrop-blur-md border border-white/10 rounded-lg px-3 py-2 flex justify-between items-center hover:scale-[1.01] transition mt-4">
             <div className="w-1/12 text-sm text-white/80 font-semibold">–</div>
             <div className="w-5/12">
@@ -75,6 +80,8 @@ const Leaderboard = () => {
 
         <p className="text-center text-xs text-white/50 mt-3">Compete daily to reach the top!</p>
       </div>
+
+      <Navbar />
     </div>
   );
 };

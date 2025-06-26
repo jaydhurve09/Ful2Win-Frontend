@@ -1144,16 +1144,207 @@ getWalletBalance: async function() {
 
 /**
  * Create a new post
- * @param {Object} postData - Post data including content and optional media
+ * @param {FormData} formData - FormData containing post data and optional media file
  * @returns {Promise<Object>} Created post data
  */
-createPost: async function(postData) {
+createPost: async function(formData) {
+  console.log('=== Starting createPost ===');
+  
   try {
-    const response = await api.post('/api/posts', postData);
+    // Log FormData contents for debugging
+    console.log('=== FormData Contents ===');
+    const formDataEntries = {};
+    for (let [key, value] of formData.entries()) {
+      if (value instanceof File) {
+        console.log(`- ${key}:`, value.name, `(${value.type}, ${value.size} bytes)`);
+        formDataEntries[key] = {
+          type: 'file',
+          name: value.name,
+          size: value.size,
+          mimeType: value.type
+        };
+      } else if (key === 'data') {
+        try {
+          const parsedValue = JSON.parse(value);
+          console.log(`- ${key}:`, parsedValue);
+          formDataEntries[key] = parsedValue;
+        } catch (e) {
+          console.log(`- ${key}:`, value);
+          formDataEntries[key] = value;
+        }
+      } else {
+        console.log(`- ${key}:`, value);
+        formDataEntries[key] = value;
+      }
+    }
+
+    // Get the auth token
+    const token = localStorage.getItem('token');
+    if (!token) {
+      const error = new Error('Authentication required. Please log in again.');
+      error.code = 'AUTH_REQUIRED';
+      throw error;
+    }
+
+    // Create headers with the auth token
+    const headers = {
+      'Authorization': `Bearer ${token}`,
+      'Accept': 'application/json',
+    };
+
+    console.log('=== Request Configuration ===', {
+      endpoint: '/api/posts',
+      method: 'POST',
+      hasFiles: !!formData.get('media'),
+      formData: formDataEntries,
+      headers: {
+        ...headers,
+        Authorization: 'Bearer [REDACTED]' // Don't log the full token
+      },
+      baseURL: ENV.apiBaseUrl,
+      withCredentials: true
+    });
+    
+    // Validate file size (5MB max) and type
+    const file = formData.get('media');
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        const error = new Error('File size exceeds 5MB limit');
+        error.code = 'FILE_TOO_LARGE';
+        throw error;
+      }
+      
+      // Validate file type
+      const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+      if (!validTypes.includes(file.type)) {
+        const error = new Error('Invalid file type. Only images (JPEG, PNG, GIF, WebP) are allowed.');
+        error.code = 'INVALID_FILE_TYPE';
+        throw error;
+      }
+      
+      console.log('File validation passed:', {
+        name: file.name,
+        type: file.type,
+        size: file.size
+      });
+    }
+
+    // Make the API request
+    const response = await axios({
+      method: 'post',
+      url: '/api/posts',
+      baseURL: ENV.apiBaseUrl,
+      data: formData,
+      headers: headers,
+      withCredentials: true,
+      maxContentLength: 10 * 1024 * 1024, // 10MB max content length
+      maxBodyLength: 10 * 1024 * 1024,    // 10MB max body length
+      timeout: 120000, // 120 seconds
+      onUploadProgress: (progressEvent) => {
+        const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+        console.log(`Upload Progress: ${percentCompleted}%`);
+      }
+    });
+    
+    // Log the response
+    console.log('=== Server Response ===');
+    console.log('Status:', response.status);
+    console.log('Headers:', response.headers);
+    console.log('Data:', response.data);
+    
+    if (!response.data) {
+      throw new Error('No data received from server');
+    }
+    
     return response.data;
+    
   } catch (error) {
-    console.error('Error creating post:', error);
-    throw error.response?.data?.message || 'Failed to create post';
+    // Enhanced error logging
+    const errorDetails = {
+      message: error.message,
+      code: error.code,
+      stack: error.stack,
+    };
+    
+    if (error.response) {
+      // Server responded with an error status code
+      errorDetails.response = {
+        status: error.response.status,
+        statusText: error.response.statusText,
+        headers: error.response.headers,
+        data: error.response.data
+      };
+      
+      // Log the full error response for debugging
+      console.error('Server Error Response:', error.response);
+    } else if (error.request) {
+      // The request was made but no response was received
+      errorDetails.request = {
+        method: error.config?.method,
+        url: error.config?.url,
+        headers: error.config?.headers,
+        data: error.config?.data
+      };
+      console.error('No response received:', error.request);
+    } else {
+      // Something happened in setting up the request
+      errorDetails.config = {
+        url: error.config?.url,
+        method: error.config?.method,
+        headers: error.config?.headers,
+        data: error.config?.data
+      };
+    }
+    
+    console.error('Error in createPost:', errorDetails);
+    
+    // Create a more descriptive error message
+    let errorMessage = 'Failed to create post';
+    
+    if (error.code === 'FILE_TOO_LARGE') {
+      errorMessage = 'File size exceeds 5MB limit';
+    } else if (error.code === 'INVALID_FILE_TYPE') {
+      errorMessage = error.message;
+    } else if (error.code === 'AUTH_REQUIRED') {
+      errorMessage = 'Authentication required. Please log in again.';
+    } else if (error.response) {
+      // Server responded with an error status code
+      if (error.response.status === 413) {
+        errorMessage = 'File is too large. Maximum size is 5MB.';
+      } else if (error.response.status === 400) {
+        errorMessage = 'Invalid request. Please check your input.';
+        if (error.response.data?.errors) {
+          errorMessage = Object.values(error.response.data.errors)
+            .map(err => Array.isArray(err) ? err.join(', ') : err)
+            .join('\n');
+        } else if (error.response.data?.message) {
+          errorMessage = error.response.data.message;
+        }
+      } else if (error.response.status === 401) {
+        errorMessage = 'Session expired. Please log in again.';
+      } else if (error.response.status === 500) {
+        errorMessage = 'Server error. Please try again later.';
+      }
+    } else if (error.request) {
+      // Request was made but no response received
+      errorMessage = 'No response from server. Please check your connection.';
+    } else {
+      // Something happened in setting up the request
+      errorMessage = `Error: ${error.message}`;
+    }
+    
+    const enhancedError = new Error(errorMessage);
+    enhancedError.code = error.code;
+    enhancedError.originalError = error;
+    enhancedError.response = error.response;
+    
+    // If this is a 401 error, redirect to login
+    if (error.response?.status === 401) {
+      // You might want to handle this in your component instead
+      // window.location.href = '/login';
+    }
+    
+    throw enhancedError;
   }
 },
 
