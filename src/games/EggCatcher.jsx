@@ -1,37 +1,40 @@
 import React, { useEffect, useRef } from "react";
+import { useState } from "react";
 import axios from "axios";
-import ScoreCard from "./ScoreCard.jsx";
+import ScoreCard from "../components/ScoreCard";
 const scoreData = {
   userId: "12345", // Replace with actual user ID
   score: 0, // This will be updated dynamically
   roomId: "67890", // Replace with actual room ID
-  gameName: "Flappy Bird", // Replace with actual game name
+  gameName: "color smash", // Replace with actual game name
 };
 
-const FlappyBall = () => {
-  const [gameOn, setGameOn] = React.useState(false);
+const EggCatcher = () => {
+  const [gameOn, setGameOn] = useState(false);
 
   useEffect(() => {
     const handleMessage = (event) => {
+      console.log("hii");
       // ✅ Check origin to prevent security issues
-      // if (event.origin !== "http://localhost:4000") return;
+    //  if (event.origin !== "https://colorsmash.vercel.app/") return;
 
       const { type, score } = event.data;
 
       if (type === "GAME_OVER") {
-        console.log("🎯 Final Score from Game:", score);
+        
         // Send the score to the backend
-       // axios
-       //   .post("http://localhost:5000/score/submit-score", {
-        //    userId: "12345", // Replace with actual user ID
-        //    score: score,
-         //   roomId: "67890", // Replace with actual room ID
-          //  gameName: "Flappy Bird",
-         // });
+        axios
+          .post("http://localhost:5000/score/submit-score", {
+            userId: "12345", // Replace with actual user ID
+            score: score,
+            roomId: "67890", // Replace with actual room ID
+            gameName: "egg cacher",
+          });
           
         setGameOn(true);
+        console.log(gameOn)
         scoreData.score = score; // Update the score data
-        
+         console.log("🎯 Final Score from Game:", score);
       }
     };
 
@@ -54,7 +57,7 @@ const FlappyBall = () => {
       <div>
         <h2>Play Game</h2>
         <iframe
-          src="https://bird-lac-omega.vercel.app/"
+          src="https://egg-cacher.vercel.app/"
           title="Game"
           width="100%"
           height="100%"
@@ -75,4 +78,4 @@ const FlappyBall = () => {
   );
 };
 
-export default FlappyBall;
+export default EggCatcher;

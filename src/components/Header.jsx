@@ -178,19 +178,19 @@ const Header = () => {
             {/* Wallet */}
             <div
               onClick={() => navigate('/wallet')}
-              className="flex items-center bg-dullBlue px-3 py-1.5 rounded-full cursor-pointer hover:opacity-90 transition"
+              className="flex items-center bg-active px-3 py-1.5 rounded-full cursor-pointer hover:opacity-90 transition"
             >
-              <IoMdWallet className="bg-active rounded-full p-1 text-lg mr-1.5" />
+              <IoMdWallet className=" rounded-full text-black text-xl mr-1.5" />
               {isLoading ? (
                 <div className='h-4 w-12 bg-gray-600 animate-pulse rounded'></div>
               ) : (
-                <span className="text-black font-medium text-sm">{formattedBalance}</span>
+                <span className="text-black font-medium text-md">{formattedBalance}</span>
               )}
             </div>
 
             {/* Bell Notification */}
             <button
-              className="text-white text-xl hover:opacity-80 transition-opacity"
+              className="text-dullBlue text-xl hover:opacity-80 transition-opacity"
               onClick={() => navigate('/notifications')}
             >
               <FaBell />
@@ -199,7 +199,7 @@ const Header = () => {
             {/* Profile */}
             <button
               onClick={() => navigate('/profile')}
-              className="w-9 h-9 rounded-full overflow-hidden border-2 border-yellow-500 hover:opacity-90 transition-opacity"
+              className="w-9 h-9 rounded-full overflow-hidden border-[3px] border-dullBlue hover:opacity-90 transition-opacity"
             >
               {profilePicture ? (
                 <img 

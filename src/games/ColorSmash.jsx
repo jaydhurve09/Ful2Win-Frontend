@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import axios from "axios";
-import ScoreCard from "./ScoreCard.jsx";
+import ScoreCard from "../components/ScoreCard.jsx";
 const scoreData = {
   userId: "12345", // Replace with actual user ID
   score: 0, // This will be updated dynamically

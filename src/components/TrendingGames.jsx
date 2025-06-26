@@ -36,8 +36,8 @@ const TrendingGames = () => {
     },
     {
       id: 3,
-      name: 'Maze Runner',
-      path: '/comingsoon',
+      name: 'Match Merge',
+      path: '/matchmerge',
       image: mazeRunner,
       description: 'Navigate through challenging mazes',
       className: 'bg-gray-800',
@@ -47,8 +47,8 @@ const TrendingGames = () => {
     },
     {
       id: 4,
-      name: 'Poker',
-      path: '/comingsoon',
+      name: 'Egg Catcher',
+      path: '/eggcatcher',
       image: poker,
       description: 'Test your poker face',
       className: 'bg-gray-800/50',
@@ -58,8 +58,8 @@ const TrendingGames = () => {
     },
     {
       id: 5,
-      name: 'Ludo',
-      path: '/comingsoon',
+      name: 'Gravity Hop',
+      path: '/gravityhop',
       image: ludo,
       description: 'Family favorite board game',
       className: 'bg-gray-800',

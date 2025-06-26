@@ -4,7 +4,7 @@ import Header from '../components/Header';
 import Navbar from '../components/Navbar';
 import GameCard from '../components/GameCard';
 import BackgroundBubbles from '../components/BackgroundBubbles';
-import { GravityHop } from '../components/GravityHop';
+import GravityHop from '../games/GravityHop';
 
 // Game images
 import callBreak from '../assets/call-break.png';
@@ -18,7 +18,7 @@ import SportBall from '../assets/Sports-Ball.png';
 const games = [
   { id: 1, title: 'Flappy-Boll', category: 'Puzzle', players: '10K+', image: SportBall, path: 'flappyball', featured: true },
   { id: 2, title: 'Rummy', category: 'Card', players: '25K+', image: rummy, featured: true },
-  { id: 3, title: 'Maze Runner', category: 'Puzzle', players: '8K+', image: mazeRunner, featured: true },
+  { id: 3, title: 'Maze Runner', category: 'Puzzle', players: '8K+', image: mazeRunner,  featured: true },
   { id: 4, title: 'Poker', category: 'Card', players: '15K+', image: poker, featured: false },
   { id: 5, title: 'Ludo', category: 'Board', players: '30K+', image: ludo, featured: true },
   { id: 6, title: 'Gravity Hop', category: 'Puzzle', players: '5K+', featured: false , to: 'GravityHop' },

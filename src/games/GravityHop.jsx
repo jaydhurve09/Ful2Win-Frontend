@@ -1,7 +1,7 @@
 import {React} from 'react';
 import { useEffect } from 'react';
 
-export const GravityHop = () => {
+const GravityHop = () => {
     useEffect(() => {
     const handleMessage = (event) => {
       // ✅ Check origin to prevent security issues
@@ -30,4 +30,6 @@ export const GravityHop = () => {
         ></iframe>
     </div>
   );
-}
+};
+
+export default GravityHop;

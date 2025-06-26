@@ -24,16 +24,19 @@ import FollowerPage from './components/FollowerPage';
 import SupportCenter from './pages/SupportCenter';
 import LeaderboardPage from './components/LeaderboardPage';
 import TournamentHistory from './components/TournamentHistory';
-import FlappyBall from './components/FlappyBall';
+import FlappyBall from './games/FlappyBall';
 import Login from './pages/Login';
 import SignUp from './pages/SignUp';
 import ForgotPassword from './pages/ForgotPassword';
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
-import ColorSmash from './components/ColorSmash';
+import ColorSmash from './games/ColorSmash';
 import Leaderboard from './components/Leaderboard';
 import TournamentLobby from './components/TournamentLobby';
 import ComingSoon from './components/ComingSoon';
+import MatchMerge from './games/MatchMerge';
+import EggCatcher from './games/EggCatcher';
+import GravityHop from './games/GravityHop';
 
 function App() {
   return (
@@ -74,8 +77,11 @@ function App() {
               <Route path="/followers" element={<FollowerPage />} />
               <Route path="/leaderboard" element={<LeaderboardPage />} />
               <Route path="/tournamenthistory" element={<TournamentHistory />} />
-              <Route path="/leaderboard_singlegame" element={<Leaderboard />} />
+              <Route path="/leaderboard_singlegame" element={<Leaderboard />}/>
               <Route path="/comingsoon" element={<ComingSoon />} />
+              <Route path="/matchmerge" element={<MatchMerge />} />
+              <Route path="/eggcatcher" element={<EggCatcher />} />
+              <Route path="/gravityhop" element={<GravityHop />} />
             </Route>
             
             {/* 404 - Not Found */}
