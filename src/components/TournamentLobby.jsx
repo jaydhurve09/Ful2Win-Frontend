@@ -64,7 +64,7 @@ const TournamentLobby = () => {
   return (
     <div className="relative min-h-screen bg-blueGradient text-white">
       <BackgroundBubbles />
-      <Header />
+      {/* <Header /> */}
 
       {/* Scrollable Content Below Header */}
       <div className="relative z-10 max-w-md mx-auto h-[calc(100vh-64px)] px-4 pb-24 overflow-y-auto space-y-6">
@@ -122,7 +122,7 @@ const TournamentLobby = () => {
         </div>
       </div>
 
-      <Navbar />
+      {/* <Navbar /> */}
     </div>
   );
 };
