@@ -1155,6 +1155,21 @@ createPost: async function(postData) {
     console.error('Error creating post:', error);
     throw error.response?.data?.message || 'Failed to create post';
   }
+},
+
+/**
+ * Get all posts for the community feed
+ * @param {Object} params - Query parameters (page, limit, etc.)
+ * @returns {Promise<Array>} Array of posts
+ */
+getCommunityPosts: async function(params = {}) {
+  try {
+    const response = await api.get('/api/posts', { params });
+    return response.data.data || response.data;
+  } catch (error) {
+    console.error('Error fetching community posts:', error);
+    throw error.response?.data?.message || 'Failed to fetch community posts';
+  }
 }
 
 };

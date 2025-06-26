@@ -38,7 +38,16 @@ const CommunityProfile = ({ user: userProp, onClose }) => {
 
   console.log('Rendering profile for user:', user); // Debug log
 
-  const stats = user.stats;
+  // Get stats with defaults
+  const stats = {
+    followers: user.followersCount || user.stats?.followers || 0,
+    following: user.followingCount || user.stats?.following || 0,
+    posts: user.postsCount || user.stats?.posts || 0,
+    ...user.stats
+  };
+
+  // Check if this is the current user's profile
+  const isCurrentUser = user._id === localStorage.getItem('userId');
 
   const achievements = [
     { id: 1, title: 'First Win', icon: <FaTrophy className="text-yellow-400" />, unlocked: true },
@@ -129,7 +138,7 @@ const CommunityProfile = ({ user: userProp, onClose }) => {
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-4 gap-2 my-6">
+          <div className="grid grid-cols-3 gap-2 my-6">
             <div className="bg-white/5 rounded-lg p-3 text-center">
               <div className="text-lg font-bold text-white">{stats.wins}</div>
               <div className="text-xs text-gray-400">Wins</div>
@@ -142,14 +151,14 @@ const CommunityProfile = ({ user: userProp, onClose }) => {
               <div className="text-lg font-bold text-white">{stats.games}</div>
               <div className="text-xs text-gray-400">Games</div>
             </div>
-            <div className="bg-white/5 rounded-lg p-3 text-center">
+            {/* <div className="bg-white/5 rounded-lg p-3 text-center">
               <div className="text-lg font-bold text-white">{stats.friends}</div>
               <div className="text-xs text-gray-400">Friends</div>
-            </div>
+            </div> */}
           </div>
 
           {/* Action Buttons */}
-          <div className="flex gap-2 mb-6">
+          {/* <div className="flex gap-2 mb-6">
             <button className="flex-1 flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white py-2.5 px-4 rounded-lg text-sm font-medium transition-colors">
               <FaUserPlus size={16} />
               Add Friend
@@ -158,24 +167,61 @@ const CommunityProfile = ({ user: userProp, onClose }) => {
               <FaCommentDots size={16} />
               Message
             </button>
-          </div>
+          </div> */}
 
-          {/* Follow Stats */}
+          {/* Stats Section */}
           <div className="mb-6">
-            <div className="grid grid-cols-3 gap-2 bg-white/5 rounded-xl p-3">
+            <div className="grid grid-cols-3 gap-2 bg-white/5 rounded-xl p-4">
               <div className="text-center">
-                <div className="text-lg font-bold text-white">1.2K</div>
-                <div className="text-xs text-gray-400">Posts</div>
+                <p className="text-2xl font-bold text-white">{stats.posts}</p>
+                <p className="text-xs text-gray-400">Posts</p>
               </div>
               <div className="text-center">
-                <div className="text-lg font-bold text-white">24.5K</div>
-                <div className="text-xs text-gray-400">Followers</div>
+                <p className="text-2xl font-bold text-white">{stats.followers}</p>
+                <p className="text-xs text-gray-400">Followers</p>
               </div>
               <div className="text-center">
-                <div className="text-lg font-bold text-white">1.5K</div>
-                <div className="text-xs text-gray-400">Following</div>
+                <p className="text-2xl font-bold text-white">{stats.following}</p>
+                <p className="text-xs text-gray-400">Following</p>
               </div>
             </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-3 my-4">
+            {isCurrentUser ? (
+              <button 
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg font-medium transition-colors"
+                onClick={() => {
+                  // Handle edit profile
+                  onClose();
+                  // You can add navigation to edit profile here
+                }}
+              >
+                Edit Profile
+              </button>
+            ) : (
+              <>
+                <button 
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg font-medium transition-colors"
+                  onClick={() => {
+                    // Handle follow action
+                    // toast.success(`Followed ${user.name}`);
+                  }}
+                >
+                  Follow
+                </button>
+                <button 
+                  className="flex-1 bg-white/10 hover:bg-white/20 text-white py-2 px-4 rounded-lg font-medium transition-colors"
+                  onClick={() => {
+                    // Handle message action
+                    // toast.success(`Messaging ${user.name}`);
+                  }}
+                >
+                  Message
+                </button>
+              </>
+            )}
           </div>
 
           {/* Achievements */}

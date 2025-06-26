@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom'; // For redirect
+import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Header from '../components/Header';
 import BackgroundBubbles from '../components/BackgroundBubbles';
@@ -37,102 +37,100 @@ const Community = () => {
   const [selectedFriend, setSelectedFriend] = useState(null);
   const [isCreatingPost, setIsCreatingPost] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
+  const [posts, setPosts] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate(); // For Challenges redirect
 
-  const handleViewProfile = async (post) => {
+  // Function to enhance posts with user data
+  const enhancePostsWithUserData = async (posts) => {
     try {
-      // Show loading state
-      setViewingProfile({ loading: true });
-
-      let userId;
-      let userData;
-
-      // If post is a user object (from direct click)
-      if (post._id && post.username) {
-        userId = post._id;
-      } 
-      // If post has a user object with _id
-      else if (post.user?._id) {
-        userId = post.user._id;
-      }
-      // For posts with just a username
-      else if (post.user) {
-        // If user is just a string (username), we'll need to find the user by username
-        // For now, we'll use the current implementation and enhance it
-        const user = post.user || {};
-        userData = {
-          ...user,
-          user: typeof user === 'string' ? user : (user.username || post.user || 'user'),
-          name: typeof user === 'string' ? user : (user.name || post.name || 'User'),
-          avatar: user.profilePicture || post.avatar || (user.name || '').charAt(0)?.toUpperCase() || 'U',
-          verified: user.verified || post.verified || false,
-          stats: {
-            wins: 0,
-            winRate: '0%',
-            games: 0,
-            friends: 0,
-            ...(user.stats || {})
-          }
-        };
-        setViewingProfile(userData);
-        return;
-      }
-
-      // If we have a userId, fetch the full user profile
-      if (userId) {
+      const enhancedPosts = [];
+      
+      for (const post of posts) {
         try {
-          const response = await authService.getUserProfile(userId);
-          userData = {
-            ...response,
-            username: response.username || response.user || 'user',
-            name: response.fullName || response.name || response.username || 'User',
-            profilePicture: response.profilePicture,
-            verified: response.isVerified || response.verified || false,
-            // Add any additional fields you want to display
-            stats: {
-              wins: 0, // You can update these with actual stats if available
-              winRate: '0%',
-              games: 0,
-              friends: 0,
-              ...response.stats
-            }
-          };
-          setViewingProfile(userData);
-        } catch (error) {
-          console.error('Error fetching user profile:', error);
-          toast.error('Failed to load user profile');
-          // Fall back to basic info if available
-          if (post.user) {
-            setViewingProfile({
-              ...post.user,
-              name: post.user.name || post.user.username || 'User',
-              avatar: post.user.profilePicture || (post.user.name || 'U').charAt(0).toUpperCase(),
-              loading: false
+          // Check if user data is already in the post
+          if (post.user?._id || post.author?._id) {
+            enhancedPosts.push({
+              ...post,
+              user: post.user || post.author || { _id: 'unknown' }
             });
+            continue;
           }
+          
+          // If we have a user ID, try to fetch the user data
+          const userId = post.user || post.userId || post.author || post.createdBy?._id || post.createdBy;
+          if (userId && typeof userId === 'string') {
+            console.log(`Fetching user data for post ${post._id}, user ID:`, userId);
+            try {
+              const userData = await authService.getUserProfile(userId);
+              enhancedPosts.push({ ...post, user: userData });
+            } catch (error) {
+              console.error(`Failed to fetch user ${userId} for post ${post._id}:`, error);
+              enhancedPosts.push({ ...post, user: { _id: userId } });
+            }
+          } else {
+            console.log('No valid user ID found for post:', post._id, 'post data:', post);
+            enhancedPosts.push({ ...post, user: { _id: 'unknown' } });
+          }
+        } catch (error) {
+          console.error('Error processing post:', post._id, error);
+          enhancedPosts.push({ ...post, user: { _id: 'unknown' } });
         }
       }
+      
+      return enhancedPosts;
     } catch (error) {
-      console.error('Error in handleViewProfile:', error);
-      toast.error('Failed to load profile');
-      setViewingProfile(null);
+      console.error('Error in enhancePostsWithUserData:', error);
+      return posts.map(post => ({
+        ...post,
+        user: post.user || post.author || { _id: 'unknown' }
+      }));
     }
   };
 
-  // Fetch current user data
+  // Fetch current user data and posts
   useEffect(() => {
-    const fetchCurrentUser = async () => {
+    const fetchData = async () => {
+      setIsLoading(true);
       try {
+        // Fetch current user data
         const userData = await authService.getCurrentUserProfile();
-        console.log('Current user data:', userData); // Debug log
+        console.log('Current user data:', userData);
         setCurrentUser(userData);
+
+        // Fetch community posts with user data populated
+        let postsData = await authService.getCommunityPosts({ 
+          sort: '-createdAt',
+          limit: 20,
+          populate: 'user author createdBy', // Include all possible user reference fields
+        });
+        
+        console.log('Raw posts data:', JSON.stringify(postsData, null, 2));
+        
+        // Process posts to ensure we have user data
+        if (Array.isArray(postsData)) {
+          // First try to use the populated user data
+          const processedPosts = postsData.map(post => ({
+            ...post,
+            user: post.user || post.author || post.createdBy || null
+          }));
+          
+          // Then enhance any posts that still don't have user data
+          const enhancedPosts = await enhancePostsWithUserData(processedPosts);
+          console.log('Processed posts with user data:', enhancedPosts);
+          setPosts(enhancedPosts);
+        } else {
+          setPosts([]);
+        }
       } catch (error) {
-        console.error('Error fetching current user:', error);
-        toast.error('Failed to load user data');
+        console.error('Error fetching data:', error);
+        toast.error('Failed to load posts');
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    fetchCurrentUser();
+    fetchData();
   }, []);
 
   const communityTabs = [
@@ -149,50 +147,11 @@ const Community = () => {
     { id: 'discussions', label: 'Discussions', icon: <FiMessageCircle className="mr-1" /> },
   ];
 
-  const communityPosts = [
-    {
-      id: 1,
-      user: 'gaming_legend',
-      name: 'Alex Johnson',
-      avatar: 'AJ',
-      time: '1h ago',
-      content: 'Check out this insane headshot I hit in the tournament yesterday!',
-      image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?...',
-      likes: 256,
-      comments: 32,
-      shares: 18,
-      type: 'popular',
-      userLiked: true,
-      verified: true,
-    },
-    {
-      id: 2,
-      user: 'esports_pro',
-      avatar: 'EP',
-      time: '4h ago',
-      content: 'Check out my latest gaming setup!',
-      likes: 128,
-      comments: 24,
-      shares: 12,
-      type: 'recent',
-      userLiked: true,
-    },
-    {
-      id: 3,
-      user: 'game_dev',
-      avatar: 'GD',
-      time: '1d ago',
-      content: "What's your favorite game of all time?",
-      likes: 87,
-      comments: 45,
-      shares: 5,
-      type: 'discussions',
-      userLiked: false,
-    },
-  ];
-
-  const [posts, setPosts] = useState(communityPosts);
-  const filteredPosts = activeType === 'all' ? posts : posts.filter(post => post.type === activeType);
+  // Filter posts based on active tab
+  const filteredPosts = React.useMemo(() => {
+    if (activeType === 'all') return posts;
+    return posts.filter(post => post.type === activeType);
+  }, [posts, activeType]);
 
   const handleCreatePost = async () => {
     if (newPostContent.trim() === '') {
@@ -212,28 +171,15 @@ const Community = () => {
         content: newPostContent,
         // Add any additional post data here (e.g., images, videos, etc.)
       };
-      
+
+      // Create the post
       const createdPost = await authService.createPost(postData);
       
-      // Format the new post with user information
-      const newPost = {
-        id: createdPost._id || Date.now(),
-        user: {
-          _id: currentUser._id,
-          username: currentUser.username || 'user',
-          name: currentUser.name || 'User',
-          profilePicture: currentUser.profilePicture,
-          verified: currentUser.verified || false
-        },
-        time: 'Just now',
-        content: createdPost.content,
-        image: createdPost.image,
-        likes: 0,
-        comments: 0,
-        shares: 0,
-        type: 'recent',
-        userLiked: false
-      };
+      // Fetch the full post with populated user data
+      const response = await authService.getCommunityPosts({ 
+        _id: createdPost._id,
+        populate: 'user' 
+      });
       
       console.log('New post created:', newPost); // Debug log
       
@@ -244,31 +190,161 @@ const Community = () => {
     } catch (error) {
       console.error('Error creating post:', error);
       toast.error(error.message || 'Failed to create post. Please try again.');
-    } finally {
-      setIsCreatingPost(false);
     }
   };
 
-  const toggleLike = (postId) => {
-    setPosts(posts.map(post => {
-      if (post.id === postId) {
-        return {
-          ...post,
-          likes: post.userLiked ? post.likes - 1 : post.likes + 1,
-          userLiked: !post.userLiked,
-        };
-      }
-      return post;
-    }));
+
+
+  const handleViewProfile = async (userId, post) => {
+    try {
+      // Navigate to the profile screen with the user ID
+      navigate(`/profile/${userId}`);
+    } catch (error) {
+      console.error('Error navigating to profile:', error);
+      toast.error('Failed to open profile');
+    }
   };
 
   const handleTabChange = (tabId) => {
-    if (tabId === 'challenges') {
-      navigate('/challenges'); // Redirect inline
-    } else {
-      setActiveTab(tabId);
-    }
+    setActiveTab(tabId);
   };
+
+  const renderPosts = () => {
+    if (isLoading) {
+      return (
+        <div className="flex justify-center items-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+        </div>
+      );
+    }
+
+    if (filteredPosts.length === 0) {
+      return (
+        <div className="text-center py-8 text-gray-400">
+          No posts found. Be the first to post!
+        </div>
+      );
+    }
+
+    return filteredPosts.map((post) => {
+      console.log('Post data:', post); // Log the full post data
+      
+      // Extract user data from the post
+      const user = post.user || post.author || post.createdBy || { _id: 'unknown' };
+      
+      // Debug: Log the full post and user data
+      console.log('Post ID:', post._id);
+      console.log('Available user data in post:', {
+        postUser: post.user,
+        postAuthor: post.author,
+        postCreatedBy: post.createdBy
+      });
+      
+      // Handle different possible user name fields
+      const userName = user?.fullName || user?.name || user?.username || 'Unknown User';
+      const userUsername = user?.username || 'user';
+      const userAvatarUrl = user?.profilePicture || user?.avatar || null;
+      const userInitial = userName.charAt(0).toUpperCase();
+      
+      console.log('Extracted user data for post', post._id, ':', {
+        userName,
+        userUsername,
+        userAvatarUrl,
+        hasAvatar: !!userAvatarUrl
+      });
+      
+      const avatarElement = userAvatarUrl ? (
+        <img 
+          src={userAvatarUrl} 
+          alt={userName}
+          className="w-10 h-10 rounded-full object-cover"
+        />
+      ) : (
+        <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-white font-medium">
+          {userInitial}
+        </div>
+      );
+      
+      // Debug: Log the final post data
+      console.log('Rendering post:', {
+        postId: post._id,
+        userName,
+        userUsername,
+        hasAvatar: !!userAvatarUrl,
+        userData: user
+      });
+
+      return (
+        <div key={post._id} className="bg-white/10 backdrop-blur-sm rounded-xl p-4 mb-4 border border-white/10">
+          <div className="flex items-start mb-3">
+            <div 
+              className="cursor-pointer"
+              onClick={() => handleViewProfile(user?._id || user, post)}
+            >
+              {avatarElement}
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center">
+                <h4 className="font-semibold mr-2">
+                  {userName}
+                </h4>
+                <span className="text-xs text-gray-400">
+                  {new Date(post.createdAt).toLocaleDateString()}
+                </span>
+              </div>
+              <p className="text-sm text-gray-300">
+                @{userUsername}
+              </p>
+            </div>
+            <button className="text-gray-400 hover:text-white">
+              <BsThreeDotsVertical />
+            </button>
+          </div>
+          
+          <p className="mb-3">{post.content}</p>
+          
+          {post.image && (
+            <div className="mb-3 rounded-lg overflow-hidden">
+              <img 
+                src={post.image} 
+                alt="Post content" 
+                className="w-full h-auto max-h-96 object-cover rounded-lg"
+              />
+            </div>
+          )}
+          
+          <div className="flex items-center justify-between text-gray-400 text-sm border-t border-white/10 pt-3">
+            <button className="flex items-center hover:text-white">
+              <FiHeart className="mr-1" /> {post.likes?.length || 0}
+            </button>
+            <button className="flex items-center hover:text-white">
+              <FiMessageCircle className="mr-1" /> {post.comments?.length || 0}
+            </button>
+            <button className="flex items-center hover:text-white">
+              <FiShare2 className="mr-1" /> Share
+            </button>
+          </div>
+        </div>
+      );
+    });
+  };
+
+  // Fetch current user data and posts
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Fetch current user data
+        const userData = await authService.getCurrentUserProfile();
+        console.log('Current user data:', userData);
+        setCurrentUser(userData);
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+        toast.error('Failed to load user data');
+      }
+    };
+
+    fetchData();
+  }, []);
 
   return (
     <div className="relative min-h-screen pb-24 overflow-hidden text-white bg-blueGradient">
@@ -438,56 +514,7 @@ const Community = () => {
                 </div>
 
                 <div className="space-y-4">
-                  {filteredPosts.length > 0 ? (
-                    filteredPosts.map((post) => (
-                      <div key={post.id} className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10">
-                        <div className="flex items-center justify-between mb-3">
-                          <button onClick={() => handleViewProfile(post)} className="flex items-center">
-                            {post.user?.profilePicture ? (
-                              <img 
-                                src={post.user.profilePicture} 
-                                alt={post.user.name || 'User'} 
-                                className="w-10 h-10 rounded-full object-cover mr-3"
-                              />
-                            ) : (
-                              <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-white font-bold mr-3">
-                                {post.user?.name?.charAt(0) || post.name?.charAt(0) || 'U'}
-                              </div>
-                            )}
-                            <div>
-                              <h3 className="font-semibold text-white flex items-center">
-                                {post.user?.username || post.user || 'User'}
-                                {post.user?.verified && <span className="ml-1 text-blue-400 text-sm">✔</span>}
-                              </h3>
-                              <p className="text-xs text-white/60">{post.time || 'Just now'}</p>
-                            </div>
-                          </button>
-                          <button className="text-white/50 hover:text-white"><BsThreeDotsVertical /></button>
-                        </div>
-                        <p className="mb-3 text-white/90">{post.content}</p>
-                        {post.image && (
-                          <img
-                            src={post.image}
-                            alt="Post"
-                            className="rounded-lg w-full h-auto object-cover mb-3"
-                          />
-                        )}
-                        <div className="flex items-center justify-between mt-2 pt-2 border-t border-white/10">
-                          <button
-                            onClick={() => toggleLike(post.id)}
-                            className={`flex items-center text-sm ${post.userLiked ? 'text-red-400' : 'text-white/60 hover:text-white'}`}
-                          >
-                            <FiHeart className="mr-1" /> {post.likes}
-                          </button>
-                          <button className="flex items-center text-sm text-white/60 hover:text-white"><FiMessageSquare className="mr-1" /> {post.comments}</button>
-                          <button className="flex items-center text-sm text-white/60 hover:text-white"><FiShare2 className="mr-1" /> {post.shares}</button>
-                          <button className="flex items-center text-sm text-white/60 hover:text-white"><FiUserPlus className="mr-1" /> Follow</button>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-center text-white/70 py-10">No posts found.</p>
-                  )}
+                  {renderPosts()}
                 </div>
               </div>
             )}
