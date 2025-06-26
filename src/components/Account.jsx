@@ -170,35 +170,43 @@ const Account = () => {
     // Validate form
     const validationErrors = {};
     
-    if (!formData.fullName.trim()) {
-      validationErrors.fullName = 'Full name is required';
-    }
-    
-    if (!formData.phoneNumber.trim()) {
-      validationErrors.phoneNumber = 'Phone number is required';
-    }
-    
-    // Validate username if it's being changed
+    // Only validate username if it's being changed
     if (formData.username !== user?.username) {
-      if (!formData.username.trim()) {
+      if (!formData.username) {
         validationErrors.username = 'Username is required';
       } else if (!/^[a-z0-9._-]+$/.test(formData.username)) {
-        validationErrors.username = 'Username can only contain letters, numbers, dots, underscores, and hyphens';
+        validationErrors.username = 'Username can only contain lowercase letters, numbers, dots, underscores, and hyphens';
       } else {
-        // Check username availability
-        setIsCheckingUsername(true);
+        // Only check username availability if it's a new username
         try {
           const { available, error } = await checkUsernameAvailability(formData.username);
-          if (!available) {
-            validationErrors.username = error || 'Username is already taken';
+          if (error) {
+            validationErrors.username = error;
+          } else if (!available) {
+            validationErrors.username = 'Username is already taken';
           }
         } catch (err) {
           console.error('Error checking username:', err);
           validationErrors.username = 'Error checking username availability';
-        } finally {
-          setIsCheckingUsername(false);
         }
       }
+    }
+    
+    // Validate required fields
+    if (!formData.fullName) {
+      validationErrors.fullName = 'Full name is required';
+    }
+    
+    if (!formData.email) {
+      validationErrors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      validationErrors.email = 'Email is invalid';
+    }
+    
+    if (!formData.phoneNumber) {
+      validationErrors.phoneNumber = 'Phone number is required';
+    } else if (!/^\d{10}$/.test(formData.phoneNumber)) {
+      validationErrors.phoneNumber = 'Please enter a valid 10-digit phone number';
     }
     
     // Only validate password if it's being changed
@@ -223,31 +231,49 @@ const Account = () => {
       
       // Add profile picture file if it exists
       if (formData.profilePictureFile) {
-        // Ensure we're appending the actual File object
+        // Ensure we're appending the actual File object with the correct field name
         formDataToSend.append('profilePicture', formData.profilePictureFile);
+        console.log('Appended file to FormData:', {
+          name: formData.profilePictureFile.name,
+          type: formData.profilePictureFile.type,
+          size: formData.profilePictureFile.size
+        });
       } else if (formData.profilePicture && !formData.profilePicture.startsWith('blob:')) {
         // If it's not a blob URL, it's a regular URL that should be sent as a string
         formDataToSend.append('profilePicture', formData.profilePicture);
       }
       
       // Add other form fields
-      const formFields = ['username', 'fullName', 'email', 'phoneNumber', 'bio', 'dateOfBirth', 'gender', 'country', 'password'];
+      const formFields = ['username', 'fullName', 'email', 'phoneNumber', 'bio', 'dateOfBirth', 'gender', 'country'];
       formFields.forEach(field => {
         if (formData[field] !== undefined && formData[field] !== '') {
           formDataToSend.append(field, formData[field]);
+          console.log(`Appended field ${field}:`, formData[field]);
         }
       });
       
-      // Log the form data being sent
+      // Only add password if it's being changed
+      if (formData.password) {
+        formDataToSend.append('password', formData.password);
+        console.log('Appended password field');
+      }
+      
+      // Log the form data being sent (without logging the actual file content)
       console.log('Form data entries:');
       for (let [key, val] of formDataToSend.entries()) {
-        console.log(key, val instanceof File ? `File: ${val.name} (${val.size} bytes, ${val.type})` : val);
+        if (val instanceof File) {
+          console.log(key, `File: ${val.name} (${val.size} bytes, ${val.type})`);
+        } else {
+          console.log(key, val);
+        }
       }
       
       // Update user profile using the API service
+      console.log('Sending update request...');
       const response = await authService.updateUserProfile(user._id, formDataToSend, true);
       
-      if (response.success) {
+      if (response && response.success && response.data) {
+        console.log('Profile update successful:', response.data);
         // Update local user data
         await updateUser(response.data);
         
@@ -258,7 +284,9 @@ const Account = () => {
         // Refresh user data
         await checkAuthState();
       } else {
-        toast.error(response.message || 'Failed to update profile');
+        const errorMessage = response?.message || 'Failed to update profile';
+        console.error('Update failed:', errorMessage, response);
+        throw new Error(errorMessage);
       }
     } catch (error) {
       console.error('Error updating profile:', error);

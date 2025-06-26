@@ -817,52 +817,39 @@ const authService = {
         throw new Error('No authentication token found. Please log in again.');
       }
 
-      // Set up request config
-      const config = {
-        headers: {
-          'Accept': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        withCredentials: true,
-      };
-
-      // For FormData, let the browser set the Content-Type with boundary
-      if (!isFormData) {
-        config.headers['Content-Type'] = 'application/json';
-      } else {
-        // Remove Content-Type header to let the browser set it with the correct boundary
-        delete config.headers['Content-Type'];
-      }
-
       const apiUrl = `/api/users/profile/${userId}`;
       
       // Log the FormData contents if it's a FormData object
       if (isFormData && userData instanceof FormData) {
         console.log('FormData contents:');
         for (let pair of userData.entries()) {
-          console.log(pair[0] + ': ', pair[1]);
+          console.log(pair[0] + ': ', pair[1] instanceof File ? 
+            `File: ${pair[1].name} (${pair[1].size} bytes, ${pair[1].type})` : 
+            pair[1]);
         }
       }
 
       console.log('Sending request with config:', {
         url: apiUrl,
         method: 'PUT',
-        headers: config.headers,
         hasData: !!userData,
         isFormData: isFormData
       });
 
-      // Make the API request with the correct content type
-      const response = await axios({
-        method: 'put',
-        url: `${ENV.apiBaseUrl}${apiUrl}`,
-        data: userData,
-        headers: {
-          ...config.headers,
-          'Authorization': `Bearer ${token}`
-        },
-        withCredentials: true
-      });
+      // Make the API request
+      const response = await axios.put(
+        `${ENV.apiBaseUrl}${apiUrl}`,
+        userData,
+        {
+          headers: {
+            'Content-Type': isFormData ? 'multipart/form-data' : 'application/json',
+            'Accept': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          withCredentials: true,
+          timeout: 60000 // 60 seconds timeout for file uploads
+        }
+      );
       
       // If the response is successful and contains data
       if (response.data) {
@@ -872,7 +859,7 @@ const authService = {
           localStorage.setItem('user', JSON.stringify(response.data));
         }
         
-        return response.data;
+        return { success: true, data: response.data };
       }
       
       throw new Error('Invalid response from server');
@@ -882,6 +869,8 @@ const authService = {
         message: error.message,
         response: error.response?.data,
         status: error.response?.status,
+        config: error.config,
+        stack: error.stack
       });
       
       // Handle specific error cases
