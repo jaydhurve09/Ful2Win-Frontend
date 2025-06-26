@@ -272,17 +272,20 @@ const Account = () => {
       console.log('Sending update request...');
       const response = await authService.updateUserProfile(user._id, formDataToSend, true);
       
-      if (response && response.success && response.data) {
-        console.log('Profile update successful:', response.data);
-        // Update local user data
-        await updateUser(response.data);
-        
-        // Exit edit mode and show success message
-        setIsEditing(false);
-        toast.success('Profile updated successfully!');
-        
-        // Refresh user data
-        await checkAuthState();
+      if (response && response.success) {
+        console.log('Profile update successful:', response);
+        // Update local user data with the returned user object
+        const updatedUser = response.user || response.data;
+        if (updatedUser) {
+          await updateUser(updatedUser);
+          // Exit edit mode and show success message
+          setIsEditing(false);
+          toast.success(response.message || 'Profile updated successfully!');
+          // Refresh user data
+          await checkAuthState();
+        } else {
+          throw new Error('Failed to get updated user data');
+        }
       } else {
         const errorMessage = response?.message || 'Failed to update profile';
         console.error('Update failed:', errorMessage, response);
