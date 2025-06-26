@@ -147,7 +147,7 @@ const Header = () => {
             {/* Profile */}
             <button
               onClick={() => navigate('/profile')}
-              className="w-10 h-10 rounded-full overflow-hidden ml-2 border-2 border-yellow-500 hover:opacity-90 transition-opacity"
+              className="w-10 h-10 rounded-full overflow-hidden ml-2 border-2 border-dullBlue hover:opacity-90 transition-opacity"
             >
               {profilePicture ? (
                 <img 

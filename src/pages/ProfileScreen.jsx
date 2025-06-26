@@ -263,7 +263,7 @@ const ProfileScreen = () => {
           {/* Profile Picture with Name */}
           <div className="flex items-center space-x-4">
             <div className="relative group w-20 h-20">
-              <div className="w-full h-full rounded-full overflow-hidden border-2 border-white bg-gray-100 flex items-center justify-center">
+              <div className="w-full h-full rounded-full overflow-hidden border-2 border-dullBlue bg-gray-100 flex items-center justify-center">
                 {currentUser?.profilePicture ? (
                   <img
                     src={currentUser.profilePicture}
@@ -276,7 +276,7 @@ const ProfileScreen = () => {
                     }}
                   />
                 ) : (
-                  <FiUser className="text-gray-400 text-3xl" />
+                  <FiUser className="text-dullBlue text-3xl" />
                 )}
               </div>
             </div>
@@ -286,7 +286,7 @@ const ProfileScreen = () => {
               <h2 className="text-xl font-semibold">
                 {currentUser?.fullName || 'User Name'}
               </h2>
-              <p className="text-sm text-gray-300">
+              <p className="text-sm text-dullBlue">
                 @{currentUser?.username || 'username'}
               </p>
             </div>
