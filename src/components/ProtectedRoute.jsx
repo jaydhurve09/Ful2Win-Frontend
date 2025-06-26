@@ -1,53 +1,48 @@
-import { Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { useEffect, useCallback } from 'react';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { toast } from 'react-toastify';
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, isLoading, checkAuthState } = useAuth();
   const location = useLocation();
-  const navigate = useNavigate();
+  const [isVerifying, setIsVerifying] = useState(true);
+  const isAuthRoute = ['/login', '/signup', '/forgot-password'].includes(location.pathname);
 
-  // Check authentication status
-  const verifyAuth = useCallback(async () => {
-    try {
-      // If we're still loading, wait for auth state to be determined
-      if (isLoading) return;
-
-      const isAuthRoute = ['/login', '/signup', '/forgot-password'].includes(location.pathname);
-      
-      // If user is not authenticated and trying to access protected route
-      if (!isAuthenticated && !isAuthRoute) {
-        navigate('/login', { 
-          replace: true, 
-          state: { 
-            from: location,
-            message: 'Please log in to access this page'
-          } 
-        });
-      }
-      // If user is authenticated but trying to access auth route
-      else if (isAuthenticated && isAuthRoute) {
-        navigate('/', { replace: true });
-      }
-    } catch (error) {
-      console.error('Auth verification error:', error);
-      navigate('/login', { 
-        replace: true,
-        state: { 
-          from: location,
-          error: 'Session expired. Please log in again.'
-        } 
-      });
-    }
-  }, [isAuthenticated, isLoading, location, navigate]);
-
-  // Verify auth on mount and when dependencies change
+  // Check authentication status on mount
   useEffect(() => {
-    verifyAuth();
-  }, [verifyAuth]);
+    const verifyAuth = async () => {
+      try {
+        // Skip verification if it's a public route
+        if (isAuthRoute) {
+          setIsVerifying(false);
+          return;
+        }
 
-  // Show loading state
-  if (isLoading) {
+        // If we're still loading the initial auth state, wait for it
+        if (isLoading) return;
+
+        // If we're not authenticated, try to refresh the token
+        if (!isAuthenticated) {
+          const isStillAuthed = await checkAuthState();
+          if (!isStillAuthed && !isAuthRoute) {
+            console.log('User not authenticated, redirecting to login');
+            return; // The auth context will handle the redirect
+          }
+        }
+      } catch (error) {
+        console.error('Auth verification error:', error);
+        toast.error('Session expired. Please log in again.');
+      } finally {
+        setIsVerifying(false);
+      }
+    };
+
+    verifyAuth();
+  }, [isAuthenticated, isLoading, isAuthRoute, checkAuthState]);
+
+  // Show loading state while verifying
+  if (isVerifying || isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
@@ -55,17 +50,18 @@ const ProtectedRoute = ({ children }) => {
     );
   }
 
-  // If not authenticated and not on auth route, render nothing (will redirect in useEffect)
-  if (!isAuthenticated && !['/login', '/signup', '/forgot-password'].includes(location.pathname)) {
-    return null;
+  // If not authenticated and not on an auth route, redirect to login
+  if (!isAuthenticated && !isAuthRoute && !isLoading) {
+    console.log('Redirecting to login from:', location.pathname);
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // If authenticated but on auth route, redirect to home
-  if (isAuthenticated && ['/login', '/signup', '/forgot-password'].includes(location.pathname)) {
+  // If user is authenticated but trying to access auth route, redirect to home
+  if (isAuthenticated && isAuthRoute) {
     return <Navigate to="/" replace />;
   }
 
-  // Render the protected content
+  // If we have children, render them, otherwise render the outlet
   return children || <Outlet />;
 };
 

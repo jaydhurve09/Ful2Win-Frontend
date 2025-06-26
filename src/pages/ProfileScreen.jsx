@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { FiUser, FiUsers, FiDollarSign, FiEdit, FiShare2, FiLogOut, FiMessageSquare, FiMail, FiHeadphones, FiHelpCircle } from "react-icons/fi";
 import { FaTrophy, FaGamepad, FaRupeeSign } from "react-icons/fa";
 import { IoMdPerson } from "react-icons/io";
@@ -9,6 +9,7 @@ import BackgroundBubbles from "../components/BackgroundBubbles";
 import Account from "../components/Account";
 import { useAuth } from "../contexts/AuthContext";
 import { toast } from "react-toastify";
+import authService from "../services/api";
 
 const ProfileScreen = () => {
   const navigate = useNavigate();
@@ -18,15 +19,109 @@ const ProfileScreen = () => {
   const [activeSection, setActiveSection] = useState("profile");
   const [activeProfileAction, setActiveProfileAction] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
+  const [userStats, setUserStats] = useState({
+    balance: 0,
+    coins: 0,
+    followers: 0,
+    wins: 0,
+    matches: 0
+  });
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const { userId } = useParams();
 
-  // Get current user from localStorage
-  useEffect(() => {
-    const user = JSON.parse(localStorage.getItem('user'));
-    if (user) {
-      setCurrentUser(user);
+  // Fetch user data function that can be called directly
+  const fetchUserData = useCallback(async () => {
+    try {
+      setLoading(true);
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      console.log('Current user from localStorage:', user);
+      
+      if (user?._id) {
+        // Fetch user profile to get updated stats
+        console.log('Fetching user profile for ID:', user._id);
+        const response = await authService.getUserProfile(user._id);
+        console.log('API Response:', response);
+        
+        if (response) {
+          // Merge the response with existing user data
+          const updatedUser = { 
+            ...user,
+            ...response,
+            // Handle profile picture - it might be a string URL or an object with url property
+            profilePicture: typeof response.profilePicture === 'string' 
+              ? response.profilePicture 
+              : response.profilePicture?.url || user.profilePicture
+          };
+          
+          console.log('Updated user data:', updatedUser);
+          
+          // Update user data in localStorage
+          localStorage.setItem('user', JSON.stringify(updatedUser));
+          
+          // Update state with latest stats
+          const stats = {
+            balance: response.Balance || user.Balance || 0, // Note: Capital B in Balance
+            coins: response.coins || user.coins || 0,
+            followers: Array.isArray(response.followers) 
+              ? response.followers.length 
+              : (user.followers?.length || 0),
+            wins: response.stats?.wins || user.stats?.wins || 0,
+            matches: response.stats?.matches || user.stats?.matches || 0
+          };
+          
+          console.log('Stats to be set:', stats);
+          setUserStats(stats);
+          setCurrentUser(updatedUser);
+        }
+      } else {
+        console.error('No user ID found in localStorage');
+        toast.error('Please log in again');
+        navigate('/login');
+      }
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      toast.error('Failed to load user data');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
     }
-  }, []);
+  }, [userId, navigate]);
+
+  // Initial data fetch
+  useEffect(() => {
+    fetchUserData();
+  }, [fetchUserData]);
+  
+  // Pull to refresh handler
+  const handleRefresh = useCallback(() => {
+    setRefreshing(true);
+    fetchUserData();
+  }, [fetchUserData]);
+
+  // Stats configuration
+  const stats = [
+    { 
+      icon: <FaRupeeSign className="text-green-500" />, 
+      label: "Balance", 
+      value: userStats.balance.toLocaleString() 
+    },
+    { 
+      icon: <FiDollarSign className="text-yellow-500" />, 
+      label: "Coins", 
+      value: userStats.coins.toLocaleString() 
+    },
+    { 
+      icon: <FaTrophy className="text-blue-500" />, 
+      label: "Wins", 
+      value: userStats.wins.toLocaleString() 
+    },
+    { 
+      icon: <IoMdPerson className="text-purple-500" />, 
+      label: "Followers", 
+      value: userStats.followers.toLocaleString() 
+    },
+  ];
 
   useEffect(() => {
     const path = location.pathname;
@@ -42,13 +137,6 @@ const ProfileScreen = () => {
     { id: "tournament", label: "Tournament Log", icon: <FaTrophy />, path: "/tournamenthistory" },
     { id: "followers", label: "Followers", icon: <FiUsers />, path: "/followers" },
     { id: "wallet", label: "Wallet", icon: <FaRupeeSign />, path: "/wallet" },
-  ];
-
-  const stats = [
-    { icon: <FaTrophy className="text-yellow-500" />, label: "Wins", value: 120 },
-    { icon: <FiDollarSign className="text-blue-500" />, label: "Coins", value: 5000 },
-    { icon: <FaGamepad className="text-purple-500" />, label: "Matches", value: 1234 },
-    { icon: <IoMdPerson className="text-green-500" />, label: "Followers", value: 89 },
   ];
 
   const profileActions = [
@@ -136,16 +224,23 @@ const ProfileScreen = () => {
 
       <div className="relative z-10 py-4 max-w-2xl mx-auto px-4">
         {/* Profile Picture */}
-        <div className="w-20 h-20 mx-auto mt-4 mb-1 rounded-full bg-yellow-300 flex items-center justify-center overflow-hidden">
-          <img
-            src={currentUser?.profilePicture || defaultProfile}
-            alt="Profile"
-            className="w-full h-full object-cover"
-            onError={(e) => {
-              e.target.onerror = null;
-              e.target.src = defaultProfile;
-            }}
-          />
+        <div className="relative group w-20 h-20 mx-auto mt-4 mb-1">
+          <div className="w-full h-full rounded-full overflow-hidden border-2 border-white bg-gray-100 flex items-center justify-center">
+            {currentUser?.profilePicture ? (
+              <img
+                src={currentUser.profilePicture}
+                alt="Profile"
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  console.log('Error loading profile picture, falling back to default');
+                  e.target.onerror = null;
+                  e.target.src = defaultProfile;
+                }}
+              />
+            ) : (
+              <FiUser className="text-gray-400 text-3xl" />
+            )}
+          </div>
         </div>
 
         {/* Nav Icons */}
@@ -208,24 +303,32 @@ const ProfileScreen = () => {
           </div>
         )} */}
 
-        {/* Stats */}
+        {/* Stats Section */}
         <div className="grid grid-cols-2 gap-3 mb-4 mt-4">
-          {stats.map((stat, i) => (
-            <div
-              key={i}
-              className="bg-white p-4 rounded-xl flex items-center space-x-3"
-            >
-              <div className="w-10 h-10 bg-gray-100 border rounded-full flex items-center justify-center">
-                {stat.icon}
-              </div>
-              <div>
-                <div className="font-bold text-gray-800 text-lg">
-                  {stat.value.toLocaleString()}
+          {stats.map((stat, i) => {
+            // Format values for display
+            let displayValue = stat.value;
+            if (typeof displayValue === 'number') {
+              displayValue = displayValue.toLocaleString();
+            }
+            
+            return (
+              <div
+                key={i}
+                className="bg-white p-4 rounded-xl flex items-center space-x-3 shadow-sm"
+              >
+                <div className="w-10 h-10 bg-gray-100 border rounded-full flex items-center justify-center">
+                  {stat.icon}
                 </div>
-                <div className="text-xs text-gray-600">{stat.label}</div>
+                <div>
+                  <div className="font-bold text-gray-800 text-lg">
+                    {loading ? '...' : displayValue || '0'}
+                  </div>
+                  <div className="text-xs text-gray-600">{stat.label}</div>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Actions */}

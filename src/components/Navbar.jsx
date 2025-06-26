@@ -1,10 +1,18 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useLocation, Link } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import logo from '../assets/logo.png';
 import { FaHome, FaGamepad, FaTrophy, FaUsers, FaWallet, FaUser } from 'react-icons/fa';
 
 const Navbar = () => {
   const location = useLocation();
+  const { isAuthenticated, user } = useAuth();
+
+  useEffect(() => {
+    console.log('Navbar auth state:', { isAuthenticated, user });
+    console.log('Auth token:', localStorage.getItem('token'));
+    console.log('User data:', localStorage.getItem('user'));
+  }, [isAuthenticated, user]);
   return (
     <>
       <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-b from-transparent to-[#022870] h-16 md:h-24">
