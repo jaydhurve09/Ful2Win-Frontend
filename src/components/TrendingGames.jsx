@@ -7,6 +7,9 @@ import poker from '../assets/poker.png';
 import ludo from '../assets/ludo.png';
 import colorsmash from '../assets/colorsmash.png';
 import flappyball from '../assets/Flappy-Ball.png';
+import eggcatcher from '../assets/EggCatcher.png';  
+import matchmerge from '../assets/MatchMerge.png';
+import gravityhop from '../assets/GravityHop.png';
 
 const TrendingGames = () => {
   const navigate = useNavigate();
@@ -38,7 +41,7 @@ const TrendingGames = () => {
       id: 3,
       name: 'Match Merge',
       path: '/matchmerge',
-      image: mazeRunner,
+      image: matchmerge,
       description: 'Navigate through challenging mazes',
       className: 'bg-gray-800',
       titleSize: 'text-xl',
@@ -49,7 +52,7 @@ const TrendingGames = () => {
       id: 4,
       name: 'Egg Catcher',
       path: '/eggcatcher',
-      image: poker,
+      image: eggcatcher,
       description: 'Test your poker face',
       className: 'bg-gray-800/50',
       titleSize: 'text-lg',
@@ -60,7 +63,7 @@ const TrendingGames = () => {
       id: 5,
       name: 'Gravity Hop',
       path: '/gravityhop',
-      image: ludo,
+      image: gravityhop,
       description: 'Family favorite board game',
       className: 'bg-gray-800',
       titleSize: 'text-xl',
