@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom'; // For redirect
 import Navbar from '../components/Navbar';
 import Header from '../components/Header';
@@ -24,6 +24,10 @@ import { RiSwordLine } from 'react-icons/ri';
 import { BsThreeDotsVertical } from 'react-icons/bs';
 import { FaImage, FaVideo, FaPoll } from 'react-icons/fa';
 
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import authService from '../services/api';
+
 const Community = () => {
   const [activeTab, setActiveTab] = useState('feed');
   const [activeType, setActiveType] = useState('all');
@@ -31,7 +35,105 @@ const Community = () => {
   const [showCreatePost, setShowCreatePost] = useState(false);
   const [viewingProfile, setViewingProfile] = useState(null);
   const [selectedFriend, setSelectedFriend] = useState(null);
+  const [isCreatingPost, setIsCreatingPost] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
   const navigate = useNavigate(); // For Challenges redirect
+
+  const handleViewProfile = async (post) => {
+    try {
+      // Show loading state
+      setViewingProfile({ loading: true });
+
+      let userId;
+      let userData;
+
+      // If post is a user object (from direct click)
+      if (post._id && post.username) {
+        userId = post._id;
+      } 
+      // If post has a user object with _id
+      else if (post.user?._id) {
+        userId = post.user._id;
+      }
+      // For posts with just a username
+      else if (post.user) {
+        // If user is just a string (username), we'll need to find the user by username
+        // For now, we'll use the current implementation and enhance it
+        const user = post.user || {};
+        userData = {
+          ...user,
+          user: typeof user === 'string' ? user : (user.username || post.user || 'user'),
+          name: typeof user === 'string' ? user : (user.name || post.name || 'User'),
+          avatar: user.profilePicture || post.avatar || (user.name || '').charAt(0)?.toUpperCase() || 'U',
+          verified: user.verified || post.verified || false,
+          stats: {
+            wins: 0,
+            winRate: '0%',
+            games: 0,
+            friends: 0,
+            ...(user.stats || {})
+          }
+        };
+        setViewingProfile(userData);
+        return;
+      }
+
+      // If we have a userId, fetch the full user profile
+      if (userId) {
+        try {
+          const response = await authService.getUserProfile(userId);
+          userData = {
+            ...response,
+            username: response.username || response.user || 'user',
+            name: response.fullName || response.name || response.username || 'User',
+            profilePicture: response.profilePicture,
+            verified: response.isVerified || response.verified || false,
+            // Add any additional fields you want to display
+            stats: {
+              wins: 0, // You can update these with actual stats if available
+              winRate: '0%',
+              games: 0,
+              friends: 0,
+              ...response.stats
+            }
+          };
+          setViewingProfile(userData);
+        } catch (error) {
+          console.error('Error fetching user profile:', error);
+          toast.error('Failed to load user profile');
+          // Fall back to basic info if available
+          if (post.user) {
+            setViewingProfile({
+              ...post.user,
+              name: post.user.name || post.user.username || 'User',
+              avatar: post.user.profilePicture || (post.user.name || 'U').charAt(0).toUpperCase(),
+              loading: false
+            });
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error in handleViewProfile:', error);
+      toast.error('Failed to load profile');
+      setViewingProfile(null);
+    }
+  };
+
+  // Fetch current user data
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const userData = await authService.getCurrentUserProfile();
+        console.log('Current user data:', userData); // Debug log
+        setCurrentUser(userData);
+      } catch (error) {
+        console.error('Error fetching current user:', error);
+        toast.error('Failed to load user data');
+      }
+    };
+
+    fetchCurrentUser();
+  }, []);
 
   const communityTabs = [
     { id: 'feed', label: 'Feed', icon: <FiHome className="mr-1" /> },
@@ -92,23 +194,59 @@ const Community = () => {
   const [posts, setPosts] = useState(communityPosts);
   const filteredPosts = activeType === 'all' ? posts : posts.filter(post => post.type === activeType);
 
-  const handleCreatePost = () => {
-    if (newPostContent.trim() === '') return;
-    const newPost = {
-      id: posts.length + 1,
-      user: 'current_user',
-      avatar: 'U',
-      time: 'Just now',
-      content: newPostContent,
-      likes: 0,
-      comments: 0,
-      shares: 0,
-      type: 'recent',
-      userLiked: false,
-    };
-    setPosts([newPost, ...posts]);
-    setNewPostContent('');
-    setShowCreatePost(false);
+  const handleCreatePost = async () => {
+    if (newPostContent.trim() === '') {
+      toast.error('Please enter some content for your post');
+      return;
+    }
+
+    if (!currentUser) {
+      toast.error('User information not available');
+      return;
+    }
+
+    setIsCreatingPost(true);
+    
+    try {
+      const postData = {
+        content: newPostContent,
+        // Add any additional post data here (e.g., images, videos, etc.)
+      };
+      
+      const createdPost = await authService.createPost(postData);
+      
+      // Format the new post with user information
+      const newPost = {
+        id: createdPost._id || Date.now(),
+        user: {
+          _id: currentUser._id,
+          username: currentUser.username || 'user',
+          name: currentUser.name || 'User',
+          profilePicture: currentUser.profilePicture,
+          verified: currentUser.verified || false
+        },
+        time: 'Just now',
+        content: createdPost.content,
+        image: createdPost.image,
+        likes: 0,
+        comments: 0,
+        shares: 0,
+        type: 'recent',
+        userLiked: false
+      };
+      
+      console.log('New post created:', newPost); // Debug log
+      
+      setPosts([newPost, ...posts]);
+      setNewPostContent('');
+      setShowCreatePost(false);
+      toast.success('Post created successfully!');
+    } catch (error) {
+      console.error('Error creating post:', error);
+      toast.error(error.message || 'Failed to create post. Please try again.');
+    } finally {
+      setIsCreatingPost(false);
+    }
   };
 
   const toggleLike = (postId) => {
@@ -218,7 +356,17 @@ const Community = () => {
                 <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 mb-6 border border-white/10">
                   <h3 className="text-lg font-semibold mb-4">Create Post</h3>
                   <div className="flex items-start">
-                    <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-white font-bold mr-3 flex-shrink-0">U</div>
+                    {currentUser?.profilePicture ? (
+                      <img 
+                        src={currentUser.profilePicture} 
+                        alt={currentUser.name || 'User'}
+                        className="w-10 h-10 rounded-full object-cover mr-3 flex-shrink-0"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-white font-bold mr-3 flex-shrink-0">
+                        {currentUser?.name?.charAt(0)?.toUpperCase() || 'U'}
+                      </div>
+                    )}
                     <div className="flex-1">
                       {!showCreatePost ? (
                         <>
@@ -257,25 +405,31 @@ const Community = () => {
                         <div className="flex-shrink-0">
                           {showCreatePost ? (
                             <div className="flex space-x-2">
-                              <Button variant="outline" onClick={() => setShowCreatePost(false)} size="sm">
+                              <Button 
+                                variant="outline" 
+                                onClick={() => setShowCreatePost(false)} 
+                                size="sm"
+                                disabled={isCreatingPost}
+                              >
                                 Cancel
                               </Button>
                               <Button 
                                 variant="primary" 
-                                onClick={handleCreatePost} 
-                                size="sm" 
-                                disabled={!newPostContent.trim()}
+                                onClick={handleCreatePost}
+                                size="sm"
+                                disabled={!newPostContent.trim() || isCreatingPost}
                               >
-                                Post
+                                {isCreatingPost ? 'Posting...' : 'Post'}
                               </Button>
                             </div>
                           ) : (
-                            <button
-                              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap"
+                            <Button
+                              variant="primary"
+                              size="sm"
                               onClick={() => setShowCreatePost(true)}
                             >
                               Post
-                            </button>
+                            </Button>
                           )}
                         </div>
                       </div>
@@ -288,16 +442,24 @@ const Community = () => {
                     filteredPosts.map((post) => (
                       <div key={post.id} className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10">
                         <div className="flex items-center justify-between mb-3">
-                          <button onClick={() => setViewingProfile(post)} className="flex items-center">
-                            <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-white font-bold mr-3">
-                              {post.avatar}
-                            </div>
+                          <button onClick={() => handleViewProfile(post)} className="flex items-center">
+                            {post.user?.profilePicture ? (
+                              <img 
+                                src={post.user.profilePicture} 
+                                alt={post.user.name || 'User'} 
+                                className="w-10 h-10 rounded-full object-cover mr-3"
+                              />
+                            ) : (
+                              <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-white font-bold mr-3">
+                                {post.user?.name?.charAt(0) || post.name?.charAt(0) || 'U'}
+                              </div>
+                            )}
                             <div>
                               <h3 className="font-semibold text-white flex items-center">
-                                {post.user}
-                                {post.verified && <span className="ml-1 text-blue-400 text-sm">✔</span>}
+                                {post.user?.username || post.user || 'User'}
+                                {post.user?.verified && <span className="ml-1 text-blue-400 text-sm">✔</span>}
                               </h3>
-                              <p className="text-xs text-white/60">{post.time}</p>
+                              <p className="text-xs text-white/60">{post.time || 'Just now'}</p>
                             </div>
                           </button>
                           <button className="text-white/50 hover:text-white"><BsThreeDotsVertical /></button>

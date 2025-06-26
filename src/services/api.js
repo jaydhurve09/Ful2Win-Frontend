@@ -1140,6 +1140,21 @@ getWalletBalance: async function() {
     }
     return { balance: 0 };
   }
+},
+
+/**
+ * Create a new post
+ * @param {Object} postData - Post data including content and optional media
+ * @returns {Promise<Object>} Created post data
+ */
+createPost: async function(postData) {
+  try {
+    const response = await api.post('/api/posts', postData);
+    return response.data;
+  } catch (error) {
+    console.error('Error creating post:', error);
+    throw error.response?.data?.message || 'Failed to create post';
+  }
 }
 
 };
