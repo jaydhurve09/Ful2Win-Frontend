@@ -85,9 +85,16 @@ const GameTournaments = () => {
     });
   }, [tournaments, activeFilter, searchQuery]);
   
-  // Handle view tournament details
+  // Handle view/join tournament
   const handleViewTournament = (tournamentId) => {
-    navigate(`/tournament/${tournamentId}`);
+    // Navigate to the game wrapper with tournament context
+    navigate(`/games/${gameId}/play`, { 
+      state: { 
+        tournamentId,
+        mode: 'tournament',
+        fromTournament: true
+      } 
+    });
   };
 
   // Fetch game and tournaments
