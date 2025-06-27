@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Navbar from '../components/Navbar';
@@ -20,6 +20,31 @@ const Tournaments = () => {
   const [tournaments, setTournaments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [gameThumbnails, setGameThumbnails] = useState({});
+  const [gameDetails, setGameDetails] = useState({});
+  
+  // Handle join tournament - navigates to the tournament lobby
+  const handleJoinTournament = (tournament) => {
+    console.log('Tournament object:', tournament);
+    
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/login', { state: { from: '/tournaments' } });
+      return;
+    }
+    
+    if (!tournament) {
+      console.error('No tournament data provided');
+      return;
+    }
+    
+    // Determine if it's a cash or coin tournament
+    const isCashTournament = tournament.mode === 'cash' || tournament.entryFee > 0;
+    const tournamentType = isCashTournament ? 'cash' : 'coin';
+    
+    // Navigate to the tournament lobby
+    navigate(`/tournament/${tournament.id}?type=${tournamentType}`);
+  };
 
   const statusTabs = [
     { id: 'all', label: 'All' },
@@ -27,6 +52,112 @@ const Tournaments = () => {
     { id: 'upcoming', label: 'Upcoming' },
     { id: 'completed', label: 'Completed' },
   ];
+
+  // Fetch game details by gameId and update tournaments with thumbnails
+  const fetchGameDetails = useCallback(async (gameIds) => {
+    try {
+      console.log('Fetching game details for IDs:', gameIds);
+      const token = localStorage.getItem('token');
+      const uniqueGameIds = [...new Set(gameIds.filter(id => id))];
+      
+      const gamePromises = uniqueGameIds.map(async (gameId) => {
+        try {
+          console.log(`Fetching game ${gameId}...`);
+          const response = await axios.get(`${API_URL}/games/${gameId}`, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            },
+            withCredentials: true
+          });
+          
+          console.log(`Game ${gameId} response:`, response.data);
+          const gameData = response.data?.data || {};
+          console.log('Game data:', gameData);
+          
+          // Function to construct game asset URL
+          const getGameAssetUrl = (assetPath) => {
+            if (!assetPath) return null;
+            
+            // Handle full URLs
+            if (assetPath.startsWith('http')) return assetPath;
+            
+            // Handle protocol-relative URLs
+            if (assetPath.startsWith('//')) return `https:${assetPath}`;
+            
+            // Handle relative paths - construct URL to the game's assets
+            // Format: /api/games/{gameId}/assets/{filename}
+            return `${API_URL}/games/${gameId}/assets/${assetPath}`;
+          };
+
+          // Try to get thumbnail from different possible locations in order of preference
+          let thumbnail = null;
+          
+          // Check for thumbnail in different possible locations
+          if (gameData.assets?.thumbnail) {
+            thumbnail = getGameAssetUrl(gameData.assets.thumbnail);
+          } else if (gameData.thumbnail) {
+            thumbnail = getGameAssetUrl(gameData.thumbnail);
+          } else if (gameData.image) {
+            thumbnail = getGameAssetUrl(gameData.image);
+          } else if (gameData.bannerImage?.url) {
+            thumbnail = getGameAssetUrl(gameData.bannerImage.url);
+          }
+          
+          console.log(`Game ${gameId} thumbnail:`, thumbnail);
+            
+          return {
+            gameId,
+            thumbnail,
+            name: gameData.name || 'Game'
+          };
+        } catch (err) {
+          console.error(`Error fetching game ${gameId}:`, err);
+          return { gameId, thumbnail: null, name: 'Game' };
+        }
+      });
+      
+      const gameResults = await Promise.all(gamePromises);
+      const newGameDetails = {};
+      
+      gameResults.forEach(game => {
+        if (game && game.gameId) {
+          newGameDetails[game.gameId] = {
+            thumbnail: game.thumbnail,
+            name: game.name
+          };
+        }
+      });
+      
+      console.log('New game details:', newGameDetails);
+      
+      // Update the game details state
+      setGameDetails(prev => ({
+        ...prev,
+        ...newGameDetails
+      }));
+      
+      // Also update the tournaments with the new thumbnails
+      setTournaments(prevTournaments => 
+        prevTournaments.map(tournament => {
+          const gameId = tournament.gameId;
+          if (gameId && newGameDetails[gameId]?.thumbnail) {
+            return {
+              ...tournament,
+              gameImage: newGameDetails[gameId].thumbnail
+            };
+          }
+          return tournament;
+        })
+      );
+      
+      return newGameDetails;
+    } catch (err) {
+      console.error('Error in fetchGameDetails:', err);
+      return {};
+    }
+  }, []);
 
   // Fetch tournaments from the backend
   useEffect(() => {
@@ -48,13 +179,16 @@ const Tournaments = () => {
 
         if (response.data && Array.isArray(response.data.data || response.data)) {
           const data = response.data.data || response.data;
+          // Extract all unique game IDs and create formatted tournaments
+          const uniqueGameIds = [];
+          const gameIdMap = {};
+          
           const formattedTournaments = data.map(tournament => {
-            // Determine the game image based on type or name
-            let gameImage = ludo; // Default image
-            if (tournament.gameType) {
-              const gameType = tournament.gameType.toLowerCase();
-              if (gameType.includes('rummy')) gameImage = rummy;
-              else if (gameType.includes('carrom')) gameImage = carrom;
+            const gameId = tournament.gameId || tournament.game?._id || tournament.gameId;
+            
+            if (gameId && !gameIdMap[gameId]) {
+              gameIdMap[gameId] = true;
+              uniqueGameIds.push(gameId);
             }
             
             // Get entry fee and prize pool from the tournament data
@@ -65,10 +199,34 @@ const Tournaments = () => {
             const currentPlayers = tournament.currentPlayers || 0;
             const maxPlayers = tournament.maxPlayers || 100;
             
+            // Get image with proper fallbacks
+          let gameImage = ludo; // Default fallback
+          
+          // First check if we have the game details with thumbnail
+          if (tournament.game?.assets?.thumbnail) {
+            gameImage = tournament.game.assets.thumbnail;
+          } 
+          // Then check if we have a direct image reference
+          else if (tournament.image) {
+            gameImage = tournament.image;
+          }
+          // Then check banner image
+          else if (tournament.bannerImage?.url) {
+            gameImage = tournament.bannerImage.url;
+          }
+          // Then check game type for fallback
+          else if (tournament.gameType) {
+            const gameType = tournament.gameType.toLowerCase();
+            if (gameType.includes('rummy')) gameImage = rummy;
+            else if (gameType.includes('carrom')) gameImage = carrom;
+          }
+            
             return {
               id: tournament._id || tournament.id,
+              gameId: gameId,
+              game: tournament.game, // Store the full game object if available
               name: tournament.name || 'Tournament',
-              image: tournament.bannerImage?.url || tournament.gameImage || gameImage,
+              image: gameImage,
               entryFee: entryFee,
               prizePool: prizePool,
               players: `${currentPlayers}/${maxPlayers}`,
@@ -79,7 +237,27 @@ const Tournaments = () => {
             };
           });
           
+          // First set the tournaments with initial data
           setTournaments(formattedTournaments);
+          
+          // Then fetch additional game details for all unique gameIds
+          if (uniqueGameIds.length > 0) {
+            fetchGameDetails(uniqueGameIds).then(updatedGameDetails => {
+              // Update tournaments with the fetched game details
+              setTournaments(prevTournaments => 
+                prevTournaments.map(tournament => {
+                  const gameId = tournament.gameId;
+                  if (gameId && updatedGameDetails[gameId]?.thumbnail) {
+                    return {
+                      ...tournament,
+                      gameImage: updatedGameDetails[gameId].thumbnail
+                    };
+                  }
+                  return tournament;
+                })
+              );
+            });
+          }
         }
       } catch (err) {
         console.error('Error fetching tournaments:', err);
@@ -94,15 +272,6 @@ const Tournaments = () => {
 
     fetchTournaments();
   }, []);
-
-  const handleJoinTournament = (tournamentId) => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      navigate('/login', { state: { from: '/tournaments' } });
-      return;
-    }
-    navigate(`/tournament/${tournamentId}`);
-  };
 
   const getFilteredTournaments = () => {
     return tournaments.filter(tournament => {
@@ -203,24 +372,7 @@ const Tournaments = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-4 py-2 text-sm font-medium transition-colors duration-200 ${
-                  activeTab === tab.id
-                    ? 'bg-active text-black rounded-full px-6'
-                    : 'text-dullBlue hover:text-white'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Status Tabs - Mobile */}
-          <div className="flex md:hidden gap-2 mb-6 overflow-x-auto">
-            {statusTabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`px-4 py-2 text-sm font-medium transition-colors duration-200 whitespace-nowrap ${
+                className={`px-6 py-2 text-sm font-medium transition-colors duration-200 ${
                   activeTab === tab.id
                     ? 'bg-yellow-400 text-black rounded-full'
                     : 'text-gray-300 hover:text-white'
@@ -237,15 +389,24 @@ const Tournaments = () => {
               <div key={tournament.id} className="bg-gradient-to-br from-gray-800/10 to-black/10 backdrop-blur-lg border border-white/30 rounded-xl p-6">
                 <div className="flex gap-6">
                   <div className="w-2/5">
-                    <img 
-                      src={tournament.image} 
-                      alt={tournament.name} 
-                      className="w-full aspect-square rounded-lg object-cover"
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = ludo;
-                      }}
-                    />
+                    {console.log(`Rendering desktop image for tournament ${tournament.id}:`, {
+                      gameId: tournament.gameId,
+                      gameImage: tournament.gameImage,
+                      fallback: ludo
+                    })}
+                    <div className="w-full aspect-square rounded-lg overflow-hidden">
+                      <img 
+                        src={tournament.gameImage || ludo} 
+                        alt={tournament.name}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          console.error(`Error loading image for tournament ${tournament.id}:`, e.target.src);
+                          e.target.onerror = null;
+                          e.target.src = ludo;
+                        }}
+                        loading="lazy"
+                      />
+                    </div>
                   </div>
                   <div className="w-3/5">
                     <div className="flex justify-between items-start mb-4">
@@ -272,7 +433,10 @@ const Tournaments = () => {
                       variant="primary" 
                       fullWidth 
                       className="mb-2"
-                      onClick={() => handleJoinTournament(tournament.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleJoinTournament(tournament);
+                      }}
                     >
                       {tournament.status === 'completed' ? 'View Results' : 'Join Tournament'}
                     </Button>
@@ -305,15 +469,23 @@ const Tournaments = () => {
 
                 <div className="flex items-center gap-4">
                   <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
-                    <img 
-                      src={tournament.image} 
-                      alt={tournament.name} 
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = ludo;
-                      }}
-                    />
+                    {console.log(`Rendering mobile image for tournament ${tournament.id}:`, {
+                      gameId: tournament.gameId,
+                      gameImage: tournament.gameImage,
+                      fallback: ludo
+                    })}
+                    <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
+                      <img 
+                        src={tournament.gameImage || ludo} 
+                        alt={tournament.name}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = ludo;
+                        }}
+                        loading="lazy"
+                      />
+                    </div>
                   </div>
                   <div className="flex-1">
                     <h3 className="text-white font-semibold text-lg mb-1">{tournament.name}</h3>
@@ -334,7 +506,7 @@ const Tournaments = () => {
                     <Button
                       variant="primary"
                       className="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-semibold py-2 rounded-lg mb-2"
-                      onClick={() => handleJoinTournament(tournament.id)}
+                      onClick={() => handleJoinTournament(tournament)}
                     >
                       {tournament.status === 'completed' ? 'View Results' : 'Join Tournament'}
                     </Button>
