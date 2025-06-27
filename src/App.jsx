@@ -80,7 +80,7 @@ function App() {
               <Route path="/tournamenthistory" element={<TournamentHistory />} />
               <Route path="/leaderboard_singlegame" element={<Leaderboard />}/>
               <Route path="/tournament/:tournamentId" element={<TournamentLobby />} />
-              <Route path="/game-tournaments/:gameId" element={<GameTournaments />} />
+              <Route path="/tournament-lobby/:gameId" element={<TournamentLobby />} />
               <Route path="/comingsoon" element={<ComingSoon />} />
             </Route>
             

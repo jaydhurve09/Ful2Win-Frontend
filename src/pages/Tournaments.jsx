@@ -25,7 +25,7 @@ const Tournaments = () => {
   }, [games, searchQuery]);
 
   const handleViewGameTournaments = (gameId) => {
-    navigate(`/game-tournaments/${gameId}`);
+    navigate(`/tournament-lobby/${gameId}`);
   };
 
   const formatPlayerCount = (players, total) => {
