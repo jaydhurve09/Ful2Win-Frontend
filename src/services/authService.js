@@ -202,10 +202,29 @@ const authService = {
    */
   async getUserProfile(userId) {
     try {
-      const response = await api.get(`/users/${userId}`);
-      return response.data;
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+      
+      const response = await api.get(`/users/${userId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        withCredentials: true
+      });
+      
+      if (response.data) {
+        return response.data.data || response.data;
+      }
+      throw new Error('Failed to fetch user profile');
     } catch (error) {
       console.error('Error fetching user profile:', error);
+      // Clear invalid auth data
+      if (error.response && error.response.status === 401) {
+        this.clearAuthData();
+      }
       throw error;
     }
   },

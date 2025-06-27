@@ -22,7 +22,7 @@ import BackgroundBubbles from "../components/BackgroundBubbles";
 import Account from "../components/Account";
 import { useAuth } from "../contexts/AuthContext";
 import { toast } from "react-toastify";
-import authService from "../services/api";
+import authService from "../services/authService";
 
 const ProfileScreen = () => {
   const navigate = useNavigate();

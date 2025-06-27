@@ -111,27 +111,31 @@ const Header = () => {
             {/* Wallet (clickable) */}
             <div
               onClick={() => navigate('/wallet')}
-              className="flex items-center justify-center mx-auto py-[4px] px-2 gap-2 rounded-xl text-black bg-active cursor-pointer hover:opacity-90 transition"
+              className="flex items-center justify-center mx-auto py-1.5 px-3 gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-blue-500 cursor-pointer hover:opacity-90 transition shadow-md"
             >
-              <div className='flex items-center gap-2'>
-                <div className='flex items-center gap-1 text-gray-800 font-semibold'>
-                  <IoMdWallet className='text-2xl' />
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 text-white font-medium">
+                  <IoMdWallet className="text-lg" />
                   {isLoading ? (
-                    <div className='h-4 w-12 bg-gray-800 animate-pulse rounded'></div>
+                    <div className="h-4 w-16 bg-blue-400/50 animate-pulse rounded"></div>
                   ) : (
-                    <span>{formattedBalance}</span>
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-sm">₹</span>
+                      <span className="text-base font-semibold">{balance.toLocaleString('en-IN')}</span>
+                    </div>
                   )}
                 </div>
-                {/* <button 
+                <button 
                   onClick={(e) => {
                     e.stopPropagation();
                     refreshBalance();
                   }}
-                  className='text-white/70 hover:text-white text-sm p-1 hover:bg-white/10 rounded-full transition-colors'
-                  title='Refresh balance'
+                  className="text-white/80 hover:text-white text-sm p-1 hover:bg-white/20 rounded-full transition-colors"
+                  title="Refresh balance"
+                  disabled={isLoading}
                 >
                   <FiRefreshCw className={`w-3 h-3 ${isLoading ? 'animate-spin' : ''}`} />
-                </button> */}
+                </button>
               </div>
             </div>
 
