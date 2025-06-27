@@ -86,16 +86,11 @@ const register = async (userData, retries = 2) => {
         timestamp: new Date().toISOString()
       });
       
-      console.log('[Auth] Sending registration request to:', api.defaults.baseURL + '/register');
-      console.log('[Auth] Request headers:', {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Cache-Control': 'no-cache',
-        'Pragma': 'no-cache'
-      });
+      console.log('[Auth] Sending registration request to:', api.defaults.baseURL + '/api/auth/register');
+      console.log('[Auth] Request data:', userData);
       
       const startTime = Date.now();
-      const response = await api.post('/register', userData, {
+      const response = await api.post('/api/auth/register', userData, {
         timeout: 15000, // 15 seconds timeout for registration
         headers: {
           'Content-Type': 'application/json',
@@ -237,7 +232,7 @@ const login = async (userData) => {
       password: userData.password
     };
     
-    console.log('[Auth] Sending login request to:', api.defaults.baseURL + '/login');
+    console.log('[Auth] Sending login request to:', api.defaults.baseURL + '/auth/login');
     console.log('[Auth] Request headers:', {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
@@ -246,7 +241,7 @@ const login = async (userData) => {
     });
     
     const startTime = Date.now();
-    const response = await api.post('/login', requestData, {
+    const response = await api.post('/auth/login', requestData, {
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
