@@ -1,25 +1,16 @@
 import axios from 'axios';
 
-// Helper function to normalize URL (remove trailing slashes)
-const normalizeUrl = (url) => {
-  if (!url) return '';
-  return url.endsWith('/') ? url.slice(0, -1) : url;
-};
-
 // Environment configuration
 const ENV = {
   isProduction: import.meta.env.PROD,
   isDevelopment: import.meta.env.DEV,
-  // In production, we use relative URLs and let the server handle the routing
-  apiBaseUrl: import.meta.env.PROD ? '' : normalizeUrl(import.meta.env.VITE_API_BASE_URL || ''),
-  apiUrl: import.meta.env.PROD ? '/api/users' : normalizeUrl(import.meta.env.VITE_API_URL || '')
+  apiBaseUrl: import.meta.env.VITE_API_BASE_URL || '',
+  apiUrl: import.meta.env.VITE_API_URL || ''
 };
 
-// Environment logging removed for production
-
-// Create axios instance with base URL
+// Create axios instance with base configuration
 const api = axios.create({
-  baseURL: ENV.apiBaseUrl,
+  baseURL: ENV.isProduction ? '' : ENV.apiBaseUrl, // Use relative URLs in production
   timeout: 30000, // 30 seconds
   withCredentials: true,
   headers: {
@@ -34,7 +25,7 @@ const api = axios.create({
   }
 });
 
-// Request interceptor to add auth token to requests
+// Request interceptor to add auth token
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
@@ -48,27 +39,21 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor to handle 401 Unauthorized responses
+// Response interceptor for error handling
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
     
-    // If error is 401 and we haven't tried to refresh the token yet
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
+    // Handle 401 Unauthorized
+    if (error.response?.status === 401) {
+      // Clear auth data
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
       
-      try {
-        // Clear auth data
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        
-        // Redirect to login
-        if (window.location.pathname !== '/login') {
-          window.location.href = '/login';
-        }
-      } catch (error) {
-        console.error('Error handling 401:', error);
+      // Only redirect if not already on login page
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
       }
     }
     
@@ -219,38 +204,20 @@ const testBackendConnection = async () => {
 
 // Login user
 const login = async (userData) => {
-  console.log('[Auth] Login attempt started', {
-    timestamp: new Date().toISOString(),
-    hasPhoneNumber: !!userData.phoneNumber,
-    hasEmail: !!userData.email
-  });
-  
   try {
+    console.log('\n=== Login Request ===');
+    console.log(`[${new Date().toISOString()}] Login attempt`);
+    
+    // Prepare request data
     const requestData = {
       phoneNumber: userData.phoneNumber,
       email: userData.email,
       password: userData.password
     };
     
-    const loginUrl = '/api/users/login';
-    console.log('[Auth] Sending login request to:', api.defaults.baseURL + loginUrl);
-    console.log('[Auth] Request headers:', {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      'Cache-Control': 'no-cache',
-      'Pragma': 'no-cache'
-    });
-    
+    console.log('Sending login request to /api/users/login');
     const startTime = Date.now();
-    const response = await api.post(loginUrl, requestData, {
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Cache-Control': 'no-cache',
-        'Pragma': 'no-cache'
-      },
-      withCredentials: true
-    });
+    const response = await api.post('/api/users/login', requestData);
     
     const endTime = Date.now();
     console.log(`[Auth] Login response received in ${endTime - startTime}ms`, {
@@ -280,7 +247,7 @@ const login = async (userData) => {
         localStorage.setItem('user', JSON.stringify(user));
       }
       
-      // Set the auth token for future requests
+      // Set the auth header for future requests
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       
       console.log('Login successful, token stored:', { 
@@ -290,11 +257,10 @@ const login = async (userData) => {
       });
       
       return {
-        ...response,
-        data: {
-          ...response.data,
-          success: true
-        }
+        ...response.data,
+        success: true,
+        user,
+        token
       };
     }
     
@@ -311,6 +277,10 @@ const login = async (userData) => {
         data: error.config?.data
       }
     });
+    
+    // Clear any existing token on error
+    localStorage.removeItem('token');
+    delete api.defaults.headers.common['Authorization'];
     
     // Format the error to include the server's error message if available
     const errorMessage = error.response?.data?.message || error.message || 'Login failed';
@@ -1215,19 +1185,19 @@ createPost: async function(formData) {
         console.log(`Upload Progress: ${percentCompleted}%`);
       }
     });
-    
+
     // Log the response
     console.log('=== Server Response ===');
     console.log('Status:', response.status);
     console.log('Headers:', response.headers);
     console.log('Data:', response.data);
-    
+
     if (!response.data) {
       throw new Error('No data received from server');
     }
-    
+
     return response.data;
-    
+
   } catch (error) {
     // Enhanced error logging
     const errorDetails = {
@@ -1235,7 +1205,7 @@ createPost: async function(formData) {
       code: error.code,
       stack: error.stack,
     };
-    
+
     if (error.response) {
       // Server responded with an error status code
       errorDetails.response = {
@@ -1244,7 +1214,7 @@ createPost: async function(formData) {
         headers: error.response.headers,
         data: error.response.data
       };
-      
+
       // Log the full error response for debugging
       console.error('Server Error Response:', error.response);
     } else if (error.request) {
