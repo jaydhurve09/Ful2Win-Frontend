@@ -10,25 +10,25 @@ const normalizeUrl = (url) => {
 const ENV = {
   isProduction: import.meta.env.PROD,
   isDevelopment: import.meta.env.DEV,
-  apiBaseUrl: normalizeUrl(import.meta.env.VITE_API_BASE_URL || ''),
-  apiUrl: normalizeUrl(import.meta.env.VITE_API_URL || '')
+  // In production, we use relative URLs and let the server handle the routing
+  apiBaseUrl: import.meta.env.PROD ? '' : normalizeUrl(import.meta.env.VITE_API_BASE_URL || ''),
+  apiUrl: import.meta.env.PROD ? '/api/users' : normalizeUrl(import.meta.env.VITE_API_URL || '')
 };
 
 // Environment logging removed for production
 
 // Create axios instance with base URL
 const api = axios.create({
-  baseURL: ENV.apiBaseUrl, // Using apiBaseUrl which doesn't include /api/users
-  timeout: 30000, // Increased to 30 seconds for production
+  baseURL: ENV.apiBaseUrl,
+  timeout: 30000, // 30 seconds
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
-    'Cache-Control': 'no-cache',
+    'Cache-Control': 'no-cache, no-store, must-revalidate',
     'Pragma': 'no-cache',
     'Expires': '0'
   },
-  withCredentials: true,
   validateStatus: function (status) {
     return status >= 200 && status < 500; // Resolve only if status code is less than 500
   }

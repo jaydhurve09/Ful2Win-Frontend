@@ -47,13 +47,12 @@ const Games = () => {
         setLoading(true);
         setError(null);
         
-        // Get the API base URL from environment variables
-        const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
-        const apiUrl = `${apiBaseUrl}${apiBaseUrl.endsWith('/') ? '' : '/'}api/games`;
+        // Use relative URL for API requests
+        const apiUrl = '/api/games';
         
         console.log('Fetching games from:', apiUrl);
         
-        // Make the API request directly with the constructed URL
+        // Make the API request with relative URL
         const response = await fetch(apiUrl, {
           method: 'GET',
           headers: {
