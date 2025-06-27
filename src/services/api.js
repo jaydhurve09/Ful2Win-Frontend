@@ -1,16 +1,16 @@
 import axios from 'axios';
 
 // Environment configuration
-const ENV = {
-  isProduction: import.meta.env.PROD,
-  isDevelopment: import.meta.env.DEV,
-  apiBaseUrl: import.meta.env.VITE_API_BASE_URL || '',
-  apiUrl: import.meta.env.VITE_API_URL || ''
-};
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+
+console.log('API Configuration:', {
+  mode: import.meta.env.MODE,
+  apiBaseUrl: API_BASE_URL
+});
 
 // Create axios instance with base configuration
 const api = axios.create({
-  baseURL: ENV.isProduction ? '' : ENV.apiBaseUrl, // Use relative URLs in production
+  baseURL: `${API_BASE_URL}/api`, // Base URL with /api prefix
   timeout: 30000, // 30 seconds
   withCredentials: true,
   headers: {
@@ -21,17 +21,45 @@ const api = axios.create({
     'Expires': '0'
   },
   validateStatus: function (status) {
-    return status >= 200 && status < 500; // Resolve only if status code is less than 500
+    return status < 500; // Resolve all status codes less than 500
   }
 });
 
-// Request interceptor to add auth token
+// Log API configuration
+console.log('API Configuration:', {
+  isProduction: import.meta.env.MODE === 'production',
+  baseURL: api.defaults.baseURL,
+  apiUrl: API_BASE_URL
+});
+
+// Request interceptor to add auth token and headers
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
-    if (token) {
+    
+    // Don't override headers if they're already set
+    if (!config.headers) {
+      config.headers = {};
+    }
+    
+    // Only set Authorization header if token exists and it's not explicitly set
+    if (token && !config.headers.Authorization) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    
+    // Ensure Content-Type is set for all non-form-data requests
+    if (!config.headers['Content-Type'] && !(config.data instanceof FormData)) {
+      config.headers['Content-Type'] = 'application/json';
+    }
+    
+    // Ensure Accept header is set
+    if (!config.headers['Accept']) {
+      config.headers['Accept'] = 'application/json';
+    }
+    
+    // Ensure withCredentials is true for all requests
+    config.withCredentials = true;
+    
     return config;
   },
   (error) => {
@@ -512,7 +540,11 @@ const getAuthHeader = () => {
   return token ? { 'Authorization': `Bearer ${token}` } : {};
 };
 
-const authService = {
+// Export the axios instance as default
+export default api;
+
+// Export auth service methods as named exports
+export const authService = {
   /**
    * Check if a username is available
    * @param {string} username - Username to check
@@ -1304,5 +1336,3 @@ getCommunityPosts: async function(params = {}) {
 }
 
 };
-
-export default authService;

@@ -1,6 +1,6 @@
 import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import authService from '../services/api';
+import authService from '../services/authService';
 
 // Helper function to get stored auth data
 const getStoredAuthData = () => {
@@ -65,9 +65,9 @@ export const AuthProvider = ({ children }) => {
       }
 
       try {
-        const userProfile = await authService.getCurrentUserProfile();
-        if (userProfile) {
-          updateAuthState(userProfile, true);
+        const response = await authService.getCurrentUserProfile();
+        if (response && response.data) {
+          updateAuthState(response.data, true);
           return true;
         }
         throw new Error('Failed to fetch user profile');
@@ -78,7 +78,7 @@ export const AuthProvider = ({ children }) => {
         return false;
       }
     } catch (error) {
-      console.error('Error checking auth state:', error);
+console.error('Error checking auth state:', error);
       setError(error);
       authService.clearAuthData();
       updateAuthState(null, false);

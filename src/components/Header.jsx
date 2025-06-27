@@ -8,7 +8,7 @@ import { FiRefreshCw } from "react-icons/fi";
 import logo from '../assets/logo.png';
 import defaultProfile from '../assets/default-profile.jpg';
 import { useAuth } from '../contexts/AuthContext';
-import authService from '../services/api';
+import authService from '../services/authService';
 import { toast } from 'react-toastify';
 
 const Header = () => {
