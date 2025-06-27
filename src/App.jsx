@@ -33,6 +33,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import ColorSmash from './games/ColorSmash';
 import Leaderboard from './components/Leaderboard';
 import TournamentLobby from './components/TournamentLobby';
+import GameTournaments from './pages/GameTournaments';
 import ComingSoon from './components/ComingSoon';
 import MatchMerge from './games/MatchMerge';
 import EggCatcher from './games/EggCatcher';
@@ -78,7 +79,8 @@ function App() {
               <Route path="/leaderboard" element={<LeaderboardPage />} />
               <Route path="/tournamenthistory" element={<TournamentHistory />} />
               <Route path="/leaderboard_singlegame" element={<Leaderboard />}/>
-              {/* <Route path="/tournaments" element={<TournamentLobby />} /> */}
+              <Route path="/tournament/:tournamentId" element={<TournamentLobby />} />
+              <Route path="/game-tournaments/:gameId" element={<GameTournaments />} />
               <Route path="/comingsoon" element={<ComingSoon />} />
             </Route>
             
