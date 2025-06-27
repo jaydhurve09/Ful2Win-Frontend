@@ -87,14 +87,32 @@ const GameTournaments = () => {
   
   // Handle view/join tournament
   const handleViewTournament = (tournamentId) => {
-    // Navigate to the game wrapper with tournament context
-    navigate(`/games/${gameId}/play`, { 
-      state: { 
-        tournamentId,
-        mode: 'tournament',
-        fromTournament: true
-      } 
-    });
+    // Find the tournament details
+    const tournament = tournaments.find(t => t.id === tournamentId);
+    
+    if (!tournament) {
+      toast.error('Tournament not found');
+      return;
+    }
+
+    // Show confirmation dialog
+    if (window.confirm(
+      `Register for ${tournament.name}?\n\n` +
+      `Entry Fee: ${formatPrize(tournament.entryFee || 0, tournament.mode === 'coin')}\n` +
+      `Prize Pool: ${formatPrize(tournament.prizePool || 0, tournament.mode === 'coin')}\n` +
+      `Players: ${tournament.participants?.length || 0}/${tournament.maxParticipants || '∞'}\n\n` +
+      'Do you want to proceed?'
+    )) {
+      // User confirmed, navigate to the game wrapper with tournament context
+      navigate(`/games/${gameId}`, { 
+        state: { 
+          tournamentId,
+          mode: 'tournament',
+          fromTournament: true,
+          tournamentName: tournament.name
+        } 
+      });
+    }
   };
 
   // Fetch game and tournaments
@@ -212,9 +230,9 @@ const GameTournaments = () => {
           </button>
           <div className="flex items-center gap-6">
             <div className="relative w-16 h-16 md:w-20 md:h-20 rounded-xl overflow-hidden bg-gradient-to-br from-gray-800 to-gray-900 flex-shrink-0 shadow-lg border border-gray-700">
-              {game.image || game.thumbnail ? (
+              {game.assets.thumbnail || game.thumbnail ? (
                 <img 
-                  src={game.image || game.thumbnail} 
+                  src={game.assets.thumbnail || game.thumbnail} 
                   alt={game.name}
                   className="w-full h-full object-cover"
                   onError={(e) => {
@@ -229,7 +247,7 @@ const GameTournaments = () => {
               )}
             </div>
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold">{game.name} Tournaments</h1>
+              <h1 className="text-2xl md:text-3xl font-bold">{game.displayName} Tournaments</h1>
               {game.type && (
                 <span className="text-sm text-yellow-400 bg-yellow-900/30 px-2 py-1 rounded-full">
                   {game.type}
@@ -322,7 +340,7 @@ const GameTournaments = () => {
                     <p className="text-gray-400">Players</p>
                     <p className="font-medium flex items-center">
                       <FaUsers className="mr-1 text-blue-400" />
-                      {formatPlayerCount(tournament.participants?.length || 0, tournament.maxParticipants || '∞')}
+                      {formatPlayerCount(tournament.currentPlayers?.length || 0, tournament.maxPlayers || '∞')}
                     </p>
                   </div>
                   <div>

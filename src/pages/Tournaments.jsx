@@ -1,13 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaGamepad, FaUsers, FaTrophy, FaClock, FaSearch } from 'react-icons/fa';
+import { FaGamepad, FaUsers, FaTrophy, FaSearch } from 'react-icons/fa';
 import Header from '../components/Header';
 import Navbar from '../components/Navbar';
 import BackgroundBubbles from '../components/BackgroundBubbles';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 
-// Base URL for API requests
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 const API_URL = `${API_BASE_URL}/api`;
 
@@ -17,111 +16,75 @@ const Tournaments = () => {
   const [error, setError] = useState(null);
   const [games, setGames] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
-  
-  // Get filtered games based on search query
+
   const getFilteredGames = useCallback(() => {
-    return games.filter(game => {
-      return game.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-             (game.description && game.description.toLowerCase().includes(searchQuery.toLowerCase()));
-    });
+    return games.filter(game =>
+      game.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (game.description && game.description.toLowerCase().includes(searchQuery.toLowerCase()))
+    );
   }, [games, searchQuery]);
-  
-  // Handle view game tournaments
+
   const handleViewGameTournaments = (gameId) => {
     navigate(`/game-tournaments/${gameId}`);
   };
 
-  // Format date to readable string
-  const formatDate = (dateString) => {
-    if (!dateString) return 'N/A';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
-  // Format player count
   const formatPlayerCount = (players, total) => {
     if (total === 0) return 'No players';
-    if (total === 1) return '1 player';
-    return `${players || 0} of ${total} players`;
+    // if (total === 1) return '1 player';
+    return `${players || 0} players`;
   };
 
-  // Fetch games
   const fetchGames = useCallback(async () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      
+
       const response = await axios.get(`${API_URL}/games`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
       if (response.data.success) {
         const gamesData = response.data.data || [];
-        
-        // Fetch tournament counts for each game
-        const gamesWithTournamentCounts = await Promise.all(
+
+        const gamesWithDetails = await Promise.all(
           gamesData.map(async (game) => {
-            // Use _id if available (MongoDB), otherwise use id
             const gameId = game._id || game.id;
-            
-            // Skip if game doesn't have an ID
-            if (!gameId) {
-              console.warn('Game is missing ID:', game);
-              return {
-                ...game,
-                id: game._id || null,
-                tournamentCount: 0
-              };
-            }
+            if (!gameId) return { ...game, tournamentCount: 0, activePlayers: 0, maxPlayers: 0 };
 
             try {
-              // Ensure we use the correct ID (_id or id) for the API call
               const tournamentsRes = await axios.get(`${API_URL}/tournaments?gameId=${gameId}`, {
                 headers: { Authorization: `Bearer ${token}` },
-                validateStatus: (status) => status < 500 // Don't throw for 4xx errors
+                validateStatus: status => status < 500
               });
-              
-              // Handle successful response
+
               if (tournamentsRes.status === 200 && tournamentsRes.data?.success) {
+                const tournaments = tournamentsRes.data.data;
+                const activePlayers = tournaments.reduce((sum, t) => sum + (t.activePlayers || 0), 0);
+                const maxPlayers = tournaments.reduce((sum, t) => sum + (t.maxPlayers || 0), 0);
+
                 return {
                   ...game,
-                  tournamentCount: Array.isArray(tournamentsRes.data.data) 
-                    ? tournamentsRes.data.data.length 
-                    : 0
+                  tournamentCount: tournaments.length,
+                  activePlayers,
+                  maxPlayers
                 };
               }
-              
-              // If we get here, the response wasn't successful
-              console.warn(`Unexpected response for game ${gameId}:`, tournamentsRes.data);
-              return {
-                ...game,
-                tournamentCount: 0
-              };
-            } catch (error) {
-              console.error(`Error fetching tournaments for game ${gameId || 'unknown'}:`, error);
-              return {
-                ...game,
-                tournamentCount: 0
-              };
+
+              return { ...game, tournamentCount: 0, activePlayers: 0, maxPlayers: 0 };
+            } catch (err) {
+              return { ...game, tournamentCount: 0, activePlayers: 0, maxPlayers: 0 };
             }
           })
         );
 
-        setGames(gamesWithTournamentCounts);
+        setGames(gamesWithDetails);
       } else {
         throw new Error('Failed to load games');
       }
     } catch (error) {
       console.error('Error fetching games:', error);
-      setError(error.response?.data?.message || 'Failed to load games. Please try again later.');
+      setError(error.response?.data?.message || 'Failed to load games.');
       toast.error('Failed to load games');
-      
       if (error.response?.status === 401) {
         navigate('/login', { state: { from: '/tournaments' } });
       }
@@ -134,7 +97,6 @@ const Tournaments = () => {
     fetchGames();
   }, [fetchGames]);
 
-  // Loading state
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white">
@@ -148,7 +110,6 @@ const Tournaments = () => {
     );
   }
 
-  // Error state
   if (error) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white">
@@ -171,17 +132,15 @@ const Tournaments = () => {
     );
   }
 
-  // Main content
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white">
       <BackgroundBubbles />
       <Header />
-      
+
       <main className="container mx-auto px-4 py-8 relative z-10">
         <div className="flex flex-col space-y-6 mb-8">
           <h1 className="text-3xl font-bold">Games</h1>
-          
-          {/* Search */}
+
           <div className="flex flex-col md:flex-row gap-4">
             <div className="relative flex-1">
               <input
@@ -196,7 +155,6 @@ const Tournaments = () => {
           </div>
         </div>
 
-        {/* Games Grid */}
         {getFilteredGames().length === 0 ? (
           <div className="bg-gray-800/30 border-2 border-dashed border-gray-700 rounded-xl p-8 text-center">
             <div className="text-yellow-500 mb-3">
@@ -206,7 +164,7 @@ const Tournaments = () => {
             </div>
             <h3 className="text-xl font-semibold mb-2">No Games Found</h3>
             <p className="text-gray-400">
-              {searchQuery 
+              {searchQuery
                 ? 'No games match your search. Try different keywords.'
                 : 'There are no games available right now. Check back later!'}
             </p>
@@ -224,18 +182,17 @@ const Tournaments = () => {
             {getFilteredGames().map((game) => {
               const gameId = game._id || game.id;
               const displayName = game.displayName || game.name;
-              const thumbnail = game.thumbnail || game.image;
-              
+              const thumbnail = game.assets?.thumbnail || game.image;
+
               return (
-                <div 
+                <div
                   key={gameId}
                   className="group bg-gradient-to-br from-gray-800/30 to-black/20 backdrop-blur-lg border border-white/20 rounded-xl overflow-hidden cursor-pointer hover:border-yellow-400/50 hover:shadow-lg hover:shadow-yellow-500/10 transition-all duration-300 flex flex-col"
                   onClick={() => handleViewGameTournaments(gameId)}
                 >
-                  {/* Game Thumbnail */}
                   <div className="relative h-40 bg-gradient-to-br from-gray-800 to-gray-900 overflow-hidden">
                     {thumbnail ? (
-                      <img 
+                      <img
                         src={thumbnail}
                         alt={displayName}
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
@@ -256,7 +213,6 @@ const Tournaments = () => {
                     </div>
                   </div>
 
-                  {/* Game Info */}
                   <div className="p-4 flex-1 flex flex-col">
                     <div className="flex-1">
                       <h3 className="text-lg font-bold text-white mb-1 line-clamp-1">{displayName}</h3>
@@ -277,7 +233,7 @@ const Tournaments = () => {
                         <FaUsers className="text-yellow-500 mr-2" />
                         <span>{formatPlayerCount(game.activePlayers || 0, game.maxPlayers || 0)}</span>
                       </div>
-                      <button 
+                      <button
                         className="px-4 py-2 bg-yellow-500 hover:bg-yellow-400 text-gray-900 font-medium text-sm rounded-lg transition-colors flex items-center"
                         onClick={(e) => {
                           e.stopPropagation();
@@ -292,11 +248,10 @@ const Tournaments = () => {
                 </div>
               );
             })}
-            ))}
           </div>
         )}
       </main>
-      
+
       <Navbar />
     </div>
   );
