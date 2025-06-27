@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaSearch, FaFire, FaStar, FaArrowRight, FaGamepad, FaSpinner } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
-import axios from 'axios';
+import api from '../services/api';
 import Header from '../components/Header';
 import Navbar from '../components/Navbar';
 import BackgroundBubbles from '../components/BackgroundBubbles';
@@ -47,20 +47,38 @@ const Games = () => {
         setLoading(true);
         setError(null);
         
-        // Try to fetch from the API
-        const response = await axios.get('http://localhost:5000/api/games');
+        // Get the API base URL from environment variables
+        const apiBaseUrl = import.meta.env.API_BASE_URL || 'http://localhost:5000';
+        const apiUrl = `${apiBaseUrl}${apiBaseUrl.endsWith('/') ? '' : '/'}api/games`;
+        
+        console.log('Fetching games from:', apiUrl);
+        
+        // Make the API request directly with the constructed URL
+        const response = await fetch(apiUrl, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include' // Include cookies for authenticated requests
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const responseData = await response.json();
         
         // Handle different response formats
         let gamesData = [];
-        if (Array.isArray(response.data)) {
+        if (Array.isArray(responseData)) {
           // If the response is directly an array
-          gamesData = response.data;
-        } else if (response.data && Array.isArray(response.data.data)) {
+          gamesData = responseData;
+        } else if (responseData && Array.isArray(responseData.data)) {
           // If the response has a data array
-          gamesData = response.data.data;
-        } else if (response.data && response.data.games) {
+          gamesData = responseData.data;
+        } else if (responseData && responseData.games) {
           // If the response has a games array
-          gamesData = Array.isArray(response.data.games) ? response.data.games : [];
+          gamesData = Array.isArray(responseData.games) ? responseData.games : [];
         }
         
         setGames(gamesData);
