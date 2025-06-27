@@ -174,38 +174,39 @@ const Games = () => {
     <div className="min-h-screen bg-blueGradient text-white flex flex-col">
       <BackgroundBubbles />
       
+      {/* Header and Navbar */}
       <div className="sticky top-0 z-30">
         <Header />
         <Navbar />
       </div>
-
-      {/* Search and Categories */}
-      <div className={`sticky top-16 sm:top-16 z-20 bg-gray-900/80 backdrop-blur-sm transition-all duration-300 ${isScrolled ? 'py-2 shadow-lg' : 'py-3'}`}>
-        <div className="container mx-auto px-3">
+      
+      {/* Search and Categories - Sticky at top */}
+      <div className={`sticky pt-4 top-16 sm:top-16 z-20`}>
+        <div className="container mx-auto px-4">
           <div className="flex flex-col sm:flex-row gap-3">
             {/* Search Bar */}
             <div className="relative flex-1">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FaSearch className="text-gray-400" />
+                <FaSearch className="text-gray-300" />
               </div>
               <input
                 type="text"
                 placeholder="Search games..."
-                className="w-full pl-10 pr-4 py-2 bg-gray-800/70 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white placeholder-gray-400"
+                className="w-full pl-10 pr-4 py-2 bg-gray-400/20 border border-dullBlue rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white placeholder-gray-300"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
             
             {/* Category Filter - Desktop */}
-            <div className="hidden sm:flex overflow-x-auto scrollbar-hide space-x-2">
+            <div className="hidden sm:flex flex-wrap gap-2">
               {GAME_CATEGORIES.map((category) => (
                 <button
                   key={category.id}
                   onClick={() => setActiveCategory(category.id)}
                   className={`px-3 py-2 text-sm font-medium whitespace-nowrap rounded-lg transition-colors ${
                     activeCategory === category.id
-                      ? 'bg-purple-600 text-white'
+                      ? 'bg-active text-gray-800'
                       : 'bg-gray-800/70 text-gray-300 hover:bg-gray-700/70'
                   }`}
                 >
@@ -216,15 +217,15 @@ const Games = () => {
           </div>
           
           {/* Category Filter - Mobile */}
-          <div className="sm:hidden mt-2 overflow-x-auto scrollbar-hide">
-            <div className="flex space-x-2 pb-1">
+          <div className="sm:hidden mt-3">
+            <div className="flex flex-wrap gap-2">
               {GAME_CATEGORIES.map((category) => (
                 <button
                   key={category.id}
                   onClick={() => setActiveCategory(category.id)}
-                  className={`px-3 py-1.5 text-xs font-medium whitespace-nowrap rounded-lg transition-colors ${
+                  className={`px-3 py-1.5 text-xs font-medium whitespace-nowrap rounded-lg transition-colors flex-shrink-0 ${
                     activeCategory === category.id
-                      ? 'bg-purple-600 text-white'
+                      ? 'bg-active text-gray-800'
                       : 'bg-gray-800/70 text-gray-300 hover:bg-gray-700/70'
                   }`}
                 >
@@ -236,19 +237,20 @@ const Games = () => {
         </div>
       </div>
 
-      <main className="flex-1 container mx-auto px-3 pt-4 pb-6 sm:py-6 md:py-8 relative z-10">
+      {/* Main Content */}
+      <main className="container mx-auto px-4 pt-20 pb-8 sm:pt-6 sm:pb-8 md:py-10 relative z-10 flex-1">
         {/* Hero Section */}
-        <div className="mb-8 text-center">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent">
+        <div className="mb-10 sm:mb-12 text-center">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 bg-neonBlueGradient bg-clip-text text-transparent">
             Play & Win Amazing Rewards
           </h1>
-          <p className="text-gray-300 text-sm sm:text-base max-w-2xl mx-auto">
+          <p className="text-gray-300 text-base sm:text-lg max-w-2xl mx-auto">
             Discover and compete in our exciting collection of games. Win rewards, challenge friends, and climb the leaderboards!
           </p>
         </div>
 
         {/* Featured Games */}
-        <section className="mb-12">
+        {/* <section className="mb-12">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold flex items-center">
               <FaFire className="text-orange-500 mr-2" />
@@ -351,7 +353,7 @@ const Games = () => {
               </p>
             </div>
           )}
-        </section>
+        </section> */}
 
         {/* All Games */}
         <section>
@@ -362,14 +364,14 @@ const Games = () => {
                 <span className="text-purple-300 font-normal ml-2 text-base">"{searchQuery}"</span>
               )}
             </h2>
-            <div className="bg-gray-800/70 rounded-lg px-3 py-1.5 text-sm">
+            <div className="bg-gray-400/20 rounded-lg px-3 py-1.5 text-sm">
               {filteredGames.length} {filteredGames.length === 1 ? 'game' : 'games'} found
             </div>
           </div>
           
           {/* Game Grid */}
           {filteredGames.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
               <AnimatePresence>
                 {filteredGames.map((game) => (
                   <motion.div
@@ -387,7 +389,7 @@ const Games = () => {
                       }
                     }}
                   >
-                    <div className="aspect-video bg-gray-900 relative overflow-hidden">
+                    <div className="aspect-square bg-gray-900 relative overflow-hidden">
                       <img
                         src={game.assets?.thumbnail || 'https://via.placeholder.com/400x225/1a1a2e/ffffff?text=Game+Image'}
                         alt={game.displayName || game.name || 'Game'}
