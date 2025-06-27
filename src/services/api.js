@@ -232,7 +232,8 @@ const login = async (userData) => {
       password: userData.password
     };
     
-    console.log('[Auth] Sending login request to:', api.defaults.baseURL + '/auth/login');
+    const loginUrl = '/api/users/login';
+    console.log('[Auth] Sending login request to:', api.defaults.baseURL + loginUrl);
     console.log('[Auth] Request headers:', {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
@@ -241,7 +242,7 @@ const login = async (userData) => {
     });
     
     const startTime = Date.now();
-    const response = await api.post('/auth/login', requestData, {
+    const response = await api.post(loginUrl, requestData, {
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
