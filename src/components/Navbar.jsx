@@ -9,9 +9,7 @@ const Navbar = () => {
   const { isAuthenticated, user } = useAuth();
 
   useEffect(() => {
-    console.log('Navbar auth state:', { isAuthenticated, user });
-    console.log('Auth token:', localStorage.getItem('token'));
-    console.log('User data:', localStorage.getItem('user'));
+    // Removed console logs for production
   }, [isAuthenticated, user]);
   return (
     <>

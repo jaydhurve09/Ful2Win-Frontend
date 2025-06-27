@@ -111,7 +111,6 @@ const Account = () => {
     // Handle country selection from react-select
     if (e && e.target === undefined && e.value) {
       const { value, name } = e;
-      console.log('Country selected:', { name, value });
       
       setFormData(prev => ({
         ...prev,
@@ -122,30 +121,18 @@ const Account = () => {
     
     const { name, value, files, type } = e.target;
     
-    console.log('Input changed:', { name, type, value, files: files ? Array.from(files) : 'no files' });
-    
     if (name === 'profilePicture' && files && files[0]) {
       const file = files[0];
-      console.log('File selected:', { 
-        name: file.name, 
-        type: file.type, 
-        size: file.size,
-        isFile: file instanceof File
-      });
       
       // Create a preview URL for the image
       const previewUrl = URL.createObjectURL(file);
       
       // Update form data with both the file and preview URL
-      setFormData(prev => {
-        const newData = {
-          ...prev,
-          profilePicture: previewUrl,  // Set preview URL for display
-          profilePictureFile: file     // Store the actual file for upload
-        };
-        console.log('Updated formData with file:', newData);
-        return newData;
-      });
+      setFormData(prev => ({
+        ...prev,
+        profilePicture: previewUrl,  // Set preview URL for display
+        profilePictureFile: file     // Store the actual file for upload
+      }));
       return;
     }
     
@@ -233,11 +220,6 @@ const Account = () => {
       if (formData.profilePictureFile) {
         // Ensure we're appending the actual File object with the correct field name
         formDataToSend.append('profilePicture', formData.profilePictureFile);
-        console.log('Appended file to FormData:', {
-          name: formData.profilePictureFile.name,
-          type: formData.profilePictureFile.type,
-          size: formData.profilePictureFile.size
-        });
       } else if (formData.profilePicture && !formData.profilePicture.startsWith('blob:')) {
         // If it's not a blob URL, it's a regular URL that should be sent as a string
         formDataToSend.append('profilePicture', formData.profilePicture);
@@ -248,32 +230,18 @@ const Account = () => {
       formFields.forEach(field => {
         if (formData[field] !== undefined && formData[field] !== '') {
           formDataToSend.append(field, formData[field]);
-          console.log(`Appended field ${field}:`, formData[field]);
         }
       });
       
       // Only add password if it's being changed
       if (formData.password) {
         formDataToSend.append('password', formData.password);
-        console.log('Appended password field');
-      }
-      
-      // Log the form data being sent (without logging the actual file content)
-      console.log('Form data entries:');
-      for (let [key, val] of formDataToSend.entries()) {
-        if (val instanceof File) {
-          console.log(key, `File: ${val.name} (${val.size} bytes, ${val.type})`);
-        } else {
-          console.log(key, val);
-        }
       }
       
       // Update user profile using the API service
-      console.log('Sending update request...');
       const response = await authService.updateUserProfile(user._id, formDataToSend, true);
       
       if (response && response.success) {
-        console.log('Profile update successful:', response);
         // Update local user data with the returned user object
         const updatedUser = response.user || response.data;
         if (updatedUser) {
@@ -288,7 +256,6 @@ const Account = () => {
         }
       } else {
         const errorMessage = response?.message || 'Failed to update profile';
-        console.error('Update failed:', errorMessage, response);
         throw new Error(errorMessage);
       }
     } catch (error) {
@@ -354,18 +321,14 @@ const Account = () => {
   };
 
   const toggleEdit = (e) => {
-    console.log('toggleEdit called, current isEditing:', isEditing);
     if (e) {
       e.preventDefault();
       e.stopPropagation();
     }
     
-    if (isEditing) {
-      console.log('Canceling edit, resetting form data');
+    if (isEditing && originalData) {
       // Reset to original data when canceling edit
-      if (originalData) {
-        setFormData(originalData);
-      }
+      setFormData(originalData);
     }
     setIsEditing(!isEditing);
   };

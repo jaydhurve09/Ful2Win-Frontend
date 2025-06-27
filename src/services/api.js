@@ -14,14 +14,7 @@ const ENV = {
   apiUrl: normalizeUrl(import.meta.env.VITE_API_URL || '')
 };
 
-// Log environment for debugging
-console.log('Environment Configuration:', {
-  ...ENV,
-  env: process.env.NODE_ENV,
-  mode: import.meta.env.MODE,
-  baseUrl: ENV.apiBaseUrl,
-  apiUrl: ENV.apiUrl
-});
+// Environment logging removed for production
 
 // Create axios instance with base URL
 const api = axios.create({
@@ -1021,30 +1014,12 @@ updateUserProfile: async function(userId, userData, isFormData = false) {
   try {
     // Get token from localStorage
     const token = localStorage.getItem('token');
-    console.log('Token from localStorage:', token ? 'Token found' : 'No token found');
     
     if (!token) {
       throw new Error('No authentication token found. Please log in again.');
     }
 
     const apiUrl = `/api/users/profile/${userId}`;
-    
-    // Log the FormData contents if it's a FormData object
-    if (isFormData && userData instanceof FormData) {
-      console.log('FormData contents:');
-      for (let pair of userData.entries()) {
-        console.log(pair[0] + ': ', pair[1] instanceof File ? 
-          `File: ${pair[1].name} (${pair[1].size} bytes, ${pair[1].type})` : 
-          pair[1]);
-      }
-    }
-
-    console.log('Sending request with config:', {
-      url: apiUrl,
-      method: 'PUT',
-      hasData: !!userData,
-      isFormData: isFormData
-    });
 
     // Make the API request
     const response = await axios.put(
@@ -1129,7 +1104,6 @@ getWalletBalance: async function() {
   try {
     const response = await api.get('/api/users/me');
     const userData = response.data.data || response.data;
-    console.log('Wallet balance response:', userData);
     return { balance: userData.balance || 0 };
   } catch (error) {
     console.error('Error fetching wallet balance:', error);

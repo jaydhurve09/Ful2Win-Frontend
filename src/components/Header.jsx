@@ -43,7 +43,6 @@ const Header = () => {
       setLoadingBalance(true);
       const result = await authService.getWalletBalance();
       const balance = result?.balance || 0;
-      console.log('Setting wallet balance:', balance); // Debug log
       setBalance(balance);
       return balance;
     } catch (error) {

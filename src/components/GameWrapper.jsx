@@ -15,7 +15,6 @@ const testGameUrl = async (url) => {
   if (!url) return { ok: false, error: 'No URL provided' };
   
   try {
-    console.log('Testing game URL:', url);
     const response = await fetch(url, { 
       method: 'HEAD',
       mode: 'no-cors',
@@ -23,7 +22,7 @@ const testGameUrl = async (url) => {
       credentials: 'omit'
     });
     
-    const result = {
+    return {
       url,
       ok: response.ok,
       status: response.status,
@@ -31,18 +30,13 @@ const testGameUrl = async (url) => {
       redirected: response.redirected,
       type: response.type
     };
-    
-    console.log('URL test result:', result);
-    return result;
   } catch (error) {
-    const errorResult = {
+    return {
       url,
       ok: false,
       error: error.message,
       name: error.name
     };
-    console.error('Error testing game URL:', errorResult);
-    return errorResult;
   }
 };
 
@@ -137,7 +131,6 @@ const GameWrapper = () => {
           setError(null);
         }
         
-        console.log(`[GameWrapper] Fetching game data for ID: ${gameId}`);
         const response = await axios.get(`/api/games/${gameId}`, {
           timeout: 10000,
           headers: {
@@ -151,12 +144,6 @@ const GameWrapper = () => {
           withCredentials: true,
           cancelToken: source.token,
           validateStatus: (status) => status >= 200 && status < 500
-        });
-
-        console.log('[GameWrapper] Game data response:', {
-          status: response.status,
-          data: response.data,
-          headers: response.headers
         });
         
         if (!isMounted) return;
@@ -172,30 +159,20 @@ const GameWrapper = () => {
           setGame(gameData);
           
           // Extract game URL from the response with priority:
-          // 1. Direct URL
-          // 2. assets.gameUrl (string or object)
-          // 3. deployment.fullUrl
-          // 4. deployment.baseUrl + iframePath
           let gameUrl = '';
           
           if (gameData.url) {
             gameUrl = gameData.url;
-            console.log('[GameWrapper] Using direct URL from game data:', gameUrl);
           } else if (gameData.assets?.gameUrl) {
             gameUrl = typeof gameData.assets.gameUrl === 'string' 
               ? gameData.assets.gameUrl 
               : gameData.assets.gameUrl.baseUrl || '';
-            console.log('[GameWrapper] Using URL from assets.gameUrl:', gameUrl);
           } else if (gameData.deployment?.fullUrl) {
             gameUrl = gameData.deployment.fullUrl;
-            console.log('[GameWrapper] Using deployment.fullUrl:', gameUrl);
           } else if (gameData.deployment?.baseUrl) {
             const base = gameData.deployment.baseUrl.replace(/\/+$/, '');
             const path = (gameData.deployment.iframePath || '').replace(/^\/+/, '');
             gameUrl = path ? `${base}/${path}` : base;
-            console.log('[GameWrapper] Constructed URL from baseUrl + iframePath:', gameUrl);
-          } else {
-            console.warn('[GameWrapper] No valid URL found in game data');
           }
           
           // Clean up and validate the URL
@@ -204,25 +181,18 @@ const GameWrapper = () => {
               // Ensure it has a protocol
               if (!gameUrl.startsWith('http')) {
                 gameUrl = `https://${gameUrl}`;
-                console.log('[GameWrapper] Added protocol to URL:', gameUrl);
               }
               
               // Ensure it ends with a single slash
-              gameUrl = gameUrl.replace(/\/+$/, '') + '/';
+              gameUrl = gameUrl.replace(/\/+$/, '/')
               
-              console.log('[GameWrapper] Final game URL:', gameUrl);
-              
-              // Additional validation for the game URL
+              // Validate and set the URL
               try {
                 new URL(gameUrl); // This will throw if URL is invalid
                 setGameUrl(gameUrl);
                 setGamePath(gameData.path || '');
                 setRetryCount(0);
-                
-                // Optional: Send analytics or tracking event
-                console.log('[GameWrapper] Game URL is valid and ready');
               } catch (urlError) {
-                console.error('[GameWrapper] Invalid game URL:', urlError);
                 throw new Error(`Invalid game URL: ${urlError.message}`);
               }
             } catch (error) {
@@ -236,21 +206,12 @@ const GameWrapper = () => {
         } else {
           const errorMessage = response.data?.message || 
                               `Failed to load game data (Status: ${response.status})`;
-          console.error('[GameWrapper] API error:', errorMessage);
           throw new Error(errorMessage);
         }
       } catch (err) {
         if (axios.isCancel(err)) {
-          console.log('[GameWrapper] Request canceled:', err.message);
           return; // Don't update state if the request was canceled
         }
-        
-        console.error('[GameWrapper] Error loading game data:', {
-          error: err,
-          message: err.message,
-          response: err.response?.data,
-          status: err.response?.status
-        });
         
         if (isMounted) {
           const errorMessage = err.response?.data?.message || 
@@ -261,7 +222,6 @@ const GameWrapper = () => {
           // Retry logic with exponential backoff
           if (retryCount < MAX_RETRIES) {
             const delay = RETRY_DELAY * Math.pow(2, retryCount);
-            console.log(`[GameWrapper] Retrying in ${delay}ms... (Attempt ${retryCount + 1}/${MAX_RETRIES})`);
             
             const timeoutId = setTimeout(() => {
               if (isMounted) {
@@ -310,12 +270,8 @@ const GameWrapper = () => {
         url = `${base}/${cleanUrl}`.replace(/([^:]\/)\/+$/, '$1') + '/';
       }
       
-      console.log('Final game URL for iframe:', url);
-      
-      // Test the URL asynchronously
-      testGameUrl(url)
-        .then(result => console.log('Game URL test result:', result))
-        .catch(console.error);
+      // Test the URL asynchronously (without logging)
+      testGameUrl(url).catch(() => {});
       
       return url;
     } catch (error) {
@@ -408,36 +364,49 @@ const GameWrapper = () => {
   }
 
   return (
-    <div className="relative w-full h-screen bg-black overflow-hidden">
+    <div className="relative w-full min-h-screen bg-transparent">
       {loading ? (
-        <div className="flex items-center justify-center w-full h-full">
-          <FaSpinner className="animate-spin text-4xl text-white" />
+        <div className="flex items-center justify-center w-full h-screen bg-gray-900">
+          <div className="text-center p-6 bg-gray-800 rounded-xl max-w-sm mx-4">
+            <FaSpinner className="animate-spin text-4xl text-purple-500 mx-auto mb-4" />
+            <h2 className="text-xl font-bold text-white mb-2">Loading Game</h2>
+            <p className="text-gray-300">Preparing {game?.displayName || 'your game'}...</p>
+          </div>
         </div>
       ) : error ? (
-        <div className="flex flex-col items-center justify-center w-full h-full p-4 text-center text-white">
-          <h2 className="mb-4 text-2xl font-bold">Error Loading Game</h2>
-          <p className="mb-6">{error}</p>
-          <div className="flex gap-4">
-            <button
-              onClick={() => navigate('/games')}
-              className="px-4 py-2 bg-gray-700 rounded hover:bg-gray-600"
-            >
-              <FaArrowLeft className="inline mr-2" /> Back to Games
-            </button>
-            <button
-              onClick={fetchGame}
-              className="flex items-center px-4 py-2 bg-blue-600 rounded hover:bg-blue-500"
-            >
-              <FaRedo className="mr-2" /> Try Again
-            </button>
+        <div className="flex items-center justify-center min-h-screen bg-gray-900 p-4">
+          <div className="text-center bg-gray-800 rounded-xl shadow-xl p-6 max-w-md w-full mx-4 border border-red-500/20">
+            <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-white mb-2">Error Loading Game</h2>
+            <p className="text-gray-300 mb-6">{error}</p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <button
+                onClick={() => navigate('/games')}
+                className="flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-medium transition-all"
+              >
+                <FaArrowLeft className="text-sm" />
+                Back to Games
+              </button>
+              <button
+                onClick={fetchGame}
+                className="flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-lg font-medium transition-all"
+              >
+                <FaRedo className="text-sm" />
+                Try Again
+              </button>
+            </div>
           </div>
         </div>
       ) : safeGameUrl ? (
-        <div className="w-full h-full">
+        <div className="fixed inset-0 w-full h-full bg-transparent">
           <iframe
             src={safeGameUrl}
             title={game?.displayName || 'Game'}
-            className="w-full h-full border-0"
+            className="w-full h-full border-0 bg-transparent"
             sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals allow-pointer-lock allow-orientation-lock"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; gamepad; fullscreen"
             referrerPolicy="no-referrer-when-downgrade"
@@ -455,14 +424,29 @@ const GameWrapper = () => {
               left: 0,
               width: '100%',
               height: '100%',
-              border: 'none'
+              border: 'none',
+              zIndex: 10
             }}
             key={safeGameUrl}
           />
         </div>
       ) : (
-        <div className="flex items-center justify-center w-full h-full">
-          <div className="text-white">Loading game...</div>
+        <div className="flex items-center justify-center min-h-screen bg-gray-900 p-4">
+          <div className="text-center bg-gray-800 rounded-xl p-6 max-w-md w-full">
+            <div className="w-16 h-16 bg-yellow-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <h2 className="text-xl font-bold text-yellow-500 mb-2">Game Not Available</h2>
+            <p className="text-gray-300 mb-6">This game is currently not available. Please try again later.</p>
+            <button
+              onClick={() => navigate('/games')}
+              className="w-full py-2.5 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-medium transition-colors"
+            >
+              Back to Games
+            </button>
+          </div>
         </div>
       )}
     </div>
