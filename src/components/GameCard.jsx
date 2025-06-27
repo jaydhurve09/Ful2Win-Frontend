@@ -76,7 +76,7 @@ const GameCard = ({ game, featured = false, size = 'md' }) => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
           >
-            <button className="w-full bg-gradient-to-r from-purple-500 to-blue-500 text-white font-semibold py-2 px-4 rounded-lg shadow-lg transform transition-all duration-300 group-hover:translate-y-0 translate-y-2 opacity-0 group-hover:opacity-100">
+            <button className="w-full hover:bg-neonBlueGradient text-white font-semibold py-2 px-4 rounded-lg shadow-lg transform transition-all duration-300 group-hover:translate-y-0 translate-y-2 opacity-0 group-hover:opacity-100">
               Play Now
             </button>
           </motion.div>

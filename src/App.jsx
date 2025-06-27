@@ -37,6 +37,7 @@ import ComingSoon from './components/ComingSoon';
 import MatchMerge from './games/MatchMerge';
 import EggCatcher from './games/EggCatcher';
 import GravityHop from './games/GravityHop';
+import GameWrapper from './components/GameWrapper';
 
 function App() {
   return (
@@ -70,8 +71,7 @@ function App() {
               <Route path="/challenges" element={<Challenges />} />
               <Route path="/notifications" element={<Notification />} />
               <Route path="/refer" element={<ReferralPage />} />
-              <Route path="/flappyball" element={<FlappyBall />} />
-              <Route path="/colorsmash" element={<ColorSmash />} />
+              <Route path="/games/:gameId" element={<GameWrapper />} />
               <Route path="/chat" element={<ChatScreen />} />
               <Route path="/kyc" element={<KYCStatusPage />} />
               <Route path="/followers" element={<FollowerPage />} />
@@ -80,9 +80,6 @@ function App() {
               <Route path="/leaderboard_singlegame" element={<Leaderboard />}/>
               <Route path="/tournaments" element={<TournamentLobby />} />
               <Route path="/comingsoon" element={<ComingSoon />} />
-              <Route path="/matchmerge" element={<MatchMerge />} />
-              <Route path="/eggcatcher" element={<EggCatcher />} />
-              <Route path="/gravityhop" element={<GravityHop />} />
             </Route>
             
             {/* 404 - Not Found */}
