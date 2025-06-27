@@ -16,7 +16,7 @@ const API_URL = `${API_BASE_URL}/api`;
 const Tournaments = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('all');
-  const [tournamentType, setTournamentType] = useState('coin');
+  const [tournamentType, setTournamentType] = useState(null); // Set to null to show all types by default
   const [tournaments, setTournaments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -48,18 +48,36 @@ const Tournaments = () => {
 
         if (response.data && Array.isArray(response.data.data || response.data)) {
           const data = response.data.data || response.data;
-          const formattedTournaments = data.map(tournament => ({
-            id: tournament._id || tournament.id,
-            name: tournament.name,
-            image: tournament.bannerImage?.url || ludo,
-            entryFee: tournament.entryFee?.amount || 100,
-            prizePool: tournament.prizePool?.amount || 3000,
-            players: `${tournament.currentPlayers || 0}/${tournament.maxPlayers || 100}`,
-            timeLeft: '2h 30m left',
-            status: tournament.status || 'upcoming',
-            mode: tournament.tournamentType === 'CASH' ? 'cash' : 'coin',
-            type: tournament.type || 'ludo'
-          }));
+          const formattedTournaments = data.map(tournament => {
+            // Determine the game image based on type or name
+            let gameImage = ludo; // Default image
+            if (tournament.gameType) {
+              const gameType = tournament.gameType.toLowerCase();
+              if (gameType.includes('rummy')) gameImage = rummy;
+              else if (gameType.includes('carrom')) gameImage = carrom;
+            }
+            
+            // Get entry fee and prize pool from the tournament data
+            const entryFee = tournament.entryFee || 0;
+            const prizePool = tournament.prizePool || 0;
+            
+            // Format players count
+            const currentPlayers = tournament.currentPlayers || 0;
+            const maxPlayers = tournament.maxPlayers || 100;
+            
+            return {
+              id: tournament._id || tournament.id,
+              name: tournament.name || 'Tournament',
+              image: tournament.bannerImage?.url || tournament.gameImage || gameImage,
+              entryFee: entryFee,
+              prizePool: prizePool,
+              players: `${currentPlayers}/${maxPlayers}`,
+              timeLeft: tournament.timeLeft || '2h 30m left',
+              status: (tournament.status || 'upcoming').toLowerCase(),
+              mode: (tournament.tournamentType || 'COIN').toLowerCase() === 'cash' ? 'cash' : 'coin',
+              type: (tournament.gameType || 'ludo').toLowerCase()
+            };
+          });
           
           setTournaments(formattedTournaments);
         }
@@ -88,8 +106,10 @@ const Tournaments = () => {
 
   const getFilteredTournaments = () => {
     return tournaments.filter(tournament => {
+      // Only apply status filter if a specific status is selected
       const matchStatus = activeTab === 'all' || tournament.status === activeTab;
-      const matchType = tournament.mode === tournamentType;
+      // Only apply type filter if a specific type is selected
+      const matchType = !tournamentType || tournament.mode === tournamentType;
       return matchStatus && matchType;
     });
   };
@@ -130,6 +150,13 @@ const Tournaments = () => {
           {/* Tournament Type Tabs - Desktop */}
           <div className="hidden md:flex gap-4 mb-6">
             <Button
+              variant={tournamentType === null ? 'primary' : 'gradient'}
+              onClick={() => setTournamentType(null)}
+              className="rounded-full"
+            >
+              All Tournaments
+            </Button>
+            <Button
               variant={tournamentType === 'coin' ? 'primary' : 'gradient'}
               onClick={() => setTournamentType('coin')}
               className="rounded-full"
@@ -148,18 +175,25 @@ const Tournaments = () => {
           {/* Tournament Type Tabs - Mobile */}
           <div className="flex md:hidden gap-2 mb-6 mt-16">
             <Button
+              variant={tournamentType === null ? 'primary' : 'gradient'}
+              onClick={() => setTournamentType(null)}
+              className="rounded-full text-sm px-4 py-2 flex-1"
+            >
+              All
+            </Button>
+            <Button
               variant={tournamentType === 'coin' ? 'primary' : 'gradient'}
               onClick={() => setTournamentType('coin')}
               className="rounded-full text-sm px-4 py-2 flex-1"
             >
-              Coin Tournaments
+              Coin
             </Button>
             <Button
               variant={tournamentType === 'cash' ? 'primary' : 'gradient'}
               onClick={() => setTournamentType('cash')}
               className="rounded-full text-sm px-4 py-2 flex-1"
             >
-              Cash Tournaments
+              Cash
             </Button>
           </div>
 
