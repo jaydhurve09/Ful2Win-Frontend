@@ -4,19 +4,21 @@ import { motion, AnimatePresence } from 'framer-motion';
 import BackgroundBubbles from './BackgroundBubbles';
 
 const GameLobby = ({
-  gameTitle = "Ludo King",
-  gameImage = "https://images.unsplash.com/photo-1606092195730-5d7b9af1efc5?w=400&h=400&fit=crop",
-  gameCategory = "Board",
-  rating = 4.8,
-  playersCount = "4 playing",
+  gameTitle = "Game Title",
+  gameImage = "https://via.placeholder.com/400",
+  gameCategory = "Game",
+  rating = 0,
+  playersCount = "0 playing",
   entryFees = {
-    classic: "₹10 - ₹50",
-    quick: "₹5 - ₹25",
-    tournament: "₹20 - ₹100",
+    classic: "Free",
+    quick: "Free",
+    tournament: "Free",
     private: "Custom",
   },
-  walletBalance = 150,
+  walletBalance = 0,
   onClose,
+  onJoinGame,
+  onJoinTournament,
 }) => {
   const [isOpen, setIsOpen] = useState(true);
   const isActionGame = gameCategory === "Action";
@@ -31,14 +33,23 @@ const GameLobby = ({
     if (onClose) onClose();
   };
 
-  const handleNavigation = (path) => {
-    console.log(`Navigating to: ${path}`);
-    // In a real app, this would use React Router
+  const handleGameModeSelect = (mode) => {
+    console.log(`Selected game mode: ${mode}`);
+    if (mode === 'tournament') {
+      if (onJoinTournament) {
+        onJoinTournament();
+      }
+    } else {
+      // For other modes, call onJoinGame with the mode and entry fee
+      const entryFee = entryFees[mode.toLowerCase()] || '0';
+      if (onJoinGame) {
+        onJoinGame(mode, entryFee);
+      }
+    }
   };
-
-  const getGamePath = () => {
-    if (!gameTitle) return "/games";
-    return `/games/${gameTitle.toLowerCase()}/play`;
+  
+  const getEntryFee = (mode) => {
+    return entryFees[mode.toLowerCase()] || 'Free';
   };
 
   const GameModeCard = ({ title, description, entryFee, onClick, comingSoon = false }) => (
@@ -155,22 +166,6 @@ const GameLobby = ({
             
             {/* Main Content */}
             <div className="p-5">
-              {/* Action Buttons */}
-              <div className="flex gap-3 mb-6">
-                <button
-                  className="flex-1 py-3 rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 text-white font-medium hover:opacity-90 transition-opacity active:scale-95 disabled:opacity-50"
-                  
-                >
-                  Play Now
-                </button>
-                <button
-                  className="flex-1 py-3 rounded-lg border border-blue-500 text-blue-400 font-medium bg-blue-500/10 hover:bg-blue-500/20 transition-colors active:scale-95"
-                  onClick={() => handleNavigation(getGamePath())}
-                >
-                  Practice
-                </button>
-              </div>
-              
               {/* Game Modes */}
               <div className="space-y-3">
                 <h2 className="text-lg font-semibold text-white mb-2">Game Modes</h2>
@@ -178,33 +173,30 @@ const GameLobby = ({
                 <GameModeCard
                   title="Tournament"
                   description="Compete for big prizes"
-                  entryFee={safeEntryFees.tournament}
-                  onClick={() => handleNavigation(`/games/${gameTitle.toLowerCase()}/select/tournament`)}
+                  entryFee={getEntryFee('tournament')}
+                  onClick={() => handleGameModeSelect('tournament')}
                 />
 
                 <GameModeCard
-                  title="Classic Mode"
+                  title="Classic"
                   description="Play with 2-4 players"
-                  entryFee={safeEntryFees.classic}
-                  comingSoon={!isActionGame}
-                  onClick={() => handleNavigation(`/games/${gameTitle.toLowerCase()}/select/classic`)}
+                  entryFee={getEntryFee('classic')}
+                  onClick={() => handleGameModeSelect('classic')}
                 />
                 
-                {isActionGame && (
-                  <GameModeCard
-                    title="Quick Mode"
-                    description="Faster gameplay"
-                    entryFee={entryFees.quick}
-                    onClick={() => handleNavigation(`/games/${gameTitle.toLowerCase()}/select/quick`)}
-                  />
-                )}
+                <GameModeCard
+                  title="Quick Play"
+                  description="Fast-paced matches"
+                  entryFee={getEntryFee('quick')}
+                  onClick={() => handleGameModeSelect('quick')}
+                />
                 
                 <GameModeCard
-                  title="Private Room"
-                  description="Invite your friends"
-                  entryFee={entryFees.private}
+                  title="Private Match"
+                  description="Play with friends"
+                  entryFee={getEntryFee('private')}
                   comingSoon={!isActionGame}
-                  onClick={isActionGame ? () => handleNavigation(`/games/${gameTitle.toLowerCase()}/select/private`) : undefined}
+                  onClick={isActionGame ? () => handleGameModeSelect('private') : undefined}
                 />
               </div>
             </div>

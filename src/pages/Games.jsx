@@ -283,7 +283,7 @@ const Games = () => {
                         onClick={() => {
                           const gameId = game._id || game.name;
                           if (gameId) {
-                            navigate(`/game/${gameId}`);
+                            navigate(`/games/${gameId}`);
                           }
                         }}
                       >
@@ -306,7 +306,7 @@ const Games = () => {
                                   e.stopPropagation();
                                   const gameId = game._id || game.name;
                                   if (gameId) {
-                                    navigate(`/game/${gameId}`);
+                                    navigate(`/games/${gameId}`);
                                   }
                                 }}
                               >
@@ -384,7 +384,7 @@ const Games = () => {
                     onClick={() => {
                       const gameId = game._id || game.name;
                       if (gameId) {
-                        navigate(`/game/${gameId}`);
+                        navigate(`/games/${gameId}`);
                       }
                     }}
                   >
@@ -412,7 +412,7 @@ const Games = () => {
                             e.stopPropagation();
                             const gameId = game._id || game.name;
                             if (gameId) {
-                              navigate(`/game/${gameId}`);
+                              navigate(`/games/${gameId}`);
                             }
                           }}
                         >

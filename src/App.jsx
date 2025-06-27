@@ -59,7 +59,7 @@ function App() {
               <Route path="/wallet" element={<Wallet />} />
               <Route path="/add" element={<Add />} />
               <Route path="/withdraw" element={<Withdraw />} />
-              {/* <Route path="/tournaments" element={<Tournaments />} /> */}
+              <Route path="/tournaments" element={<Tournaments />} />
               <Route path="/games" element={<Games />} />
               <Route path="/community" element={<Community />} />
               <Route path="/support" element={<SupportCenter />} />
@@ -78,7 +78,7 @@ function App() {
               <Route path="/leaderboard" element={<LeaderboardPage />} />
               <Route path="/tournamenthistory" element={<TournamentHistory />} />
               <Route path="/leaderboard_singlegame" element={<Leaderboard />}/>
-              <Route path="/tournaments" element={<TournamentLobby />} />
+              {/* <Route path="/tournaments" element={<TournamentLobby />} /> */}
               <Route path="/comingsoon" element={<ComingSoon />} />
             </Route>
             
