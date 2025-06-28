@@ -40,6 +40,7 @@ import MatchMerge from './games/MatchMerge';
 import EggCatcher from './games/EggCatcher';
 import GravityHop from './games/GravityHop';
 import GameWrapper from './components/GameWrapper';
+import GameOn from './components/GameOn';
 
 function App() {
   return (
@@ -78,11 +79,12 @@ function App() {
               <Route path="/chat" element={<ChatScreen />} />
               <Route path="/kyc" element={<KYCStatusPage />} />
               <Route path="/followers" element={<FollowerPage />} />
-              <Route path="/leaderboard" element={<LeaderboardPage />} />
+              <Route path="/leaderboard" element={<LeaderboardPage />} />e:\internship\Ful2Win-Frontend\src\components\GameOn.jsx
               <Route path="/tournamenthistory" element={<TournamentHistory />} />
-              <Route path="/leaderboard_singlegame" element={<Leaderboard />}/>
+              <Route path="/leaderboard_singlegame/:gameName/:tournamentId" element={<Leaderboard />}/>
               <Route path="/tournament/:tournamentId" element={<TournamentLobby />} />
               <Route path="/tournament-lobby/:gameId" element={<TournamentLobby />} />
+              <Route path="/gameOn/:gameId/:tournamentId" element={<GameOn />} />
               <Route path="/comingsoon" element={<ComingSoon />} />
             </Route>
             

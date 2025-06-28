@@ -124,6 +124,9 @@ const TournamentLobby = () => {
     if (isCoin) return `${amount.toLocaleString()} coins`;
     return `₹${amount.toLocaleString()}`;
   };
+const goToLeaderboard = ({ gameName, tournamentId }) => {
+  navigate(`/leaderboard_singlegame/${gameName}/${tournamentId}`);
+};
 
   // Handle view/join tournament
   const handleViewTournament = (tournamentId) => {
@@ -146,16 +149,7 @@ const TournamentLobby = () => {
     if (isConfirmed) {
       console.log('Tournament confirmed:', { userId, gameId, tournamentId });
       
-      navigate(`/games/${gameId}`, { 
-        state: { 
-          userId,
-          gameId,
-          tournamentId,
-          mode: 'tournament',
-          fromTournament: true,
-          tournamentName: tournament.name
-        } 
-      });
+     navigate(`/gameOn/${gameId}/${tournamentId}`);
     }
   };
 
@@ -178,12 +172,13 @@ const TournamentLobby = () => {
               {status.charAt(0).toUpperCase() + status.slice(1)}
             </div>
             <button 
-              className="flex-1 bg-white/90 hover:bg-white text-gray-900 font-medium py-2 rounded-lg transition-colors flex items-center justify-center text-xs sm:text-sm"
+               className="flex-1 bg-white/90 hover:bg-white text-gray-900 font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center"
               onClick={(e) => {
                 e.stopPropagation();
                 console.log('Navigating to leaderboard for tournament:', id);
-                navigate(`/leaderboard?tournamentId=${id}`);
+                 goToLeaderboard({ gameName: game.name, tournamentId: id });
               }}
+            
             >
               <FaTrophy className="mr-1 sm:mr-2" size={14} />
               <span className="truncate">Leaderboard</span>
@@ -210,7 +205,7 @@ const TournamentLobby = () => {
               onClick={(e) => {
                 e.stopPropagation();
                 console.log('Navigating to leaderboard for tournament:', id);
-navigate(`/leaderboard?tournamentId=${id}`);
+                 goToLeaderboard({ gameName: game.name, tournamentId: id });
               }}
             >
               <FaTrophy className="mr-2" />

@@ -1,28 +1,50 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { FaArrowLeft } from 'react-icons/fa';
-
+import axios from 'axios';
 import Header from '../components/Header';
 import Navbar from '../components/Navbar';
 import BackgroundBubbles from '../components/BackgroundBubbles';
 
-const leaderboardData = [
-  { id: 1, name: 'Johari B.', balance: '₹42,320.33', prize: '₹1,100' },
-  { id: 2, name: 'Liam Ross', balance: '₹8,794.68', prize: '₹850' },
-  { id: 3, name: 'Christopher Allen', balance: '₹7,456.96', prize: '₹625' },
-  { id: 4, name: 'Michael Wilson', balance: '₹4,935', prize: '₹425' },
-  { id: 5, name: 'Darryl H.', balance: '₹4,000.10', prize: '₹350' },
-  { id: 6, name: 'Cooper Williams', balance: '₹3,377.31', prize: '₹300' },
-  { id: 7, name: 'Noah Carter', balance: '₹2,744.69', prize: '₹250' },
-  { id: 8, name: 'Dylan Price', balance: '₹2,400.34', prize: '₹225' },
-  { id: 9, name: 'Vladlen S.', balance: '₹2,096.59', prize: '₹200' },
-  { id: 10, name: 'Ahsan S.', balance: '₹2,057.47', prize: '₹175' },
-  { id: 11, name: 'David Lewis', balance: '₹1,744.66', prize: '₹150' },
-  { id: 12, name: 'Caleb Roberts', balance: '₹1,475.34', prize: '₹125' },
-];
+const API_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
 const Leaderboard = () => {
   const navigate = useNavigate();
+  const { gameName, tournamentId } = useParams(); // ✅ Get from URL
+  const userId = JSON.parse(localStorage.getItem('user'))?._id;
+
+  const [leaderboardData, setLeaderboardData] = useState([]);
+
+  const fetchLeaderboard = async () => {
+    try {
+      const response = await axios.post(`${API_URL}/api/score/get-score`, {
+        gameName,
+        roomId: tournamentId,
+      });
+
+      const data = response.data;
+      if (data && Array.isArray(data.scores)) {
+        setLeaderboardData(data.scores);
+      } else {
+        console.error("Invalid leaderboard data format", response.data);
+      }
+    } catch (error) {
+      navigate(-1);
+      alert(error.response?.data?.message || "An error occurred while fetching leaderboard data.");
+      console.error("Error fetching leaderboard data:", error);
+    }
+  };
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    if (gameName && tournamentId) {
+      fetchLeaderboard();
+    } else {
+      console.error("Invalid gameName or tournamentId");
+    }
+  }, [gameName, tournamentId]);
+
+  const myScore = leaderboardData.find(player => player.userId === userId);
 
   return (
     <div className="relative min-h-screen bg-blueGradient text-white">
@@ -52,29 +74,46 @@ const Leaderboard = () => {
 
         {/* Leaderboard Entries */}
         <div className="space-y-2 pr-1 pb-4">
-          {leaderboardData.map((player, index) => (
+          {leaderboardData && leaderboardData.map((player, index) => (
             <div
-              key={player.id}
+              key={player._id}
               className="bg-white/10 backdrop-blur-md border border-white/10 rounded-lg px-3 py-2 flex justify-between items-center hover:scale-[1.01] transition"
             >
               <div className="w-1/12 text-sm text-white/80 font-semibold">#{index + 1}</div>
               <div className="w-5/12">
-                <p className="text-sm text-white font-medium truncate">{player.name}</p>
+                <p className="text-sm text-white font-medium truncate">{player.username}</p>
               </div>
-              <div className="w-3/12 text-right text-green-300 font-semibold text-sm">{player.balance}</div>
-              <div className="w-3/12 text-right text-lime-400 font-semibold text-sm">{player.prize}</div>
+              <div className="w-3/12 text-right text-green-300 font-semibold text-sm">
+                {player.score}
+              </div>
+              <div className="w-3/12 text-right text-lime-400 font-semibold text-sm">
+                {player.prize}
+              </div>
             </div>
           ))}
 
-          {/* User Placeholder Card */}
+          {/* My Score Placeholder Card */}
           <div className="bg-white/10 backdrop-blur-md border border-white/10 rounded-lg px-3 py-2 flex justify-between items-center hover:scale-[1.01] transition mt-4">
             <div className="w-1/12 text-sm text-white/80 font-semibold">–</div>
             <div className="w-5/12">
-              <p className="text-sm text-white font-medium truncate">ME</p>
-              <p className="text-xs text-white/50">No match played yet</p>
+              {myScore ? (
+                <>
+                  <p className="text-sm text-white font-medium truncate">{myScore.username || "Me"}</p>
+                  <p className="text-xs text-white/50">You played in this tournament</p>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm text-white font-medium truncate">ME</p>
+                  <p className="text-xs text-white/50">No match played yet</p>
+                </>
+              )}
             </div>
-            <div className="w-3/12 text-right text-white/40 font-semibold text-sm">—</div>
-            <div className="w-3/12 text-right text-white/40 font-semibold text-sm">—</div>
+            <div className="w-3/12 text-right text-white/40 font-semibold text-sm">
+              {myScore ? myScore.score : "—"}
+            </div>
+            <div className="w-3/12 text-right text-white/40 font-semibold text-sm">
+              {myScore ? myScore.prize : "—"}
+            </div>
           </div>
         </div>
 

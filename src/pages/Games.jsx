@@ -48,9 +48,9 @@ const Games = () => {
         setError(null);
         
         // Use relative URL for API requests
-        const apiUrl = '/api/games';
+       const apiUrl = '/api/games';
         
-        console.log('Fetching games from:', apiUrl);
+       // console.log('Fetching games from:', apiUrl);
         
         // Make the API request with relative URL
         const response = await fetch(apiUrl, {

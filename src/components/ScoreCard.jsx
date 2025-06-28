@@ -1,24 +1,54 @@
-import React from 'react';
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import { ImCancelCircle } from "react-icons/im";
+import { FaTrophy } from "react-icons/fa";
 
-const ScoreCard = ({ userId, score, roomId, gameName }) => {
+const ScoreCard = ({ game, userId, score, roomId, gameName }) => {
+  const navigate = useNavigate();
+
   return (
-    <div className="max-w-md mx-auto bg-white rounded-2xl shadow-lg p-6 mt-10 text-center border border-gray-200">
-      <h2 className="text-2xl font-bold text-blue-700 mb-2">🏆 Game Score</h2>
-
-      <div className="text-gray-700 text-base mb-3">
-        <p><strong>Player ID:</strong> {userId}</p>
-        <p><strong>Room ID:</strong> {roomId}</p>
-        <p><strong>Game:</strong> {gameName}</p>
-        <p className="text-3xl font-bold text-green-600 mt-4">Score: {score}</p>
-      </div>
-
-      <div className="mt-4">
+    <div className="min-h-screen bg-gradient-to-b from-blue-900 to-blue-800 text-white flex items-center justify-center px-4">
+      <div className="w-full max-w-sm bg-gradient-to-br from-blue-700 to-blue-600 rounded-2xl shadow-xl p-6 relative border-2 border-yellow-400/40">
+        
+        {/* Cancel Button */}
         <button
-          className="px-6 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-md transition-all"
-          onClick={() => window.location.reload()}
+          onClick={() => navigate(-1)}
+          className="absolute top-4 right-4 text-yellow-400 hover:text-yellow-300 text-xl transition-all"
+          title="Back to Lobby"
         >
-          Play Again
+          <ImCancelCircle />
         </button>
+
+        {/* Header */}
+        <div className="text-center mb-6">
+          <h2 className="text-2xl font-extrabold">🏆 Final Score</h2>
+        </div>
+
+        {/* Score Display */}
+        <div className="bg-yellow-100 text-yellow-800 rounded-xl py-6 mb-6 text-center shadow-inner">
+          <div className="flex justify-center items-center mb-2 text-4xl font-bold">
+            <FaTrophy className="mr-2" /> {score}
+          </div>
+          <p className="text-sm text-gray-800">Your Score in {gameName}</p>
+        </div>
+
+        {/* Details Section */}
+      
+        {/* Actions */}
+        <div className="mt-6 flex flex-col items-center gap-4">
+          <button
+            onClick={() => window.location.reload()}
+            className="w-full bg-yellow-400 hover:bg-yellow-500 text-blue-900 font-bold py-2 px-6 rounded-xl shadow transition-all duration-200"
+          >
+            🔁 Play Again
+          </button>
+          <button
+            onClick={() => navigate("/tournaments")}
+            className="w-full bg-white text-blue-700 hover:bg-gray-100 font-semibold py-2 px-6 rounded-xl transition-all duration-200 border border-blue-300"
+          >
+            🏠 Back to Lobby
+          </button>
+        </div>
       </div>
     </div>
   );
