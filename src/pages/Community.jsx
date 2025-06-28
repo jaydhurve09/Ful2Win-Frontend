@@ -45,6 +45,8 @@ const Community = () => {
   const fileInputRef = useRef(null);
   const [isLoading, setIsLoading] = useState(true);
   const [commentInputs, setCommentInputs] = useState({});
+  const [showComments, setShowComments] = useState({});
+  const [showAllComments, setShowAllComments] = useState({});
   const [showCommentInput, setShowCommentInput] = useState(null);
   const navigate = useNavigate(); // For Challenges redirect
 
@@ -665,8 +667,16 @@ const Community = () => {
                 <span className="ml-1">{post.likeCount || post.likes?.length || 0}</span>
               </button>
               <button 
-                className="flex items-center hover:text-white"
-                onClick={() => setShowCommentInput(showCommentInput === post._id ? null : post._id)}
+                className={`flex items-center ${showComments[post._id] ? 'text-blue-400' : 'hover:text-white'}`}
+                onClick={() => {
+                  setShowComments(prev => ({
+                    ...prev,
+                    [post._id]: !prev[post._id]
+                  }));
+                  if (showCommentInput !== post._id) {
+                    setShowCommentInput(post._id);
+                  }
+                }}
               >
                 <FiMessageCircle className="mr-1" /> {post.commentCount || post.comments?.length || 0}
               </button>
@@ -695,19 +705,70 @@ const Community = () => {
               </div>
             )}
 
-            {/* Comments list */}
-            {post.comments?.length > 0 && (
-              <div className="mt-2 space-y-2 max-h-40 overflow-y-auto">
-                {post.comments.map((comment, idx) => (
-                  <div key={comment._id || idx} className="flex items-start text-sm">
-                    <div className="font-medium text-blue-300 mr-2">
-                      {comment.user?.username || 'User'}:
-                    </div>
-                    <div className="text-gray-300">
-                      {comment.content}
+            {/* Comments list - Only show if comments exist and the section is toggled */}
+            {showComments[post._id] && post.comments?.length > 0 && (
+              <div className="mt-3 space-y-3 max-h-60 overflow-y-auto pr-2">
+                <div className="flex justify-between items-center text-sm font-medium text-gray-400 border-b border-white/10 pb-1">
+                  <span>Comments</span>
+                  <span className="text-xs">{post.commentCount || post.comments?.length} total</span>
+                </div>
+                
+                {/* Show only first 2 comments by default */}
+                {post.comments.slice(0, showAllComments[post._id] ? post.comments.length : 2).map((comment, idx) => (
+                  <div 
+                    key={comment._id || idx} 
+                    className="bg-white/5 rounded-lg p-3 text-sm"
+                  >
+                    <div className="flex items-start gap-2">
+                      <div className="flex-shrink-0">
+                        {comment.user?.profilePicture ? (
+                          <img 
+                            src={comment.user.profilePicture} 
+                            alt={comment.user.username}
+                            className="w-8 h-8 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-medium">
+                            {comment.user?.username?.charAt(0)?.toUpperCase() || 'U'}
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-blue-300 truncate">
+                            {comment.user?.username || 'User'}
+                          </span>
+                          <span className="text-xs text-gray-400">
+                            {new Date(comment.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                          </span>
+                        </div>
+                        <p className="mt-0.5 text-gray-200 break-words">
+                          {comment.content}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 ))}
+                
+                {/* Show 'View more' button if there are more than 2 comments */}
+                {!showAllComments[post._id] && post.comments.length > 2 && (
+                  <button 
+                    onClick={() => setShowAllComments(prev => ({ ...prev, [post._id]: true }))}
+                    className="text-sm text-blue-400 hover:text-blue-300 w-full text-center py-1"
+                  >
+                    View {post.comments.length - 2} more comments
+                  </button>
+                )}
+                
+                {/* Show 'Show less' button when all comments are shown */}
+                {showAllComments[post._id] && post.comments.length > 2 && (
+                  <button 
+                    onClick={() => setShowAllComments(prev => ({ ...prev, [post._id]: false }))}
+                    className="text-sm text-gray-400 hover:text-gray-300 w-full text-center py-1"
+                  >
+                    Show less
+                  </button>
+                )}
               </div>
             )}
           </div>
