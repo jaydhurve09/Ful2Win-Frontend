@@ -27,7 +27,7 @@ import { IoMdSend } from 'react-icons/io';
 import { formatTimeAgo } from '../utils/timeUtils';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import authService from '../services/api';
+import api, { authService } from '../services/api';
 
 const Community = () => {
   const [activeTab, setActiveTab] = useState('feed');
@@ -44,51 +44,177 @@ const Community = () => {
   const [fileType, setFileType] = useState('');
   const fileInputRef = useRef(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [commentInputs, setCommentInputs] = useState({});
+  const [showCommentInput, setShowCommentInput] = useState(null);
   const navigate = useNavigate(); // For Challenges redirect
+
+  // Handle like action
+  const handleLike = async (postId) => {
+    try {
+      // Find the post being liked/unliked
+      const postToUpdate = posts.find(post => post._id === postId);
+      if (!postToUpdate) return;
+
+      // Determine if this is a like or unlike action
+      const isLiked = postToUpdate.likes?.includes(currentUser?._id);
+      
+      // Optimistic UI update - immediately update the UI
+      setPosts(posts.map(post => {
+        if (post._id === postId) {
+          const updatedLikes = isLiked 
+            ? post.likes.filter(id => id !== currentUser?._id) // Remove like
+            : [...(post.likes || []), currentUser?._id]; // Add like
+          
+          return {
+            ...post,
+            likes: updatedLikes,
+            likeCount: isLiked 
+              ? Math.max(0, (post.likeCount || post.likes?.length || 1) - 1) // Ensure count doesn't go below 0
+              : (post.likeCount || post.likes?.length || 0) + 1
+          };
+        }
+        return post;
+      }));
+
+      try {
+        // Call the appropriate API endpoint based on like/unlike action
+        if (isLiked) {
+          await authService.unlikePost(postId);
+        } else {
+          await authService.likePost(postId);
+        }
+      } catch (apiError) {
+        console.error('API Error in handleLike:', apiError);
+        // If API call fails, show error but don't revert UI (better UX)
+        toast.error(isLiked ? 'Failed to unlike post' : 'Failed to like post');
+      }
+    } catch (error) {
+      console.error('Error in handleLike:', error);
+      toast.error('Something went wrong');
+    }
+  };
+
+  // Handle comment submission
+  const handleComment = async (postId) => {
+    if (!commentInputs[postId]?.trim()) return;
+    
+    try {
+      const newComment = {
+        _id: `temp-${Date.now()}`,
+        content: commentInputs[postId],
+        user: {
+          _id: currentUser._id,
+          username: currentUser.username,
+          fullName: currentUser.fullName,
+          profilePicture: currentUser.profilePicture
+        },
+        createdAt: new Date().toISOString(),
+        isTemp: true
+      };
+
+      // Optimistic UI update
+      setPosts(posts.map(post => {
+        if (post._id === postId) {
+          return {
+            ...post,
+            comments: [...(post.comments || []), newComment],
+            commentCount: (post.commentCount || post.comments?.length || 0) + 1
+          };
+        }
+        return post;
+      }));
+
+      // Clear input
+      setCommentInputs({...commentInputs, [postId]: ''});
+      setShowCommentInput(null);
+
+      // API call to add comment
+      const response = await authService.addComment(postId, { content: commentInputs[postId] });
+      
+      // Replace temporary comment with server response
+      setPosts(posts.map(post => {
+        if (post._id === postId) {
+          return {
+            ...post,
+            comments: post.comments.map(comment => 
+              comment.isTemp ? response.data : comment
+            )
+          };
+        }
+        return post;
+      }));
+    } catch (error) {
+      console.error('Error adding comment:', error);
+      toast.error('Failed to add comment');
+      // Revert optimistic update on error
+      setPosts([...posts]);
+    }
+  };
 
   // Function to enhance posts with user data
   const enhancePostsWithUserData = async (posts) => {
     try {
+      if (!Array.isArray(posts)) {
+        return [];
+      }
+
       const enhancedPosts = [];
       
       for (const post of posts) {
         try {
-          // Check if user data is already in the post
-          if (post.user?._id || post.author?._id) {
+          // Check if we have a populated user object
+          const populatedUser = post.user || post.author || post.createdBy;
+          
+          // If we have a populated user object with an _id, use it
+          if (populatedUser?._id) {
             enhancedPosts.push({
               ...post,
-              user: post.user || post.author || { _id: 'unknown' }
+              user: {
+                _id: populatedUser._id,
+                username: populatedUser.username || 'user',
+                fullName: populatedUser.fullName || populatedUser.name || 'User',
+                profilePicture: populatedUser.profilePicture || populatedUser.avatar || null
+              }
             });
             continue;
           }
           
-          // If we have a user ID, try to fetch the user data
+          // If we have a user ID but not a populated object, try to fetch the user
           const userId = post.user || post.userId || post.author || post.createdBy?._id || post.createdBy;
-          if (userId && typeof userId === 'string') {
-            console.log(`Fetching user data for post ${post._id}, user ID:`, userId);
+          if (userId && typeof userId === 'string' && userId !== 'unknown') {
             try {
               const userData = await authService.getUserProfile(userId);
-              enhancedPosts.push({ ...post, user: userData });
+              enhancedPosts.push({ 
+                ...post, 
+                user: {
+                  _id: userId,
+                  username: userData.username || 'user',
+                  fullName: userData.fullName || userData.name || 'User',
+                  profilePicture: userData.profilePicture || userData.avatar || null
+                }
+              });
             } catch (error) {
-              console.error(`Failed to fetch user ${userId} for post ${post._id}:`, error);
-              enhancedPosts.push({ ...post, user: { _id: userId } });
+              enhancedPosts.push({ ...post, user: { _id: userId, username: 'user', fullName: 'User' } });
             }
           } else {
-            console.log('No valid user ID found for post:', post._id, 'post data:', post);
-            enhancedPosts.push({ ...post, user: { _id: 'unknown' } });
+            enhancedPosts.push({ 
+              ...post, 
+              user: { _id: 'unknown', username: 'user', fullName: 'Unknown User' } 
+            });
           }
         } catch (error) {
-          console.error('Error processing post:', post._id, error);
-          enhancedPosts.push({ ...post, user: { _id: 'unknown' } });
+          enhancedPosts.push({ 
+            ...post, 
+            user: { _id: 'error', username: 'user', fullName: 'Error Loading User' } 
+          });
         }
       }
       
       return enhancedPosts;
     } catch (error) {
-      console.error('Error in enhancePostsWithUserData:', error);
       return posts.map(post => ({
         ...post,
-        user: post.user || post.author || { _id: 'unknown' }
+        user: post.user || post.author || { _id: 'unknown', username: 'user', fullName: 'Unknown User' }
       }));
     }
   };
@@ -100,7 +226,6 @@ const Community = () => {
       try {
         // Fetch current user data
         const userData = await authService.getCurrentUserProfile();
-        console.log('Current user data:', userData);
         setCurrentUser(userData);
 
         // Fetch community posts with user data populated
@@ -109,8 +234,6 @@ const Community = () => {
           limit: 20,
           populate: 'user author createdBy', // Include all possible user reference fields
         });
-        
-        console.log('Raw posts data:', JSON.stringify(postsData, null, 2));
         
         // Process posts to ensure we have user data
         if (Array.isArray(postsData)) {
@@ -122,13 +245,11 @@ const Community = () => {
           
           // Then enhance any posts that still don't have user data
           const enhancedPosts = await enhancePostsWithUserData(processedPosts);
-          console.log('Processed posts with user data:', enhancedPosts);
           setPosts(enhancedPosts);
         } else {
           setPosts([]);
         }
       } catch (error) {
-        console.error('Error fetching data:', error);
         toast.error('Failed to load posts');
       } finally {
         setIsLoading(false);
@@ -140,34 +261,21 @@ const Community = () => {
 
   const handleFileChange = (e) => {
     try {
-      console.log('File input changed, files:', e.target.files);
       const file = e.target.files[0];
       
       if (!file) {
-        console.log('No file selected');
         return;
       }
 
-      console.log('Selected file:', {
-        name: file.name,
-        type: file.type,
-        size: file.size,
-        lastModified: file.lastModified
-      });
-
       // Check file type
       if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
-        const errorMsg = `Unsupported file type: ${file.type}. Please upload an image or video file.`;
-        console.error(errorMsg);
-        toast.error(errorMsg);
+        toast.error(`Unsupported file type. Please upload an image or video file.`);
         return;
       }
 
       // Check file size (5MB max)
       const maxSize = 5 * 1024 * 1024; // 5MB
       if (file.size > maxSize) {
-        const errorMsg = `File size (${(file.size / (1024 * 1024)).toFixed(2)}MB) exceeds the 5MB limit`;
-        console.error(errorMsg);
         toast.error('File size should be less than 5MB');
         return;
       }
@@ -435,15 +543,15 @@ const Community = () => {
                 <h4 className="font-semibold mr-2">
                   {userName}
                 </h4>
-                <span className="text-xs text-gray-400" title={new Date(post.createdAt).toLocaleString()}>
+                <span className="text-xs text-dullBlue" title={new Date(post.createdAt).toLocaleString()}>
                   {formatTimeAgo(post.createdAt)}
                 </span>
               </div>
-              <p className="text-sm text-gray-300">
+              <p className="text-sm text-dullBlue">
                 @{userUsername}
               </p>
             </div>
-            <button className="text-gray-400 hover:text-white">
+            <button className="text-dullBlue hover:text-white">
               <BsThreeDotsVertical />
             </button>
           </div>
@@ -453,14 +561,6 @@ const Community = () => {
           {/* Handle both old format (image) and new format (media) */}
           {(post.image || (post.media && post.media.url) || (post.images && post.images.length > 0)) && (
             <div className="mb-3 rounded-lg overflow-hidden">
-              {process.env.NODE_ENV === 'development' && (
-                <div className="text-xs text-gray-500 mb-1">
-                  Post ID: {post._id}<br />
-                  Has image: {!!post.image}<br />
-                  Has media: {!!(post.media && post.media.url)}<br />
-                  Images count: {post.images?.length || 0}
-                </div>
-              )}
               
               {/* Handle single image from 'image' field (old format) */}
               {post.image && (
@@ -551,16 +651,69 @@ const Community = () => {
             </div>
           )}
           
-          <div className="flex items-center justify-between text-gray-400 text-sm border-t border-white/10 pt-3">
-            <button className="flex items-center hover:text-white">
-              <FiHeart className="mr-1" /> {post.likes?.length || 0}
-            </button>
-            <button className="flex items-center hover:text-white">
-              <FiMessageCircle className="mr-1" /> {post.comments?.length || 0}
-            </button>
-            <button className="flex items-center hover:text-white">
-              <FiShare2 className="mr-1" /> Share
-            </button>
+          <div className="flex flex-col">
+            <div className="flex items-center justify-between text-dullBlue hover:text-white text-sm border-t border-white/10 pt-3">
+              <button 
+                className={`flex items-center group transition-colors ${post.likes?.includes(currentUser?._id) ? 'text-red-500' : 'text-gray-400 hover:text-red-500'}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleLike(post._id);
+                }}
+                title={post.likes?.includes(currentUser?._id) ? 'Unlike' : 'Like'}
+              >
+                {post.likes?.includes(currentUser?._id) ? (
+                  <FaHeart className="mr-1 text-red-500 animate-scale" />
+                ) : (
+                  <FiHeart className="mr-1 group-hover:scale-110 transition-transform" />
+                )} 
+                <span className="ml-1">{post.likeCount || post.likes?.length || 0}</span>
+              </button>
+              <button 
+                className="flex items-center hover:text-white"
+                onClick={() => setShowCommentInput(showCommentInput === post._id ? null : post._id)}
+              >
+                <FiMessageCircle className="mr-1" /> {post.commentCount || post.comments?.length || 0}
+              </button>
+              <button className="flex items-center text-dullBlue hover:text-white">
+                <FiShare2 className="mr-1" /> Share
+              </button>
+            </div>
+
+            {/* Comment input */}
+            {showCommentInput === post._id && (
+              <div className="mt-3 flex items-center">
+                <input
+                  type="text"
+                  placeholder="Write a comment..."
+                  className="flex-1 bg-white/10 border border-white/20 rounded-l-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-white/50"
+                  value={commentInputs[post._id] || ''}
+                  onChange={(e) => setCommentInputs({...commentInputs, [post._id]: e.target.value})}
+                  onKeyPress={(e) => e.key === 'Enter' && handleComment(post._id)}
+                />
+                <button 
+                  className="bg-blue-500 hover:bg-blue-600 text-dullBlue hover:text-white px-3 py-2 rounded-r-lg text-sm font-medium transition-colors"
+                  onClick={() => handleComment(post._id)}
+                >
+                  Post
+                </button>
+              </div>
+            )}
+
+            {/* Comments list */}
+            {post.comments?.length > 0 && (
+              <div className="mt-2 space-y-2 max-h-40 overflow-y-auto">
+                {post.comments.map((comment, idx) => (
+                  <div key={comment._id || idx} className="flex items-start text-sm">
+                    <div className="font-medium text-blue-300 mr-2">
+                      {comment.user?.username || 'User'}:
+                    </div>
+                    <div className="text-gray-300">
+                      {comment.content}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       );
@@ -738,7 +891,7 @@ const Community = () => {
                             id="media-upload"
                             ref={fileInputRef}
                             className="hidden"
-                            accept="image/*,video/*"
+                            accept="image/*,video/mp4,video/webm,video/quicktime,video/x-msvideo,video/x-ms-wmv,video/x-matroska"
                             onChange={handleFileChange}
                           />
                           <button 
