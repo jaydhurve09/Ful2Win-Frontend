@@ -79,8 +79,22 @@ const Community = () => {
       }));
 
       try {
-        // API call to like/unlike post with the current like status
-        await authService.likePost(postId, isLiked);
+        // API call to like/unlike post
+        const response = await authService.likePost(postId, isLiked);
+        
+        // Update the post with the server response
+        if (response?.success) {
+          setPosts(posts.map(post => {
+            if (post._id === postId) {
+              return {
+                ...post,
+                likes: response.likes || post.likes,
+                likeCount: response.likeCount || post.likeCount
+              };
+            }
+            return post;
+          }));
+        }
       } catch (apiError) {
         console.error('API Error in handleLike:', apiError);
         // If API call fails, show error but don't revert UI (better UX)
@@ -123,27 +137,36 @@ const Community = () => {
       }));
 
       // Clear input
+      const commentContent = commentInputs[postId];
       setCommentInputs({...commentInputs, [postId]: ''});
       setShowCommentInput(null);
 
-      // API call to add comment
-      const response = await authService.addComment(postId, { content: commentInputs[postId] });
-      
-      // Replace temporary comment with server response
-      setPosts(posts.map(post => {
-        if (post._id === postId) {
-          return {
-            ...post,
-            comments: post.comments.map(comment => 
-              comment.isTemp ? response.data : comment
-            )
-          };
+      try {
+        // API call to add comment
+        const response = await authService.addComment(postId, { content: commentContent });
+        
+        // Replace temporary comment with server response
+        if (response?.success) {
+          setPosts(posts.map(post => {
+            if (post._id === postId) {
+              // Filter out the temp comment and add the new one from the server
+              const filteredComments = post.comments.filter(comment => !comment.isTemp);
+              return {
+                ...post,
+                comments: [...filteredComments, response.comment],
+                commentCount: response.commentCount || post.commentCount
+              };
+            }
+            return post;
+          }));
         }
-        return post;
-      }));
+      } catch (apiError) {
+        console.error('API Error in handleComment:', apiError);
+        throw new Error(apiError.response?.data?.message || 'Failed to add comment');
+      }
     } catch (error) {
-      console.error('Error adding comment:', error);
-      toast.error('Failed to add comment');
+      console.error('Error in handleComment:', error);
+      toast.error(error.message || 'Failed to add comment');
       // Revert optimistic update on error
       setPosts([...posts]);
     }
@@ -714,41 +737,63 @@ const Community = () => {
                 </div>
                 
                 {/* Show only first 2 comments by default */}
-                {post.comments.slice(0, showAllComments[post._id] ? post.comments.length : 2).map((comment, idx) => (
-                  <div 
-                    key={comment._id || idx} 
-                    className="bg-white/5 rounded-lg p-3 text-sm"
-                  >
-                    <div className="flex items-start gap-2">
-                      <div className="flex-shrink-0">
-                        {comment.user?.profilePicture ? (
-                          <img 
-                            src={comment.user.profilePicture} 
-                            alt={comment.user.username}
-                            className="w-8 h-8 rounded-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-medium">
-                            {comment.user?.username?.charAt(0)?.toUpperCase() || 'U'}
+                {post.comments
+                  .filter(comment => comment) // Filter out any null/undefined comments
+                  .slice(0, showAllComments[post._id] ? post.comments.length : 2)
+                  .map((comment, idx) => {
+                    // Ensure comment has required properties
+                    const safeComment = {
+                      _id: comment._id || `comment-${idx}`,
+                      content: comment.content || '',
+                      user: comment.user || {
+                        username: 'User',
+                        profilePicture: null
+                      },
+                      createdAt: comment.createdAt || new Date().toISOString()
+                    };
+                    
+                    return (
+                      <div 
+                        key={safeComment._id} 
+                        className="bg-white/5 rounded-lg p-3 text-sm"
+                      >
+                        <div className="flex items-start gap-2">
+                          <div className="flex-shrink-0">
+                            {safeComment.user?.profilePicture ? (
+                              <img 
+                                src={safeComment.user.profilePicture} 
+                                alt={safeComment.user.username || 'User'}
+                                className="w-8 h-8 rounded-full object-cover"
+                                onError={(e) => {
+                                  // If image fails to load, show fallback
+                                  e.target.style.display = 'none';
+                                  e.target.nextSibling.style.display = 'flex';
+                                }}
+                              />
+                            ) : null}
+                            <div className={`w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-medium ${
+                              safeComment.user?.profilePicture ? 'hidden' : 'flex'
+                            }`}>
+                              {safeComment.user?.username?.charAt(0)?.toUpperCase() || 'U'}
+                            </div>
                           </div>
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium text-blue-300 truncate">
-                            {comment.user?.username || 'User'}
-                          </span>
-                          <span className="text-xs text-gray-400">
-                            {new Date(comment.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                          </span>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-blue-300 truncate">
+                                {safeComment.user?.username || 'User'}
+                              </span>
+                              <span className="text-xs text-gray-400">
+                                {new Date(safeComment.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                              </span>
+                            </div>
+                            <p className="mt-0.5 text-gray-200 break-words">
+                              {safeComment.content}
+                            </p>
+                          </div>
                         </div>
-                        <p className="mt-0.5 text-gray-200 break-words">
-                          {comment.content}
-                        </p>
                       </div>
-                    </div>
-                  </div>
-                ))}
+                    );
+                  })}
                 
                 {/* Show 'View more' button if there are more than 2 comments */}
                 {!showAllComments[post._id] && post.comments.length > 2 && (

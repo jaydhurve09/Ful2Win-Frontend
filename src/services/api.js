@@ -1360,8 +1360,15 @@ getCommunityPosts: async (params = {}) => {
  */
 likePost: async (postId, isLiked) => {
   try {
-    const endpoint = isLiked ? '/posts/unlike' : '/posts/like';
-    const response = await api.post(endpoint, { postId });
+    // Get the current user ID from localStorage
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (!user?._id) {
+      throw new Error('User not authenticated');
+    }
+
+    // The backend expects postId in the URL and gets userId from auth token
+    const response = await api.post(`/posts/${postId}/like`, {});
+    
     return response.data;
   } catch (error) {
     console.error('Error toggling post like:', error);
@@ -1377,8 +1384,16 @@ likePost: async (postId, isLiked) => {
  */
 addComment: async (postId, commentData) => {
   try {
-    const response = await api.post(`/posts/${postId}/comments`, commentData);
-    return response.data.data || response.data;
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (!user?._id) {
+      throw new Error('User not authenticated');
+    }
+
+    const response = await api.post(`/posts/${postId}/comments`, {
+      content: commentData.content
+    });
+    
+    return response.data; // Return the full response data
   } catch (error) {
     console.error('Error adding comment:', error);
     throw error.response?.data?.message || 'Failed to add comment';

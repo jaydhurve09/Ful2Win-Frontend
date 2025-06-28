@@ -25,6 +25,13 @@ const Login = () => {
 
   // Removed testBackendConnection function as it's not needed
 
+  const validatePhoneNumber = (phone) => {
+    // Remove all non-digit characters
+    const digitsOnly = phone.replace(/\D/g, '');
+    // Check if we have exactly 10 digits
+    return digitsOnly.length === 10 ? digitsOnly : null;
+  };
+
   const handleLogin = async (e) => {
     e.preventDefault();
     
@@ -38,12 +45,19 @@ const Login = () => {
       return;
     }
     
+    // Validate and format phone number
+    const formattedPhone = validatePhoneNumber(phoneNumber);
+    if (!formattedPhone) {
+      toast.error('Please enter a valid 10-digit phone number');
+      return;
+    }
+    
     try {
       setIsLoading(true);
       
       console.log('=== Login Attempt ===');
-      console.log('1. Attempting login with:', { phoneNumber });
-      const userData = { phoneNumber, password };
+      console.log('1. Attempting login with formatted phone:', formattedPhone);
+      const userData = { phoneNumber: formattedPhone, password };
       
       console.log('2. Calling login function...');
       const result = await login(userData);
@@ -102,11 +116,18 @@ const Login = () => {
               type="tel"
               autoComplete="tel"
               value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value)}
-              placeholder="Enter your phone number"
+              onChange={(e) => {
+                // Only allow numbers and auto-format as user types
+                const value = e.target.value.replace(/\D/g, '');
+                setPhoneNumber(value);
+              }}
+              placeholder="Enter 10-digit phone number"
               className="w-full px-4 py-2 text-gray-500 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-300"
+              pattern="[0-9]{10}"
+              maxLength="10"
               required
             />
+            <p className="text-xs text-gray-500 mt-1">Enter 10 digits (e.g., 9876543210)</p>
           </div>
 
           {/* Password */}
