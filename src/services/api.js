@@ -1366,8 +1366,11 @@ likePost: async (postId, isLiked) => {
       throw new Error('User not authenticated');
     }
 
-    // The backend expects postId in the URL and gets userId from auth token
-    const response = await api.post(`/posts/${postId}/like`, {});
+    // The backend expects both postId and userId in the request body
+    const response = await api.post('/posts/like', {
+      postId,
+      userId: user._id
+    });
     
     return response.data;
   } catch (error) {
