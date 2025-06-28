@@ -77,21 +77,8 @@ const Community = () => {
       }));
 
       try {
-        // API call to like/unlike post
-        const response = await authService.likePost(postId);
-        
-        // Update the post with the server response
-        if (response.success) {
-          setPosts(posts.map(post => 
-            post._id === postId 
-              ? { 
-                  ...post, 
-                  likes: response.data.likes || post.likes,
-                  likeCount: response.data.likeCount || post.likeCount
-                } 
-              : post
-          ));
-        }
+        // API call to like/unlike post with the current like status
+        await authService.likePost(postId, isLiked);
       } catch (apiError) {
         console.error('API Error in handleLike:', apiError);
         // If API call fails, show error but don't revert UI (better UX)

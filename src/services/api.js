@@ -1355,12 +1355,14 @@ getCommunityPosts: async (params = {}) => {
 /**
  * Like or unlike a post
  * @param {string} postId - ID of the post to like/unlike
+ * @param {boolean} isLiked - Whether the post is currently liked
  * @returns {Promise<Object>} Updated post data
  */
-likePost: async (postId) => {
+likePost: async (postId, isLiked) => {
   try {
-    const response = await api.post(`/posts/${postId}/like`);
-    return response.data.data || response.data;
+    const endpoint = isLiked ? '/posts/unlike' : '/posts/like';
+    const response = await api.post(endpoint, { postId });
+    return response.data;
   } catch (error) {
     console.error('Error toggling post like:', error);
     throw error.response?.data?.message || 'Failed to update like';
