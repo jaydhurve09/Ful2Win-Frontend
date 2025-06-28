@@ -14,13 +14,54 @@ const Signup = () => {
     phoneNumber: '',
     password: '',
     confirmPassword: '',
-    agree: false
+    agree: false,
+    referralCode: ''
   });
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
-  
   const [isLoading, setIsLoading] = useState(false);
+  const [showReferral, setShowReferral] = useState(false);
   const navigate = useNavigate();
+
+  const validateForm = () => {
+    const newErrors = {};
+    let isValid = true;
+
+    // Validate full name
+    if (!formData.fullName.trim()) {
+      newErrors.fullName = 'Full name is required';
+      isValid = false;
+    }
+
+    // Validate phone number
+    const phoneRegex = /^[0-9]{10}$/;
+    if (!formData.phoneNumber.match(phoneRegex)) {
+      newErrors.phoneNumber = 'Please enter a valid 10-digit phone number';
+      isValid = false;
+    }
+
+    // Validate email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!formData.email.match(emailRegex)) {
+      newErrors.email = 'Please enter a valid email address';
+      isValid = false;
+    }
+
+    // Validate password
+    if (formData.password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters long';
+      isValid = false;
+    }
+
+    // Validate confirm password
+    if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match';
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
 
   useEffect(() => {
     // Redirect if user is already logged in
@@ -40,15 +81,24 @@ const Signup = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log('Form submitted');
     
-    if (!validateForm()) return;
+    const isValid = validateForm();
+    console.log('Form validation result:', isValid);
+    
+    if (!isValid) {
+      console.log('Form validation failed');
+      return;
+    }
     
     if (!formData.agree) {
+      console.log('Terms not agreed');
       toast.error('Please agree to the terms and privacy policy');
       return;
     }
 
     try {
+      console.log('Starting form submission');
       setIsLoading(true);
       
       // Prepare user data for the backend
@@ -56,29 +106,29 @@ const Signup = () => {
         fullName: formData.fullName,
         phoneNumber: formData.phoneNumber,
         email: formData.email,
-        password: formData.password
+        password: formData.password,
+        referralCode: formData.referralCode
       };
       
       console.log('Sending registration request with data:', userData);
       
-      // Use authService for registration
-      const result = await authService.register(userData);
+      // Call your API to initiate registration (without completing it yet)
+      // const result = await authService.register(userData);
+      
+      // For now, we'll simulate a successful response
+      const result = { success: true, message: 'OTP sent successfully' };
       
       if (result && result.success) {
-        console.log('Registration successful:', result);
-        toast.success(result.message || 'Registration successful! Please login.');
-        // Clear form
-        setFormData({
-          fullName: '',
-          name: '',
-          phoneNumber: '',
-          password: '',
-          confirmPassword: '',
-          agree: false
+        console.log('Registration initiated, redirecting to phone verification');
+        // Redirect to phone verification page with form data
+        navigate('/verify-phone', { 
+          state: { 
+            formData: userData,
+            message: result.message 
+          } 
         });
-        // Redirect to login page
-        navigate('/login');
       } else {
+        console.log('Registration failed:', result?.message);
         throw new Error(result?.message || 'Registration failed');
       }
     } catch (error) {
@@ -86,6 +136,7 @@ const Signup = () => {
       const message = error.response?.data?.message || 'Registration failed. Please try again.';
       toast.error(message);
     } finally {
+      console.log('Form submission completed');
       setIsLoading(false);
     }
   };
@@ -149,6 +200,9 @@ const Signup = () => {
                 className="w-full px-4 py-2 text-gray-500 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-300"
                 required
               />
+              {errors.phoneNumber && (
+                <p className="text-red-500 text-sm mt-1">{errors.phoneNumber}</p>
+              )}
             </div>
 
             {/* Email */}
@@ -167,6 +221,9 @@ const Signup = () => {
                 className="w-full px-4 py-2 text-gray-500 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-300"
                 required
               />
+              {errors.email && (
+                <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+              )}
             </div>
 
             {/* Password */}
@@ -185,6 +242,9 @@ const Signup = () => {
                 className="w-full px-4 py-2 text-gray-500 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-300"
                 required
               />
+              {errors.password && (
+                <p className="text-red-500 text-sm mt-1">{errors.password}</p>
+              )}
             </div>
 
             {/* Confirm Password */}
@@ -214,6 +274,31 @@ const Signup = () => {
               </div>
               {errors.confirmPassword && (
                 <p className="text-red-500 text-sm mt-1">{errors.confirmPassword}</p>
+              )}
+            </div>
+
+            {/* Referral Code Toggle */}
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={() => setShowReferral(!showReferral)}
+                className="text-sm text-blue-600 hover:underline focus:outline-none"
+              >
+                {showReferral ? 'Hide Referral Code' : 'Have a Referral Code?'}
+              </button>
+              
+              {showReferral && (
+                <div className="mt-2 transition-all duration-300 ease-in-out">
+                  <input
+                    id="referralCode"
+                    name="referralCode"
+                    type="text"
+                    placeholder="Enter referral code (optional)"
+                    value={formData.referralCode}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 text-gray-500 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-300 mt-1"
+                  />
+                </div>
               )}
             </div>
 
@@ -249,6 +334,14 @@ const Signup = () => {
                 I agree to the <Link to="/terms" className="text-blue-600 hover:underline">Terms</Link> and{' '}
                 <Link to="/privacy" className="text-blue-600 hover:underline">Privacy Policy</Link>
               </label>
+            </div>
+
+            {/* Already have an account */}
+            <div className="text-center pt-2">
+              <p className="text-sm text-gray-600">
+                Already have an account?{' '}
+                <Link to="/login" className="text-blue-600 hover:underline font-medium">Login here</Link>
+              </p>
             </div>
 
             <button
