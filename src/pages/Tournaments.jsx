@@ -99,7 +99,7 @@ const Tournaments = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white">
+      <div className="min-h-screen bg-blueGradient text-white">
         <BackgroundBubbles />
         <Header />
         <div className="flex items-center justify-center min-h-[60vh]">
@@ -112,7 +112,7 @@ const Tournaments = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white">
+      <div className="min-h-screen bg-blueGradient text-white">
         <BackgroundBubbles />
         <Header />
         <div className="container mx-auto px-4 py-8 text-center">
@@ -133,7 +133,7 @@ const Tournaments = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white">
+    <div className="min-h-screen bg-blueGradient text-white">
       <BackgroundBubbles />
       <Header />
 
@@ -156,7 +156,7 @@ const Tournaments = () => {
         </div>
 
         {getFilteredGames().length === 0 ? (
-          <div className="bg-gray-800/30 border-2 border-dashed border-gray-700 rounded-xl p-8 text-center">
+          <div className=" bg-gray-800/30 border-2 border-dashed border-gray-700 rounded-xl p-8 text-center">
             <div className="text-yellow-500 mb-3">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />

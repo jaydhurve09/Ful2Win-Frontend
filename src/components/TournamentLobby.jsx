@@ -15,6 +15,7 @@ import { toast } from 'react-toastify';
 import axios from 'axios';
 import Header from './Header';
 import BackgroundBubbles from './BackgroundBubbles';
+import Navbar from './Navbar';
 
 // Base URL for API requests
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
@@ -164,19 +165,20 @@ const TournamentLobby = () => {
     const renderActionButtons = () => {
       if (status === 'completed' || status === 'cancelled') {
         return (
-          <div className="flex gap-2 w-full">
-            <div className="flex-1 text-center py-2 px-4 rounded-lg bg-gray-700 text-gray-400">
+          <div className="flex gap-2 w-full text-sm sm:text-base">
+            <div className="flex-1 text-center py-2 rounded-lg bg-gray-700 text-gray-300 text-xs sm:text-sm flex items-center justify-center">
               {status.charAt(0).toUpperCase() + status.slice(1)}
             </div>
             <button 
-              className="flex-1 bg-white/90 hover:bg-white text-gray-900 font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center"
+              className="flex-1 bg-white/90 hover:bg-white text-gray-900 font-medium py-2 rounded-lg transition-colors flex items-center justify-center text-xs sm:text-sm"
               onClick={(e) => {
                 e.stopPropagation();
-                console.log('View leaderboard for tournament:', id);
+                console.log('Navigating to leaderboard for tournament:', id);
+                navigate(`/leaderboard?tournamentId=${id}`);
               }}
             >
-              <FaTrophy className="mr-2" />
-              Leaderboard
+              <FaTrophy className="mr-1 sm:mr-2" size={14} />
+              <span className="truncate">Leaderboard</span>
             </button>
           </div>
         );
@@ -199,7 +201,8 @@ const TournamentLobby = () => {
               className="flex-1 bg-white/90 hover:bg-white text-gray-900 font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center"
               onClick={(e) => {
                 e.stopPropagation();
-                console.log('View leaderboard for tournament:', id);
+                console.log('Navigating to leaderboard for tournament:', id);
+navigate(`/leaderboard?tournamentId=${id}`);
               }}
             >
               <FaTrophy className="mr-2" />
@@ -239,21 +242,21 @@ const TournamentLobby = () => {
     
     return (
       <div 
-        className="bg-white/10 border border-white/10 backdrop-blur-md rounded-xl p-3 sm:p-4 shadow-md hover:border-yellow-400/50 transition-all duration-200 cursor-pointer"
+        className="bg-white/10 border border-white/10 backdrop-blur-md rounded-xl p-2 sm:p-3 shadow-md hover:border-yellow-400/50 transition-all duration-200 cursor-pointer h-full flex flex-col overflow-hidden min-h-[180px] sm:min-h-[200px]"
         onClick={handleCardClick}
       >
-        <div className="flex justify-between items-center mb-2">
+        <div className="flex justify-between items-center mb-1">
           <h3 className="text-sm sm:text-base font-semibold line-clamp-1 pr-2">{name}</h3>
           <span className={`text-[9px] sm:text-xs px-1.5 py-0.5 rounded font-medium whitespace-nowrap ${
-          status === 'live' ? 'bg-red-500' :
-          status === 'upcoming' ? 'bg-yellow-500' :
-          status === 'completed' ? 'bg-green-500' : 'bg-gray-500'
-        }`}>
-          {status}
-        </span>
+            status === 'live' ? 'bg-red-500' :
+            status === 'upcoming' ? 'bg-yellow-500' :
+            status === 'completed' ? 'bg-green-500' : 'bg-gray-500'
+          }`}>
+            {status}
+          </span>
         </div>
         
-        <div className="grid grid-cols-2 gap-1.5 sm:gap-2 mb-2 text-xs sm:text-sm">
+        <div className="grid grid-cols-2 gap-1.5 sm:gap-2 mb-1 text-xs sm:text-sm flex-grow">
           <div className="flex items-center truncate">
             {tournamentType === 'coin' ? (
               <FaCoins className="text-yellow-400 mr-1 flex-shrink-0" size={12} />
@@ -276,7 +279,7 @@ const TournamentLobby = () => {
           </div>
           <div className="flex items-center truncate">
             <FaClock className="text-yellow-400 mr-1 flex-shrink-0" size={12} />
-            <span className="truncate text-xs">
+            <span className="truncate text-[10px] sm:text-xs">
               {status === 'upcoming' ? 'Starts:' : 'Started:'} {formatDateTime(startTime).split(',').pop().trim()}
             </span>
           </div>
@@ -394,11 +397,10 @@ const TournamentLobby = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white">
+    <div className="min-h-screen felx flex-col bg-blueGradient text-white">
       <BackgroundBubbles />
       <Header />
-      
-      <main className="container mx-auto px-4 py-8 relative z-10">
+      <main className="container mx-auto mt-11 px-4 py-8 relative z-10">
         <div className="flex items-center mb-8">
           <button 
             onClick={() => navigate(-1)}
@@ -408,11 +410,11 @@ const TournamentLobby = () => {
             <FaArrowLeft className="text-xl" />
           </button>
           <h1 className="text-3xl font-bold">
-            {game?.name ? `${game.name} Tournaments` : 'Tournaments'}
+            {game?.name ? `${game.displayName} Tournaments` : 'Tournaments'}
           </h1>
         </div>
         
-        <div className="mb-6 flex flex-col md:flex-row gap-4">
+        <div className="mb-6 flex flex-col sm:flex-row gap-3 sm:gap-4">
           <div className="relative flex-1">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <FaSearch className="text-gray-400" />
@@ -462,7 +464,7 @@ const TournamentLobby = () => {
                   <FaRupeeSign className="text-yellow-500 mr-2" />
                   Cash Tournaments
                 </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 auto-rows-fr">
                   {filteredTournaments.cash.map((tournament) => (
                     <TournamentCard
                       key={tournament._id}
@@ -488,7 +490,7 @@ const TournamentLobby = () => {
                   <FaCoins className="text-yellow-500 mr-2" />
                   Coins Tournaments
                 </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 auto-rows-fr">
                   {filteredTournaments.coins.map((tournament) => (
                     <TournamentCard
                       key={tournament._id}
@@ -509,6 +511,7 @@ const TournamentLobby = () => {
           </div>
         )}
       </main>
+      <Navbar />
     </div>
   );
 };

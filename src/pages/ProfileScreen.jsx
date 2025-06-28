@@ -13,7 +13,7 @@ import {
   FiRefreshCw,
   FiSettings 
 } from "react-icons/fi";
-import { FaTrophy, FaGamepad, FaRupeeSign } from "react-icons/fa";
+import { FaTrophy, FaGamepad, FaRupeeSign, FaCoins } from "react-icons/fa";
 import { IoMdPerson } from "react-icons/io";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
 import Navbar from "../components/Navbar";
@@ -146,7 +146,7 @@ const ProfileScreen = () => {
       value: userStats.balance.toLocaleString() 
     },
     { 
-      icon: <FiDollarSign className="text-yellow-500" />, 
+      icon: <FaCoins className="text-yellow-500" />, 
       label: "Coins", 
       value: userStats.coins.toLocaleString() 
     },
