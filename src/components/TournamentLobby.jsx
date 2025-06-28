@@ -119,6 +119,12 @@ const TournamentLobby = () => {
     }
   }, []);
 
+  // Format prize as string for confirmation dialog
+  const formatPrizeString = (amount, isCoin = false) => {
+    if (isCoin) return `${amount.toLocaleString()} coins`;
+    return `₹${amount.toLocaleString()}`;
+  };
+
   // Handle view/join tournament
   const handleViewTournament = (tournamentId) => {
     const tournament = tournaments.find(t => t.id === tournamentId);
@@ -128,11 +134,13 @@ const TournamentLobby = () => {
       return;
     }
 
+    const isCoinTournament = tournament.tournamentType === 'coin';
+    
     // Show confirmation dialog first
     const isConfirmed = window.confirm(
       `Register for ${tournament.name}?\n\n` +
-      `Entry Fee: ${formatPrize(tournament.entryFee || 0, tournament.tournamentType === 'coin')}\n` +
-      `Prize Pool: ${formatPrize(tournament.prizePool || 0, tournament.tournamentType === 'coin')}`
+      `Entry Fee: ${formatPrizeString(tournament.entryFee || 0, isCoinTournament)}\n` +
+      `Prize Pool: ${formatPrizeString(tournament.prizePool || 0, isCoinTournament)}`
     );
 
     if (isConfirmed) {
@@ -195,7 +203,7 @@ const TournamentLobby = () => {
               }}
             >
               <FaGamepad className="mr-2" />
-              Join
+              Register
             </button>
             <button 
               className="flex-1 bg-white/90 hover:bg-white text-gray-900 font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center"
