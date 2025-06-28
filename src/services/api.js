@@ -976,6 +976,20 @@ getCurrentUserProfile: async () => {
 },
 
 /**
+ * Get user profile by ID
+ * @param {string} userId - User ID
+ * @returns {Promise<Object>} User profile data
+ */
+getUserProfile: async (userId) => {
+  try {
+    const response = await api.get(`/users/profile/${userId}`);
+    return response.data;
+  } catch (error) {
+    if (error.response?.status === 404) {
+      // If profile not found, try to get the current user's profile instead
+      try {
+        const currentUser = await authService.getCurrentUserProfile();
+        if (currentUser?._id === userId) {
           return currentUser;
         }
       } catch (e) {
@@ -1150,7 +1164,7 @@ createPost: async function(formData) {
     };
 
     console.log('=== Request Configuration ===', {
-      endpoint: '/api/posts',
+      endpoint: '/posts',
       method: 'POST',
       hasFiles: !!formData.get('media'),
       formData: formDataEntries,
@@ -1339,32 +1353,17 @@ getCommunityPosts: async (params = {}) => {
 },
 
 /**
- * Like a post
- * @param {string} postId - ID of the post to like
- * @returns {Promise<{success: boolean, likes: number}>} Updated like count
+ * Like or unlike a post
+ * @param {string} postId - ID of the post to like/unlike
+ * @returns {Promise<Object>} Updated post data
  */
 likePost: async (postId) => {
   try {
-    const response = await api.post('/api/posts/like', { postId });
-    return response.data;
+    const response = await api.post(`/posts/${postId}/like`);
+    return response.data.data || response.data;
   } catch (error) {
-    console.error('Error in likePost:', error);
-    throw error.response?.data?.message || 'Failed to like post';
-  }
-},
-
-/**
- * Unlike a post
- * @param {string} postId - ID of the post to unlike
- * @returns {Promise<{success: boolean, likes: number}>} Updated like count
- */
-unlikePost: async (postId) => {
-  try {
-    const response = await api.post('/api/posts/unlike', { postId });
-    return response.data;
-  } catch (error) {
-    console.error('Error in unlikePost:', error);
-    throw error.response?.data?.message || 'Failed to unlike post';
+    console.error('Error toggling post like:', error);
+    throw error.response?.data?.message || 'Failed to update like';
   }
 },
 
@@ -1376,29 +1375,11 @@ unlikePost: async (postId) => {
  */
 addComment: async (postId, commentData) => {
   try {
-    const response = await api.post('/api/posts/comment', { 
-      postId, 
-      content: commentData.content 
-    });
-    return response.data;
+    const response = await api.post(`/posts/${postId}/comments`, commentData);
+    return response.data.data || response.data;
   } catch (error) {
-    console.error('Error in addComment:', error);
+    console.error('Error adding comment:', error);
     throw error.response?.data?.message || 'Failed to add comment';
-  }
-},
-
-/**
- * Get comments for a post
- * @param {string} postId - ID of the post to get comments for
- * @returns {Promise<Array>} Array of comments
- */
-getPostComments: async (postId) => {
-  try {
-    const response = await api.get(`/posts/${postId}/comments`);
-    return response.data;
-  } catch (error) {
-    console.error('Error in getPostComments:', error);
-    throw error.response?.data?.message || 'Failed to fetch comments';
   }
 }
 

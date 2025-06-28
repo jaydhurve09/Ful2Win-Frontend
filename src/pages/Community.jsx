@@ -77,11 +77,20 @@ const Community = () => {
       }));
 
       try {
-        // Call the appropriate API endpoint based on like/unlike action
-        if (isLiked) {
-          await authService.unlikePost(postId);
-        } else {
-          await authService.likePost(postId);
+        // API call to like/unlike post
+        const response = await authService.likePost(postId);
+        
+        // Update the post with the server response
+        if (response.success) {
+          setPosts(posts.map(post => 
+            post._id === postId 
+              ? { 
+                  ...post, 
+                  likes: response.data.likes || post.likes,
+                  likeCount: response.data.likeCount || post.likeCount
+                } 
+              : post
+          ));
         }
       } catch (apiError) {
         console.error('API Error in handleLike:', apiError);
