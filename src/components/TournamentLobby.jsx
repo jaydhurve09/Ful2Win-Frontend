@@ -127,7 +127,56 @@ const TournamentLobby = () => {
 const goToLeaderboard = ({ gameName, tournamentId }) => {
   navigate(`/leaderboard_singlegame/${gameName}/${tournamentId}`);
 };
+const handleRegisterTournament = async (tournamentId) => {
+  const tournament = tournaments.find(t => t.id === tournamentId || t._id === tournamentId);
+    
+  if (!tournament) {
+    toast.error('Tournament not found');
+    return;
+  }
 
+  const isCoinTournament = tournament.tournamentType === 'coin';
+  const isConfirmed = window.confirm(
+    `Register for ${tournament.name}?\n\n` +
+    `Entry Fee: ${formatPrizeString(tournament.entryFee || 0, isCoinTournament)}\n` +
+    `Prize Pool: ${formatPrizeString(tournament.prizePool || 0, isCoinTournament)}`
+  );
+
+  if (!isConfirmed) return;
+
+  try {
+    const token = localStorage.getItem('token');
+    const user = JSON.parse(localStorage.getItem('user'));
+
+    if (!user || !token) {
+      toast.error('User not logged in');
+      return;
+    }
+
+    const response = await axios.post(
+      `${API_URL}/tournaments/${tournamentId}/register`,
+      { playerId: user._id },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (response.data.success) {
+      toast.success('Registered successfully!');
+      // Redirect to play page
+      handleViewTournament(tournamentId);
+    } else {
+      toast.error(response.data.message || 'Registration failed');
+    }
+  } catch (error) {
+    console.error('Registration error:', error);
+    toast.error(
+      error.response?.data?.message || 'Failed to register for tournament'
+    );
+  }
+};
   // Handle view/join tournament
   const handleViewTournament = (tournamentId) => {
     const tournament = tournaments.find(t => t.id === tournamentId);
@@ -140,18 +189,22 @@ const goToLeaderboard = ({ gameName, tournamentId }) => {
     const isCoinTournament = tournament.tournamentType === 'coin';
     
     // Show confirmation dialog first
-    const isConfirmed = window.confirm(
-      `Register for ${tournament.name}?\n\n` +
-      `Entry Fee: ${formatPrizeString(tournament.entryFee || 0, isCoinTournament)}\n` +
-      `Prize Pool: ${formatPrizeString(tournament.prizePool || 0, isCoinTournament)}`
-    );
+    
+    //  const isConfirmed = window.confirm(
+    //   `Register for ${tournament.name}?\n\n` +
+    //    `Entry Fee: ${formatPrizeString(tournament.entryFee || 0, isCoinTournament)}\n` +
+    //    `Prize Pool: ${formatPrizeString(tournament.prizePool || 0, isCoinTournament)}`
+      
+    //  );
 
-    if (isConfirmed) {
-      console.log('Tournament confirmed:', { userId, gameId, tournamentId });
+    // if (isConfirmed) {
+    //   console.log('Tournament confirmed:', { userId, gameId, tournamentId });
       
      navigate(`/gameOn/${gameId}/${tournamentId}`);
-    }
+   // }
   };
+  //console.log(tournaments.currentPlayers);
+
 
   // Tournament card component
   const TournamentCard = ({ id, name, entryFee, prizePool, participants, maxParticipants, startTime, status, tournamentType }) => {
@@ -187,34 +240,45 @@ const goToLeaderboard = ({ gameName, tournamentId }) => {
         );
       }
       
-      if (status === 'live') {
-        return (
-          <div className="flex gap-2 w-full">
-            <button 
-              className="flex-1 bg-yellow-500 hover:bg-yellow-400 text-gray-900 font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleViewTournament(id);
-              }}
-            >
-              <FaGamepad className="mr-2" />
-              Register
-            </button>
-            <button 
-              className="flex-1 bg-white/90 hover:bg-white text-gray-900 font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center"
-              onClick={(e) => {
-                e.stopPropagation();
-                console.log('Navigating to leaderboard for tournament:', id);
-                 goToLeaderboard({ gameName: game.name, tournamentId: id });
-              }}
-            >
-              <FaTrophy className="mr-2" />
-              Leaderboard
-            </button>
-          </div>
-        );
-      }
-      
+     if (status === 'live') {
+const hasJoined = tournaments[0].currentPlayers?.some(p =>
+  typeof p === 'string' ? p === userId : p?.userId === userId
+);
+console.log('hasJoined:', hasJoined);
+
+  return (
+    <div className="flex gap-2 w-full">
+     <button 
+  className={`flex-1 ${hasJoined ? 'bg-green-500 hover:bg-green-400' : 'bg-yellow-500 hover:bg-yellow-400'} text-gray-900 font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center`}
+  onClick={(e) => {
+    e.stopPropagation();
+
+    if (!hasJoined) {
+         handleRegisterTournament(id);
+       // agar confirm nahi kiya to ruk ja
+    }
+
+    handleViewTournament(id); // dono case me call hoga
+  }}
+>
+  <FaGamepad className="mr-2" />
+  {hasJoined ? 'Play' : 'Register'}
+</button>
+
+      <button 
+        className="flex-1 bg-white/90 hover:bg-white text-gray-900 font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center"
+        onClick={(e) => {
+          e.stopPropagation();
+          goToLeaderboard({ gameName: game.name, tournamentId: id });
+        }}
+      >
+        <FaTrophy className="mr-2" />
+        Leaderboard
+      </button>
+    </div>
+  );
+}
+ 
       // For upcoming tournaments
       return (
         <div className="flex gap-2 w-full">
