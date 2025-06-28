@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Environment configuration
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 
 console.log('API Configuration:', {
   mode: import.meta.env.MODE,
@@ -963,7 +963,7 @@ clearAuthData: function() {
  */
 getCurrentUserProfile: async () => {
   try {
-    const response = await api.get('/api/users/me');
+    const response = await api.get('/users/me');
     return response.data;
   } catch (error) {
     // If unauthorized, clear auth data
@@ -982,10 +982,9 @@ getCurrentUserProfile: async () => {
  */
 getUserProfile: async (userId) => {
   try {
-    const response = await api.get(`/api/users/profile/${userId}`);
+    const response = await api.get(`/users/profile/${userId}`);
     return response.data;
   } catch (error) {
-    console.error(`Error fetching profile for user ${userId}:`, error);
     if (error.response?.status === 404) {
       // If profile not found, try to get the current user's profile instead
       try {
@@ -994,7 +993,7 @@ getUserProfile: async (userId) => {
           return currentUser;
         }
       } catch (e) {
-        console.error('Error fetching current user profile as fallback:', e);
+        // Silently handle fallback error
       }
     }
     throw error;
@@ -1165,7 +1164,7 @@ createPost: async function(formData) {
     };
 
     console.log('=== Request Configuration ===', {
-      endpoint: '/api/posts',
+      endpoint: '/posts',
       method: 'POST',
       hasFiles: !!formData.get('media'),
       formData: formDataEntries,
@@ -1173,7 +1172,7 @@ createPost: async function(formData) {
         ...headers,
         Authorization: 'Bearer [REDACTED]' // Don't log the full token
       },
-      baseURL: ENV.apiBaseUrl,
+      baseURL: API_BASE_URL,
       withCredentials: true
     });
     
@@ -1205,7 +1204,7 @@ createPost: async function(formData) {
     const response = await axios({
       method: 'post',
       url: '/api/posts',
-      baseURL: ENV.apiBaseUrl,
+      baseURL: API_BASE_URL,
       data: formData,
       headers: headers,
       withCredentials: true,
@@ -1325,13 +1324,64 @@ createPost: async function(formData) {
  * @param {Object} params - Query parameters (page, limit, etc.)
  * @returns {Promise<Array>} Array of posts
  */
-getCommunityPosts: async function(params = {}) {
+getCommunityPosts: async (params = {}) => {
   try {
-    const response = await api.get('/api/posts', { params });
+    // Convert populate array to string if it's an array
+    if (params.populate && Array.isArray(params.populate)) {
+      params.populate = params.populate.join(',');
+    }
+    
+    const response = await api.get('/posts', { 
+      params,
+      paramsSerializer: params => {
+        return Object.entries(params)
+          .map(([key, value]) => {
+            if (key === 'populate' && Array.isArray(value)) {
+              return `${key}=${value.join(',')}`;
+            }
+            return `${key}=${encodeURIComponent(value)}`;
+          })
+          .join('&');
+      }
+    });
+    
     return response.data.data || response.data;
   } catch (error) {
     console.error('Error fetching community posts:', error);
     throw error.response?.data?.message || 'Failed to fetch community posts';
+  }
+},
+
+/**
+ * Like or unlike a post
+ * @param {string} postId - ID of the post to like/unlike
+ * @param {boolean} isLiked - Whether the post is currently liked
+ * @returns {Promise<Object>} Updated post data
+ */
+likePost: async (postId, isLiked) => {
+  try {
+    const endpoint = isLiked ? '/posts/unlike' : '/posts/like';
+    const response = await api.post(endpoint, { postId });
+    return response.data;
+  } catch (error) {
+    console.error('Error toggling post like:', error);
+    throw error.response?.data?.message || 'Failed to update like';
+  }
+},
+
+/**
+ * Add a comment to a post
+ * @param {string} postId - ID of the post to comment on
+ * @param {Object} commentData - Comment data (should contain 'content' field)
+ * @returns {Promise<Object>} Created comment data
+ */
+addComment: async (postId, commentData) => {
+  try {
+    const response = await api.post(`/posts/${postId}/comments`, commentData);
+    return response.data.data || response.data;
+  } catch (error) {
+    console.error('Error adding comment:', error);
+    throw error.response?.data?.message || 'Failed to add comment';
   }
 }
 
