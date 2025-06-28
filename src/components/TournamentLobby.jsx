@@ -68,12 +68,21 @@ const formatDateTime = (dateString) => {
   });
 };
 
-// Format prize pool
+// Format prize pool with appropriate currency/coin display
 const formatPrize = (amount, isCoin = false) => {
   if (isCoin) {
-    return `${amount} coins`;
+    return (
+      <span>
+        {amount.toLocaleString()} coins
+      </span>
+    );
   }
-  return `₹${amount.toLocaleString()}`;
+  return (
+    <span className="flex items-center">
+      <FaRupeeSign className="mr-1" />
+      {amount.toLocaleString()}
+    </span>
+  );
 };
 
 // Format player count
@@ -121,8 +130,8 @@ const TournamentLobby = () => {
     // Show confirmation dialog first
     const isConfirmed = window.confirm(
       `Register for ${tournament.name}?\n\n` +
-      `Entry Fee: ${formatPrize(tournament.entryFee || 0, tournament.mode === 'coin')}\n` +
-      `Prize Pool: ${formatPrize(tournament.prizePool || 0, tournament.mode === 'coin')}`
+      `Entry Fee: ${formatPrize(tournament.entryFee || 0, tournament.tournamentType === 'coin')}\n` +
+      `Prize Pool: ${formatPrize(tournament.prizePool || 0, tournament.tournamentType === 'coin')}`
     );
 
     if (isConfirmed) {
@@ -142,7 +151,7 @@ const TournamentLobby = () => {
   };
 
   // Tournament card component
-  const TournamentCard = ({ id, name, entryFee, prizePool, participants, maxParticipants, startTime, status, mode }) => {
+  const TournamentCard = ({ id, name, entryFee, prizePool, participants, maxParticipants, startTime, status, tournamentType }) => {
     const countdown = useCountdown(startTime);
     
     const handleCardClick = () => {
@@ -155,8 +164,20 @@ const TournamentLobby = () => {
     const renderActionButtons = () => {
       if (status === 'completed' || status === 'cancelled') {
         return (
-          <div className="w-full text-center py-2 px-4 rounded-lg bg-gray-700 text-gray-400">
-            {status.charAt(0).toUpperCase() + status.slice(1)}
+          <div className="flex gap-2 w-full">
+            <div className="flex-1 text-center py-2 px-4 rounded-lg bg-gray-700 text-gray-400">
+              {status.charAt(0).toUpperCase() + status.slice(1)}
+            </div>
+            <button 
+              className="flex-1 bg-white/90 hover:bg-white text-gray-900 font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center"
+              onClick={(e) => {
+                e.stopPropagation();
+                console.log('View leaderboard for tournament:', id);
+              }}
+            >
+              <FaTrophy className="mr-2" />
+              Leaderboard
+            </button>
           </div>
         );
       }
@@ -218,40 +239,50 @@ const TournamentLobby = () => {
     
     return (
       <div 
-        className="bg-white/10 border border-white/10 backdrop-blur-md rounded-xl p-6 shadow-md hover:border-yellow-400/50 transition-all duration-200 cursor-pointer"
+        className="bg-white/10 border border-white/10 backdrop-blur-md rounded-xl p-3 sm:p-4 shadow-md hover:border-yellow-400/50 transition-all duration-200 cursor-pointer"
         onClick={handleCardClick}
       >
-        <div className="flex justify-between items-start mb-4">
-          <h3 className="text-lg font-semibold line-clamp-2">{name}</h3>
-          <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-            status === 'live' ? 'bg-red-500' :
-            status === 'upcoming' ? 'bg-yellow-500' :
-            status === 'completed' ? 'bg-green-500' : 'bg-gray-500'
-          }`}>
-            {status}
-          </span>
+        <div className="flex justify-between items-center mb-2">
+          <h3 className="text-sm sm:text-base font-semibold line-clamp-1 pr-2">{name}</h3>
+          <span className={`text-[9px] sm:text-xs px-1.5 py-0.5 rounded font-medium whitespace-nowrap ${
+          status === 'live' ? 'bg-red-500' :
+          status === 'upcoming' ? 'bg-yellow-500' :
+          status === 'completed' ? 'bg-green-500' : 'bg-gray-500'
+        }`}>
+          {status}
+        </span>
         </div>
         
-        <div className="grid grid-cols-2 gap-4 mb-4">
-          <div className="flex items-center">
-            <FaRupeeSign className="text-yellow-400 mr-2" />
-            <span>Entry: {formatPrize(entryFee || 0, mode === 'coin')}</span>
+        <div className="grid grid-cols-2 gap-1.5 sm:gap-2 mb-2 text-xs sm:text-sm">
+          <div className="flex items-center truncate">
+            {tournamentType === 'coin' ? (
+              <FaCoins className="text-yellow-400 mr-1 flex-shrink-0" size={12} />
+            ) : (
+              <FaRupeeSign className="text-yellow-400 mr-1 flex-shrink-0" size={10} />
+            )}
+            <span className="truncate">
+              {tournamentType === 'coin' ? `${entryFee || 0} coins` : formatPrize(entryFee || 0, false)}
+            </span>
           </div>
-          <div className="flex items-center">
-            <FaTrophy className="text-yellow-400 mr-2" />
-            <span>Prize: {formatPrize(prizePool || 0, mode === 'coin')}</span>
+          <div className="flex items-center truncate">
+            <FaTrophy className="text-yellow-400 mr-1 flex-shrink-0" size={12} />
+            <span className="truncate">
+              {tournamentType === 'coin' ? `${prizePool || 0} coins` : formatPrize(prizePool || 0, false)}
+            </span>
           </div>
-          <div className="flex items-center">
-            <FaUsers className="text-yellow-400 mr-2" />
-            <span>Players: {formatPlayerCount(participants?.length || 0, maxParticipants)}</span>
+          <div className="flex items-center truncate">
+            <FaUsers className="text-yellow-400 mr-1 flex-shrink-0" size={12} />
+            <span className="truncate">{formatPlayerCount(participants?.length || 0, maxParticipants)}</span>
           </div>
-          <div className="flex items-center">
-            <FaClock className="text-yellow-400 mr-2" />
-            <span>{status === 'upcoming' ? 'Starts:' : 'Started:'} {formatDateTime(startTime)}</span>
+          <div className="flex items-center truncate">
+            <FaClock className="text-yellow-400 mr-1 flex-shrink-0" size={12} />
+            <span className="truncate text-xs">
+              {status === 'upcoming' ? 'Starts:' : 'Started:'} {formatDateTime(startTime).split(',').pop().trim()}
+            </span>
           </div>
         </div>
         
-        <div className="bg-gray-800/50 rounded-full h-2 mb-4">
+        <div className="bg-gray-800/50 rounded-full h-1 sm:h-1.5 mb-2">
           <div 
             className="bg-yellow-500 h-full rounded-full" 
             style={{ 
@@ -326,7 +357,7 @@ const TournamentLobby = () => {
     const matchesSearch = tournament.name.toLowerCase().includes(searchQuery.toLowerCase());
     
     if (matchesFilter && matchesSearch) {
-      if (tournament.mode === 'coin') {
+      if (tournament.tournamentType === 'coin') {
         acc.coins.push(tournament);
       } else {
         acc.cash.push(tournament);
@@ -431,7 +462,7 @@ const TournamentLobby = () => {
                   <FaRupeeSign className="text-yellow-500 mr-2" />
                   Cash Tournaments
                 </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                   {filteredTournaments.cash.map((tournament) => (
                     <TournamentCard
                       key={tournament._id}
@@ -443,7 +474,7 @@ const TournamentLobby = () => {
                       maxParticipants={tournament.maxParticipants}
                       startTime={tournament.startTime}
                       status={tournament.status}
-                      mode={tournament.mode || 'cash'}
+                      tournamentType={tournament.tournamentType || 'cash'}
                     />
                   ))}
                 </div>
@@ -457,7 +488,7 @@ const TournamentLobby = () => {
                   <FaCoins className="text-yellow-500 mr-2" />
                   Coins Tournaments
                 </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                   {filteredTournaments.coins.map((tournament) => (
                     <TournamentCard
                       key={tournament._id}
@@ -469,7 +500,7 @@ const TournamentLobby = () => {
                       maxParticipants={tournament.maxParticipants}
                       startTime={tournament.startTime}
                       status={tournament.status}
-                      mode={tournament.mode}
+                      tournamentType={tournament.tournamentType}
                     />
                   ))}
                 </div>
