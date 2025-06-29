@@ -108,6 +108,100 @@ const Community = () => {
     }
   };
 
+  // Fetch user profile by ID
+  const fetchUserProfile = async (userId) => {
+    try {
+      const response = await authService.getUserProfile(userId);
+      return response.data || response;
+    } catch (error) {
+      console.error(`Error fetching user ${userId}:`, error);
+      return {
+        _id: userId,
+        username: 'user',
+        fullName: 'User',
+        profilePicture: null
+      };
+    }
+  };
+
+  // Process comments to ensure they have complete user data
+  const processComments = async (comments = []) => {
+    if (!Array.isArray(comments)) return [];
+    
+    const processedComments = [];
+    
+    for (const comment of comments) {
+      try {
+        let userData = comment.user;
+        let userId = comment.user;
+        
+        // Handle different user reference formats
+        if (typeof comment.user === 'string') {
+          userId = comment.user; // User ID string
+        } else if (comment.user?._id) {
+          userId = comment.user._id; // User object with _id
+          // If we already have complete user data, use it
+          if (comment.user.username && comment.user.profilePicture) {
+            userData = comment.user;
+          }
+        }
+        
+        // If we don't have complete user data, fetch it
+        if (!userData?.username && userId) {
+          try {
+            userData = await fetchUserProfile(userId);
+          } catch (err) {
+            console.error(`Error fetching user ${userId} for comment:`, err);
+            userData = {
+              _id: userId,
+              username: 'user',
+              fullName: 'User',
+              profilePicture: null
+            };
+          }
+        }
+        
+        // Ensure we have a valid user object
+        const safeUserData = userData ? {
+          _id: userData._id || userId || 'unknown',
+          username: userData.username || 'user',
+          fullName: userData.fullName || userData.username || 'User',
+          profilePicture: userData.profilePicture || null
+        } : {
+          _id: 'unknown',
+          username: 'user',
+          fullName: 'User',
+          profilePicture: null
+        };
+        
+        processedComments.push({
+          ...comment,
+          user: safeUserData,
+          // Ensure we have a valid date
+          createdAt: comment.createdAt || new Date().toISOString(),
+          // Ensure we have content
+          content: comment.content || comment.comment || ''
+        });
+      } catch (error) {
+        console.error('Error processing comment:', error, comment);
+        // Add a fallback comment if processing fails
+        processedComments.push({
+          ...comment,
+          user: {
+            _id: 'error',
+            username: 'user',
+            fullName: 'Error Loading User',
+            profilePicture: null
+          },
+          content: comment.content || 'Error loading comment',
+          createdAt: comment.createdAt || new Date().toISOString()
+        });
+      }
+    }
+    
+    return processedComments;
+  };
+
   // Handle comment submission
   const handleComment = async (postId) => {
     const commentText = commentInputs[postId]?.trim();
@@ -119,17 +213,27 @@ const Community = () => {
         throw new Error('You must be logged in to comment');
       }
 
+      // Get fresh user data to ensure we have the latest profile info
+      let userData;
+      try {
+        userData = await fetchUserProfile(currentUser._id);
+      } catch (error) {
+        console.error('Error fetching current user data:', error);
+        // Fallback to existing data if fetch fails
+        userData = {
+          _id: currentUser._id,
+          username: currentUser.username || 'user',
+          fullName: currentUser.fullName || currentUser.username || 'User',
+          profilePicture: currentUser.profilePicture
+        };
+      }
+
       // Create a temporary comment for optimistic UI
       const tempCommentId = `temp-${Date.now()}`;
       const newComment = {
         _id: tempCommentId,
         content: commentText,
-        user: {
-          _id: currentUser._id,
-          username: currentUser.username || 'user',
-          fullName: currentUser.fullName || currentUser.username || 'User',
-          profilePicture: currentUser.profilePicture
-        },
+        user: userData,
         createdAt: new Date().toISOString(),
         isTemp: true
       };
@@ -156,30 +260,38 @@ const Community = () => {
       }));
 
       try {
-        // API call to add comment - using the correct endpoint
+        // API call to add comment
         const response = await authService.addComment(postId, { 
           comment: commentText
         });
         
         if (response?.data) {
-          // Update the post with the server's response
-          setPosts(prevPosts => 
-            prevPosts.map(post => {
-              if (post._id === postId) {
-                // Remove temp comment and add the server's comment
-                const filteredComments = (post.comments || []).filter(
-                  comment => !comment.isTemp
-                );
-                
-                return {
-                  ...post,
-                  comments: [...filteredComments, response.data],
-                  commentCount: response.data.commentCount || (filteredComments.length + 1)
-                };
-              }
-              return post;
-            })
-          );
+          // Process the server's response to ensure we have user data
+          const processedComments = await processComments([response.data]);
+          const serverComment = processedComments[0];
+          
+          if (serverComment) {
+            // Update the post with the server's response
+            setPosts(prevPosts => 
+              prevPosts.map(post => {
+                if (post._id === postId) {
+                  // Remove temp comment and add the server's comment with user data
+                  const filteredComments = (post.comments || []).filter(
+                    c => !c.isTemp || c._id !== tempCommentId
+                  );
+                  
+                  return {
+                    ...post,
+                    comments: [...filteredComments, serverComment],
+                    commentCount: post.commentCount || filteredComments.length + 1
+                  };
+                }
+                return post;
+              })
+            );
+          }
+          
+          return response.data;
         } else {
           throw new Error('Failed to add comment: Invalid server response');
         }
@@ -210,70 +322,102 @@ const Community = () => {
     }
   };
 
-  // Function to enhance posts with user data
+  // Function to enhance posts with user data and process comments
   const enhancePostsWithUserData = async (posts) => {
+    if (!Array.isArray(posts)) return [];
+    
     try {
-      if (!Array.isArray(posts)) {
-        return [];
-      }
-
       const enhancedPosts = [];
       
       for (const post of posts) {
         try {
-          // Check if we have a populated user object
-          const populatedUser = post.user || post.author || post.createdBy;
+          // Process post user data
+          let userData;
+          let userId = post.user?._id || post.author?._id || post.author || post.createdBy?._id || post.createdBy;
           
-          // If we have a populated user object with an _id, use it
-          if (populatedUser?._id) {
-            enhancedPosts.push({
-              ...post,
-              user: {
-                _id: populatedUser._id,
-                username: populatedUser.username || 'user',
-                fullName: populatedUser.fullName || populatedUser.name || 'User',
-                profilePicture: populatedUser.profilePicture || populatedUser.avatar || null
-              }
-            });
-            continue;
-          }
-          
-          // If we have a user ID but not a populated object, try to fetch the user
-          const userId = post.user || post.userId || post.author || post.createdBy?._id || post.createdBy;
-          if (userId && typeof userId === 'string' && userId !== 'unknown') {
+          // If post already has complete user data, use it
+          if (post.user?._id && post.user?.username) {
+            userData = post.user;
+          } 
+          // If we have a user ID but no complete user data, fetch it
+          else if (userId) {
             try {
-              const userData = await authService.getUserProfile(userId);
-              enhancedPosts.push({ 
-                ...post, 
-                user: {
-                  _id: userId,
-                  username: userData.username || 'user',
-                  fullName: userData.fullName || userData.name || 'User',
-                  profilePicture: userData.profilePicture || userData.avatar || null
-                }
-              });
-            } catch (error) {
-              enhancedPosts.push({ ...post, user: { _id: userId, username: 'user', fullName: 'User' } });
+              userData = await fetchUserProfile(userId);
+            } catch (err) {
+              console.error(`Error fetching user ${userId} for post:`, err);
+              userData = {
+                _id: userId,
+                username: 'user',
+                fullName: 'User',
+                profilePicture: null
+              };
             }
-          } else {
-            enhancedPosts.push({ 
-              ...post, 
-              user: { _id: 'unknown', username: 'user', fullName: 'Unknown User' } 
-            });
           }
+          
+          // Process comments for this post
+          let processedComments = [];
+          if (Array.isArray(post.comments) && post.comments.length > 0) {
+            processedComments = await processComments(post.comments);
+          }
+          
+          // Create enhanced post with user data and processed comments
+          const enhancedPost = {
+            ...post,
+            user: userData || { 
+              _id: 'unknown', 
+              username: 'user', 
+              fullName: 'Unknown User',
+              profilePicture: null 
+            },
+            comments: processedComments,
+            // Ensure we have all required post fields
+            likes: Array.isArray(post.likes) ? post.likes : [],
+            likeCount: post.likeCount || post.likes?.length || 0,
+            commentCount: post.commentCount || post.comments?.length || 0,
+            createdAt: post.createdAt || new Date().toISOString(),
+            content: post.content || ''
+          };
+          
+          enhancedPosts.push(enhancedPost);
         } catch (error) {
-          enhancedPosts.push({ 
-            ...post, 
-            user: { _id: 'error', username: 'user', fullName: 'Error Loading User' } 
+          console.error(`Error processing post ${post._id || 'unknown'}:`, error);
+          // If there's an error, add the post with minimal data
+          enhancedPosts.push({
+            ...post,
+            user: post.user || post.author || { 
+              _id: 'error', 
+              username: 'user', 
+              fullName: 'Error Loading User',
+              profilePicture: null 
+            },
+            comments: Array.isArray(post.comments) ? post.comments : [],
+            likes: Array.isArray(post.likes) ? post.likes : [],
+            likeCount: post.likeCount || post.likes?.length || 0,
+            commentCount: post.commentCount || post.comments?.length || 0,
+            createdAt: post.createdAt || new Date().toISOString(),
+            content: post.content || 'Error loading post content'
           });
         }
       }
       
       return enhancedPosts;
     } catch (error) {
+      console.error('Error in enhancePostsWithUserData:', error);
+      // Fallback to original posts if something goes wrong
       return posts.map(post => ({
         ...post,
-        user: post.user || post.author || { _id: 'unknown', username: 'user', fullName: 'Unknown User' }
+        user: post.user || post.author || { 
+          _id: 'unknown', 
+          username: 'user', 
+          fullName: 'Unknown User',
+          profilePicture: null 
+        },
+        comments: Array.isArray(post.comments) ? post.comments : [],
+        likes: Array.isArray(post.likes) ? post.likes : [],
+        likeCount: post.likeCount || post.likes?.length || 0,
+        commentCount: post.commentCount || post.comments?.length || 0,
+        createdAt: post.createdAt || new Date().toISOString(),
+        content: post.content || ''
       }));
     }
   };
@@ -807,26 +951,26 @@ const Community = () => {
                   .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)) // Sort by newest first
                   .slice(0, showAllComments[post._id] ? post.comments.length : 2)
                   .map((comment, idx) => {
-                    // Ensure comment has required properties
-                    const safeComment = {
-                      _id: comment._id || `comment-${idx}`,
-                      content: comment.content || comment.comment || '', // Handle both 'content' and 'comment' fields
-                      user: comment.user || {
-                        _id: comment.userId,
-                        username: 'User',
-                        profilePicture: null
-                      },
-                      createdAt: comment.createdAt || comment.date || new Date().toISOString()
+                    // Comment user data should already be processed by processComments
+                    const user = comment.user || {
+                      _id: comment.userId || 'unknown',
+                      username: 'User',
+                      fullName: 'User',
+                      profilePicture: null
                     };
                     
+                    const createdAt = comment.createdAt || comment.date || new Date().toISOString();
+                    const content = comment.content || comment.comment || '';
+                    const commentId = comment._id || `comment-${Date.now()}-${idx}`;
+                    
                     return (
-                      <div key={safeComment._id} className="bg-white/5 rounded-lg p-3 text-sm">
+                      <div key={commentId} className="bg-white/5 rounded-lg p-3 text-sm">
                         <div className="flex items-start gap-2">
                           <div className="flex-shrink-0">
-                            {safeComment.user?.profilePicture ? (
+                            {user?.profilePicture ? (
                               <img 
-                                src={safeComment.user.profilePicture} 
-                                alt={safeComment.user.username || 'User'}
+                                src={user.profilePicture} 
+                                alt={user.username || 'User'}
                                 className="w-8 h-8 rounded-full object-cover"
                                 onError={(e) => {
                                   // If image fails to load, show fallback
@@ -836,22 +980,22 @@ const Community = () => {
                               />
                             ) : null}
                             <div className={`w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-medium ${
-                              safeComment.user?.profilePicture ? 'hidden' : 'flex'
+                              user?.profilePicture ? 'hidden' : 'flex'
                             }`}>
-                              {safeComment.user?.username?.charAt(0)?.toUpperCase() || 'U'}
+                              {user?.username?.charAt(0)?.toUpperCase() || 'U'}
                             </div>
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
                               <span className="font-medium text-blue-300 truncate">
-                                {safeComment.user?.username || 'User'}
+                                {user?.username || 'User'}
                               </span>
-                              <span className="text-xs text-gray-400" title={new Date(safeComment.createdAt).toLocaleString()}>
-                                {formatTimeAgo(safeComment.createdAt)}
+                              <span className="text-xs text-gray-400" title={new Date(createdAt).toLocaleString()}>
+                                {formatTimeAgo(createdAt)}
                               </span>
                             </div>
                             <p className="mt-0.5 text-gray-200 break-words">
-                              {safeComment.content}
+                              {content}
                             </p>
                           </div>
                         </div>
@@ -892,7 +1036,6 @@ const Community = () => {
       try {
         // Fetch current user data
         const userData = await authService.getCurrentUserProfile();
-        console.log('Current user data:', userData);
         setCurrentUser(userData);
       } catch (error) {
         console.error('Error fetching user data:', error);

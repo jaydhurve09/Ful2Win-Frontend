@@ -982,7 +982,9 @@ getCurrentUserProfile: async () => {
  */
 getUserProfile: async (userId) => {
   try {
-    const response = await api.get(`/users/profile/${userId}`);
+    const response = await api.get(`/users/profile/${userId}`, {
+      headers: getAuthHeader()
+    });
     return response.data;
   } catch (error) {
     if (error.response?.status === 404) {
@@ -1395,18 +1397,11 @@ addComment: async (postId, commentData) => {
       throw new Error('You must be logged in to comment');
     }
 
-    console.log('Adding comment with data:', {
-      postId,
-      commentData,
-      timestamp: new Date().toISOString()
-    });
-
     // Using the correct endpoint and payload format
     const response = await api.post(`/posts/${postId}/comments`, {
       content: commentData.comment
     });
     
-    console.log('Comment added successfully:', response.data);
     return response.data;
   } catch (error) {
     console.error('Error adding comment:', {
