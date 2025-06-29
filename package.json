@@ -12,6 +12,7 @@
   "dependencies": {
     "@tailwindcss/forms": "^0.5.10",
     "axios": "^1.10.0",
+    "firebase": "^11.9.1",
     "framer-motion": "^12.19.1",
     "i18n-iso-countries": "^7.14.0",
     "lucide-react": "^0.518.0",

@@ -689,20 +689,39 @@ const Community = () => {
                 )} 
                 <span className="ml-1">{post.likeCount || post.likes?.length || 0}</span>
               </button>
-              <button 
-                className={`flex items-center ${showComments[post._id] ? 'text-blue-400' : 'hover:text-white'}`}
-                onClick={() => {
-                  setShowComments(prev => ({
-                    ...prev,
-                    [post._id]: !prev[post._id]
-                  }));
-                  if (showCommentInput !== post._id) {
-                    setShowCommentInput(post._id);
-                  }
-                }}
-              >
-                <FiMessageCircle className="mr-1" /> {post.commentCount || post.comments?.length || 0}
-              </button>
+              <div className="flex items-center">
+                <button 
+                  className={`flex items-center ${showComments[post._id] ? 'text-blue-400' : 'hover:text-white'}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    // Toggle comments visibility
+                    setShowComments(prev => ({
+                      ...prev,
+                      [post._id]: !prev[post._id]
+                    }));
+                  }}
+                  title="View comments"
+                >
+                  <FiMessageCircle className="mr-1" /> {post.commentCount || post.comments?.length || 0}
+                </button>
+                <button 
+                  className="ml-2 text-xs text-blue-400 hover:underline"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    // Toggle comment input
+                    setShowCommentInput(prev => prev === post._id ? null : post._id);
+                    // Show comments if not already shown
+                    if (!showComments[post._id]) {
+                      setShowComments(prev => ({
+                        ...prev,
+                        [post._id]: true
+                      }));
+                    }
+                  }}
+                >
+                  {/* {showCommentInput === post._id ? 'Cancel' : 'Add comment'} */}
+                </button>
+              </div>
               <button className="flex items-center text-dullBlue hover:text-white">
                 <FiShare2 className="mr-1" /> Share
               </button>
@@ -729,7 +748,7 @@ const Community = () => {
             )}
 
             {/* Comments list - Only show if comments exist and the section is toggled */}
-            {showComments[post._id] && post.comments?.length > 0 && (
+            {showComments[post._id] && (post.comments?.length > 0 || showCommentInput === post._id) && (
               <div className="mt-3 space-y-3 max-h-60 overflow-y-auto pr-2">
                 <div className="flex justify-between items-center text-sm font-medium text-gray-400 border-b border-white/10 pb-1">
                   <span>Comments</span>
@@ -744,12 +763,13 @@ const Community = () => {
                     // Ensure comment has required properties
                     const safeComment = {
                       _id: comment._id || `comment-${idx}`,
-                      content: comment.content || '',
+                      content: comment.content || comment.comment || '', // Handle both 'content' and 'comment' fields
                       user: comment.user || {
+                        _id: comment.userId,
                         username: 'User',
                         profilePicture: null
                       },
-                      createdAt: comment.createdAt || new Date().toISOString()
+                      createdAt: comment.createdAt || comment.date || new Date().toISOString()
                     };
                     
                     return (
