@@ -520,10 +520,34 @@ const Community = () => {
     { id: 'discussions', label: 'Discussions', icon: <FiMessageCircle className="mr-1" /> },
   ];
 
-  // Filter posts based on active tab
+  // Filter and sort posts based on active tab
   const filteredPosts = React.useMemo(() => {
-    if (activeType === 'all') return posts;
-    return posts.filter(post => post.type === activeType);
+    let result = [...posts];
+    
+    switch(activeType) {
+      case 'popular':
+        // Sort by number of likes (descending)
+        result.sort((a, b) => (b.likeCount || 0) - (a.likeCount || 0));
+        break;
+        
+      case 'recent':
+        // Sort by creation date (newest first)
+        result.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        break;
+        
+      case 'discussions':
+        // Sort by number of comments (descending)
+        result = result.filter(post => (post.commentCount || 0) > 0)
+                      .sort((a, b) => (b.commentCount || 0) - (a.commentCount || 0));
+        break;
+        
+      case 'all':
+      default:
+        // Default: sort by creation date (newest first)
+        result.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    }
+    
+    return result;
   }, [posts, activeType]);
 
   const handleCreatePost = async () => {
