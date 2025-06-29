@@ -464,7 +464,7 @@ console.log('hasJoined:', hasJoined);
   }
 
   return (
-    <div className="min-h-screen felx flex-col bg-blueGradient text-white">
+    <div className="min-h-screen pb-11 felx flex-col bg-blueGradient text-white">
       <BackgroundBubbles />
       <Header />
       <main className="container mx-auto mt-11 px-4 py-8 relative z-10">
