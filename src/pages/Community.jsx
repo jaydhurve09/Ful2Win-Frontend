@@ -23,7 +23,7 @@ import {
   FiUserPlus,
 } from 'react-icons/fi';
 import { RiSwordLine } from 'react-icons/ri';
-import { BsThreeDotsVertical, BsHeart, BsChat, BsShare, BsBookmark, BsEmojiSmile } from 'react-icons/bs';
+import { BsThreeDotsVertical, BsPencil, BsTrash, BsHeart, BsChat, BsShare, BsBookmark, BsEmojiSmile } from 'react-icons/bs';
 import { FaRegComment, FaRegBookmark, FaBookmark, FaRegHeart, FaHeart, FaRegShareSquare, FaImage, FaVideo, FaPoll } from 'react-icons/fa';
 import { IoMdSend } from 'react-icons/io';
 import { formatTimeAgo } from '../utils/timeUtils';
@@ -50,7 +50,24 @@ const Community = () => {
   const [showComments, setShowComments] = useState({});
   const [showAllComments, setShowAllComments] = useState({});
   const [showCommentInput, setShowCommentInput] = useState(null);
+  const [dropdownOpen, setDropdownOpen] = useState(null);
+  const [editingPost, setEditingPost] = useState(null);
+  const [editContent, setEditContent] = useState('');
+  const dropdownRef = useRef(null);
   const navigate = useNavigate(); // For Challenges redirect
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setDropdownOpen(null);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   // Handle like action
   const handleLike = async (postId) => {
@@ -716,6 +733,50 @@ const Community = () => {
     setActiveTab(tabId);
   };
 
+  const handleEditPost = async (postId) => {
+    try {
+      const response = await authService.updatePost(postId, { content: editContent });
+      
+      setPosts(posts.map(post => 
+        post._id === postId 
+          ? { 
+              ...post, 
+              content: editContent,
+              isEdited: true,
+              updatedAt: new Date().toISOString() 
+            } 
+          : post
+      ));
+      
+      setEditingPost(null);
+      setEditContent('');
+      toast.success('Post updated successfully');
+    } catch (error) {
+      console.error('Error updating post:', error);
+      toast.error('Failed to update post');
+    }
+  };
+
+  const handleDeletePost = async (postId) => {
+    if (window.confirm('Are you sure you want to delete this post?')) {
+      try {
+        await authService.deletePost(postId);
+        setPosts(posts.filter(post => post._id !== postId));
+        toast.success('Post deleted successfully');
+      } catch (error) {
+        console.error('Error deleting post:', error);
+        toast.error('Failed to delete post');
+      }
+    }
+    setDropdownOpen(null);
+  };
+
+  const openEditMode = (post) => {
+    setEditingPost(post._id);
+    setEditContent(post.content);
+    setDropdownOpen(null);
+  };
+
   const renderPosts = () => {
     if (isLoading) {
       return (
@@ -778,12 +839,79 @@ const Community = () => {
                 @{userUsername}
               </p>
             </div>
-            <button className="text-dullBlue hover:text-white">
-              <BsThreeDotsVertical />
-            </button>
+            {currentUser?._id === user?._id && (
+              <div className="relative" ref={dropdownRef}>
+                <button 
+                  className="text-dullBlue hover:text-white p-1"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setDropdownOpen(dropdownOpen === post._id ? null : post._id);
+                  }}
+                >
+                  <BsThreeDotsVertical />
+                </button>
+                
+                {dropdownOpen === post._id && (
+                  <div className="absolute right-0 mt-2 w-36 bg-gray-800 rounded-md shadow-lg z-10 border border-white/10">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openEditMode(post);
+                      }}
+                      className="flex items-center w-full px-4 py-2 text-sm text-white hover:bg-white/10"
+                    >
+                      <BsPencil className="mr-2" /> Edit
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeletePost(post._id);
+                      }}
+                      className="flex items-center w-full px-4 py-2 text-sm text-red-400 hover:bg-white/10"
+                    >
+                      <BsTrash className="mr-2" /> Delete
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
           
-          <p className="mb-3">{post.content}</p>
+          {editingPost === post._id ? (
+            <div className="mb-3">
+              <textarea
+                value={editContent}
+                onChange={(e) => setEditContent(e.target.value)}
+                className="w-full bg-white/10 border border-white/20 rounded-lg p-3 text-white focus:outline-none focus:ring-1 focus:ring-white/30 mb-2"
+                rows="3"
+                autoFocus
+              />
+              <div className="flex justify-end space-x-2">
+                <button
+                  onClick={() => setEditingPost(null)}
+                  className="px-3 py-1 text-sm bg-white/10 hover:bg-white/20 rounded-md"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => handleEditPost(post._id)}
+                  className="px-3 py-1 text-sm bg-blue-500 hover:bg-blue-600 rounded-md"
+                  disabled={!editContent.trim()}
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="mb-3">
+              <p className="whitespace-pre-wrap">{post.content}</p>
+              {post.isEdited && (
+                <span className="text-xs text-dullBlue mt-1 block">
+                  (edited)
+                </span>
+              )}
+            </div>
+          )}
           
           {/* Handle both old format (image) and new format (media) */}
           {(post.image || (post.media && post.media.url) || (post.images && post.images.length > 0)) && (
@@ -1268,11 +1396,11 @@ const Community = () => {
                             className="flex items-center text-sm text-gray-300 hover:text-white whitespace-nowrap"
                             onClick={() => document.getElementById('media-upload').click()}
                           >
-                            <FaImage className="mr-1" /> {fileType === 'video' ? 'Change Media' : 'Photo/Video'}
+                            <FaImage className="mr-1" /> {fileType === 'video' ? 'Change Media' : 'Photo'}
                           </button>
-                          <button className="flex items-center text-sm text-gray-300 hover:text-white whitespace-nowrap">
+                          {/* <button className="flex items-center text-sm text-gray-300 hover:text-white whitespace-nowrap">
                             <FaPoll className="mr-1" /> Poll
-                          </button>
+                          </button> */}
                         </div>
                         <div className="flex-shrink-0">
                           {showCreatePost ? (
