@@ -1167,13 +1167,15 @@ const Community = () => {
                   <h3 className="text-lg font-semibold mb-4">Create Post</h3>
                   <div className="flex items-start">
                     {currentUser?.profilePicture ? (
-                      <img 
-                        src={currentUser.profilePicture} 
-                        alt={currentUser.name || 'User'}
-                        className="w-10 h-10 rounded-full object-cover mr-3 flex-shrink-0"
-                      />
+                      <div className="w-10 h-10 rounded-full border-2 border-dullBlue p-0.5 mr-3 flex-shrink-0">
+                        <img 
+                          src={currentUser.profilePicture} 
+                          alt={currentUser.name || 'User'}
+                          className="w-full h-full rounded-full object-cover"
+                        />
+                      </div>
                     ) : (
-                      <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-white font-bold mr-3 flex-shrink-0">
+                      <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full border-2 border-dullBlue flex items-center justify-center text-white font-bold mr-3 flex-shrink-0">
                         {currentUser?.name?.charAt(0)?.toUpperCase() || 'U'}
                       </div>
                     )}
