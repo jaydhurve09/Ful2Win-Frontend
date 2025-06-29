@@ -778,11 +778,6 @@ const Community = () => {
                     });
                     e.target.style.display = 'none';
                   }}
-                  onLoad={() => {
-                    if (process.env.NODE_ENV === 'development') {
-                      console.log('Image loaded (old format):', post.image);
-                    }
-                  }}
                 />
               )}
               
@@ -911,7 +906,46 @@ const Community = () => {
                 >
                 </button>
               </div>
-              <button className="flex items-center text-dullBlue hover:text-white">
+              <button 
+                className="flex items-center text-dullBlue hover:text-white"
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  try {
+                    // Create share data
+                    const shareData = {
+                      title: 'Check out this post on Ful2Win',
+                      text: post.content ? 
+                        (post.content.length > 100 ? `${post.content.substring(0, 100)}...` : post.content) : 
+                        'Check out this post',
+                      url: `${window.location.origin}/community/post/${post._id}`
+                    };
+
+                    // Add image URL if available
+                    const imageUrl = post.image || (post.media?.type?.startsWith('image/') ? post.media.url : null) || 
+                                  (post.images?.length > 0 ? post.images[0].url || post.images[0] : null);
+                    
+                    if (imageUrl) {
+                      shareData.files = [new File([await (await fetch(imageUrl)).blob()], 'post-image.jpg', { type: 'image/jpeg' })];
+                    }
+
+                    // Check if Web Share API is supported
+                    if (navigator.share) {
+                      await navigator.share(shareData);
+                    } else {
+                      // Fallback for browsers that don't support Web Share API
+                      await navigator.clipboard.writeText(shareData.url);
+                      toast.success('Link copied to clipboard!');
+                    }
+                  } catch (err) {
+                    // User cancelled the share or an error occurred
+                    if (err.name !== 'AbortError') {
+                      console.error('Error sharing:', err);
+                      toast.error('Failed to share post');
+                    }
+                  }
+                }}
+                title="Share this post"
+              >
                 <FiShare2 className="mr-1" /> Share
               </button>
             </div>
