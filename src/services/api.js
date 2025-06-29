@@ -1366,8 +1366,11 @@ likePost: async (postId, isLiked) => {
       throw new Error('User not authenticated');
     }
 
+    // Use the appropriate endpoint based on whether we're liking or unliking
+    const endpoint = isLiked ? '/posts/unlike' : '/posts/like';
+    
     // The backend expects both postId and userId in the request body
-    const response = await api.post('/posts/like', {
+    const response = await api.post(endpoint, {
       postId,
       userId: user._id
     });
@@ -1389,16 +1392,34 @@ addComment: async (postId, commentData) => {
   try {
     const user = JSON.parse(localStorage.getItem('user'));
     if (!user?._id) {
-      throw new Error('User not authenticated');
+      throw new Error('You must be logged in to comment');
     }
 
+    console.log('Adding comment with data:', {
+      postId,
+      commentData,
+      timestamp: new Date().toISOString()
+    });
+
+    // Using the correct endpoint and payload format
     const response = await api.post(`/posts/${postId}/comments`, {
-      content: commentData.content
+      content: commentData.comment
     });
     
-    return response.data; // Return the full response data
+    console.log('Comment added successfully:', response.data);
+    return response.data;
   } catch (error) {
-    console.error('Error adding comment:', error);
+    console.error('Error adding comment:', {
+      error: error.message,
+      response: error.response?.data,
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      config: {
+        url: error.config?.url,
+        method: error.config?.method,
+        data: error.config?.data
+      }
+    });
     throw error.response?.data?.message || 'Failed to add comment';
   }
 }

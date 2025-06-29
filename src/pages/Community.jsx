@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Header from '../components/Header';
 import BackgroundBubbles from '../components/BackgroundBubbles';
+
+
 import Button from '../components/Button';
 import CommunityProfile from '../components/CommunityProfile';
 import ChatScreen from '../components/ChatScreen';
@@ -108,16 +110,24 @@ const Community = () => {
 
   // Handle comment submission
   const handleComment = async (postId) => {
-    if (!commentInputs[postId]?.trim()) return;
+    const commentText = commentInputs[postId]?.trim();
+    if (!commentText) return;
     
     try {
+      // Ensure we have a valid current user
+      if (!currentUser?._id) {
+        throw new Error('You must be logged in to comment');
+      }
+
+      // Create a temporary comment for optimistic UI
+      const tempCommentId = `temp-${Date.now()}`;
       const newComment = {
-        _id: `temp-${Date.now()}`,
-        content: commentInputs[postId],
+        _id: tempCommentId,
+        content: commentText,
         user: {
           _id: currentUser._id,
-          username: currentUser.username,
-          fullName: currentUser.fullName,
+          username: currentUser.username || 'user',
+          fullName: currentUser.fullName || currentUser.username || 'User',
           profilePicture: currentUser.profilePicture
         },
         createdAt: new Date().toISOString(),
@@ -125,50 +135,78 @@ const Community = () => {
       };
 
       // Optimistic UI update
-      setPosts(posts.map(post => {
-        if (post._id === postId) {
-          return {
-            ...post,
-            comments: [...(post.comments || []), newComment],
-            commentCount: (post.commentCount || post.comments?.length || 0) + 1
-          };
-        }
-        return post;
-      }));
+      setPosts(prevPosts => 
+        prevPosts.map(post => {
+          if (post._id === postId) {
+            const currentComments = Array.isArray(post.comments) ? post.comments : [];
+            return {
+              ...post,
+              comments: [...currentComments, newComment],
+              commentCount: (post.commentCount || currentComments.length) + 1
+            };
+          }
+          return post;
+        })
+      );
 
       // Clear input
-      const commentContent = commentInputs[postId];
-      setCommentInputs({...commentInputs, [postId]: ''});
-      setShowCommentInput(null);
+      setCommentInputs(prev => ({
+        ...prev,
+        [postId]: ''
+      }));
 
       try {
-        // API call to add comment
-        const response = await authService.addComment(postId, { content: commentContent });
+        // API call to add comment - using the correct endpoint
+        const response = await authService.addComment(postId, { 
+          comment: commentText
+        });
         
-        // Replace temporary comment with server response
-        if (response?.success) {
-          setPosts(posts.map(post => {
-            if (post._id === postId) {
-              // Filter out the temp comment and add the new one from the server
-              const filteredComments = post.comments.filter(comment => !comment.isTemp);
-              return {
-                ...post,
-                comments: [...filteredComments, response.comment],
-                commentCount: response.commentCount || post.commentCount
-              };
-            }
-            return post;
-          }));
+        if (response?.data) {
+          // Update the post with the server's response
+          setPosts(prevPosts => 
+            prevPosts.map(post => {
+              if (post._id === postId) {
+                // Remove temp comment and add the server's comment
+                const filteredComments = (post.comments || []).filter(
+                  comment => !comment.isTemp
+                );
+                
+                return {
+                  ...post,
+                  comments: [...filteredComments, response.data],
+                  commentCount: response.data.commentCount || (filteredComments.length + 1)
+                };
+              }
+              return post;
+            })
+          );
+        } else {
+          throw new Error('Failed to add comment: Invalid server response');
         }
       } catch (apiError) {
         console.error('API Error in handleComment:', apiError);
-        throw new Error(apiError.response?.data?.message || 'Failed to add comment');
+        // Remove the temporary comment on error
+        setPosts(prevPosts => 
+          prevPosts.map(post => {
+            if (post._id === postId) {
+              const filteredComments = (post.comments || []).filter(
+                comment => comment?._id !== tempCommentId
+              );
+              
+              return {
+                ...post,
+                comments: filteredComments,
+                commentCount: Math.max(0, (post.commentCount || 0) - 1)
+              };
+            }
+            return post;
+          })
+        );
+        throw new Error(apiError.message || 'Failed to add comment');
       }
     } catch (error) {
       console.error('Error in handleComment:', error);
       toast.error(error.message || 'Failed to add comment');
-      // Revert optimistic update on error
-      setPosts([...posts]);
     }
   };
 
@@ -675,7 +713,7 @@ const Community = () => {
           <div className="flex flex-col">
             <div className="flex items-center justify-between text-dullBlue hover:text-white text-sm border-t border-white/10 pt-3">
               <button 
-                className={`flex items-center group transition-colors ${post.likes?.includes(currentUser?._id) ? 'text-red-500' : 'text-gray-400 hover:text-red-500'}`}
+                className={`flex items-center group transition-colors ${post.likes?.includes(currentUser?._id) ? 'text-red-500' : 'text-dullBlue hover:text-red-500'}`}
                 onClick={(e) => {
                   e.stopPropagation();
                   handleLike(post._id);
@@ -694,11 +732,19 @@ const Community = () => {
                   className={`flex items-center ${showComments[post._id] ? 'text-blue-400' : 'hover:text-white'}`}
                   onClick={(e) => {
                     e.stopPropagation();
-                    // Toggle comments visibility
+                    // Toggle comments visibility and reset showAllComments to false
+                    const isShowingComments = !showComments[post._id];
                     setShowComments(prev => ({
                       ...prev,
-                      [post._id]: !prev[post._id]
+                      [post._id]: isShowingComments
                     }));
+                    // Reset showAllComments to false when toggling comments
+                    if (isShowingComments) {
+                      setShowAllComments(prev => ({
+                        ...prev,
+                        [post._id]: false
+                      }));
+                    }
                   }}
                   title="View comments"
                 >
@@ -708,7 +754,7 @@ const Community = () => {
                   className="ml-2 text-xs text-blue-400 hover:underline"
                   onClick={(e) => {
                     e.stopPropagation();
-                    // Toggle comment input
+                    // Focus the comment input when clicking the comment button
                     setShowCommentInput(prev => prev === post._id ? null : post._id);
                     // Show comments if not already shown
                     if (!showComments[post._id]) {
@@ -719,7 +765,6 @@ const Community = () => {
                     }
                   }}
                 >
-                  {/* {showCommentInput === post._id ? 'Cancel' : 'Add comment'} */}
                 </button>
               </div>
               <button className="flex items-center text-dullBlue hover:text-white">
@@ -727,8 +772,8 @@ const Community = () => {
               </button>
             </div>
 
-            {/* Comment input */}
-            {showCommentInput === post._id && (
+            {/* Comment input - Show when comments are visible */}
+            {showComments[post._id] && (
               <div className="mt-3 flex items-center">
                 <input
                   type="text"
@@ -737,6 +782,7 @@ const Community = () => {
                   value={commentInputs[post._id] || ''}
                   onChange={(e) => setCommentInputs({...commentInputs, [post._id]: e.target.value})}
                   onKeyPress={(e) => e.key === 'Enter' && handleComment(post._id)}
+                  autoFocus={showCommentInput === post._id}
                 />
                 <button 
                   className="bg-blue-500 hover:bg-blue-600 text-dullBlue hover:text-white px-3 py-2 rounded-r-lg text-sm font-medium transition-colors"
@@ -756,8 +802,9 @@ const Community = () => {
                 </div>
                 
                 {/* Show only first 2 comments by default */}
-                {post.comments
+                {[...post.comments]
                   .filter(comment => comment) // Filter out any null/undefined comments
+                  .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)) // Sort by newest first
                   .slice(0, showAllComments[post._id] ? post.comments.length : 2)
                   .map((comment, idx) => {
                     // Ensure comment has required properties
@@ -773,10 +820,7 @@ const Community = () => {
                     };
                     
                     return (
-                      <div 
-                        key={safeComment._id} 
-                        className="bg-white/5 rounded-lg p-3 text-sm"
-                      >
+                      <div key={safeComment._id} className="bg-white/5 rounded-lg p-3 text-sm">
                         <div className="flex items-start gap-2">
                           <div className="flex-shrink-0">
                             {safeComment.user?.profilePicture ? (
@@ -802,8 +846,8 @@ const Community = () => {
                               <span className="font-medium text-blue-300 truncate">
                                 {safeComment.user?.username || 'User'}
                               </span>
-                              <span className="text-xs text-gray-400">
-                                {new Date(safeComment.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                              <span className="text-xs text-gray-400" title={new Date(safeComment.createdAt).toLocaleString()}>
+                                {formatTimeAgo(safeComment.createdAt)}
                               </span>
                             </div>
                             <p className="mt-0.5 text-gray-200 break-words">
