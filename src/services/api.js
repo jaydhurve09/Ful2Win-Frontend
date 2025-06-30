@@ -545,6 +545,38 @@ export default api;
 
 // Export auth service methods as named exports
 export const authService = {
+  // Re-export the updateUserProfile function
+  updateUserProfile: async (userId, userData, isFormData = false) => {
+    try {
+      const config = {
+        headers: {
+          'Content-Type': isFormData ? 'multipart/form-data' : 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      };
+      
+      const response = await api.put(`/users/profile/${userId}`, userData, config);
+      
+      if (response.data) {
+        // Only update local storage if we have user data
+        const userData = response.data.user || response.data.data || response.data;
+        if (userData) {
+          localStorage.setItem('user', JSON.stringify(userData));
+        }
+      }
+      return response.data;
+    } catch (error) {
+      console.error('Error updating user profile:', error);
+      if (error.response && error.response.status === 401) {
+        // Clear auth data if unauthorized
+        if (typeof localStorage !== 'undefined') {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+        }
+      }
+      throw error;
+    }
+  },
   /**
    * Check if a username is available
    * @param {string} username - Username to check
@@ -1022,7 +1054,7 @@ updateUserProfile: async function(userId, userData, isFormData = false) {
 
     // Make the API request
     const response = await axios.put(
-      `${ENV.apiBaseUrl}${apiUrl}`,
+      `${import.meta.env.VITE_API_URL}/profile/${userId}`,
       userData,
       {
         headers: {

@@ -165,12 +165,18 @@ const authService = {
   /**
    * Get user's wallet balance
    * @returns {Promise<{balance: number, currency: string}>} Wallet balance
-   * 
-   * Temporarily returning default values to prevent 403 errors
    */
   getWalletBalance: async () => {
-    // Temporarily returning default values to prevent 403 errors
-    return { balance: 0, currency: 'INR' };
+    try {
+      const response = await api.get('/users/me');
+      const userData = response.data.data || response.data;
+      const balance = userData.balance || 0;
+      return { balance, currency: 'INR' };
+    } catch (error) {
+      console.error('Error fetching wallet balance:', error);
+      // Return default values in case of error
+      return { balance: 0, currency: 'INR' };
+    }
   },
 
   /**
@@ -185,7 +191,7 @@ const authService = {
         throw new Error('No authentication token found');
       }
       
-      const response = await api.get(`/users/${userId}`, {
+      const response = await api.get(`/users/profile/${userId}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -213,15 +219,30 @@ const authService = {
    * @param {Object} userData - Updated user data
    * @returns {Promise<Object>} Updated user data
    */
-  async updateUserProfile(userId, userData) {
+  async updateUserProfile(userId, userData, isFormData = false) {
     try {
-      const response = await api.put(`/users/${userId}`, userData);
+      const config = {
+        headers: {
+          'Content-Type': isFormData ? 'multipart/form-data' : 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      };
+      
+      const response = await api.put(`/users/profile/${userId}`, userData, config);
+      
       if (response.data) {
-        localStorage.setItem('user', JSON.stringify(response.data));
+        // Only update local storage if we have user data
+        const userData = response.data.user || response.data.data || response.data;
+        if (userData) {
+          localStorage.setItem('user', JSON.stringify(userData));
+        }
       }
       return response.data;
     } catch (error) {
       console.error('Error updating user profile:', error);
+      if (error.response && error.response.status === 401) {
+        this.clearAuthData();
+      }
       throw error;
     }
   }
