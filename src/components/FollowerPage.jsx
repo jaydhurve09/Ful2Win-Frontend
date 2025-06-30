@@ -5,35 +5,34 @@ import Navbar from "../components/Navbar";
 import BackgroundBubbles from "../components/BackgroundBubbles";
 
 const FollowerPage = () => {
-  const [activeTab, setActiveTab] = useState("following");
+  const [activeTab, setActiveTab] = useState("all"); // 'all' or 'following'
   const [search, setSearch] = useState("");
-  const [followers, setFollowers] = useState([]);
+  const [users, setUsers] = useState([]);
   const [following, setFollowing] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchFollowers = async () => {
-      try {
-        const res = await fetch("/api/followers");
-        const data = await res.json();
-        setFollowers(data.followers);
-        setFollowing(data.following);
-      } catch (err) {
-        const fallbackUsers = [
+    const fetchUsers = async () => {
+      // Simulate API delay
+      setTimeout(() => {
+        const demoUsers = [
           { id: 1, name: "GamerKing99", avatar: "https://i.pravatar.cc/150?img=3" },
           { id: 2, name: "PixelMaster", avatar: "https://i.pravatar.cc/150?img=4" },
           { id: 3, name: "ShadowNinja", avatar: "https://i.pravatar.cc/150?img=5" },
           { id: 4, name: "CodeCrusader", avatar: "https://i.pravatar.cc/150?img=6" },
+          { id: 5, name: "BattleQueen", avatar: "https://i.pravatar.cc/150?img=7" },
+          { id: 6, name: "SpeedWarrior", avatar: "https://i.pravatar.cc/150?img=8" },
+          { id: 7, name: "AlphaWizard", avatar: "https://i.pravatar.cc/150?img=9" },
+          { id: 8, name: "SilentStorm", avatar: "https://i.pravatar.cc/150?img=10" },
         ];
-        setFollowers(fallbackUsers);
-        setFollowing([1, 3]);
-      } finally {
+        setUsers(demoUsers);
+        setFollowing([1, 3, 5]);
         setLoading(false);
-      }
+      }, 1000);
     };
 
-    fetchFollowers();
+    fetchUsers();
   }, []);
 
   const toggleFollow = (id) => {
@@ -42,9 +41,9 @@ const FollowerPage = () => {
     );
   };
 
-  const filteredUsers = (activeTab === "followers"
-    ? followers
-    : followers.filter((user) => following.includes(user.id))
+  const filteredUsers = (activeTab === "following"
+    ? users.filter((user) => following.includes(user.id))
+    : users
   ).filter((user) => user.name.toLowerCase().includes(search.toLowerCase()));
 
   return (
@@ -63,12 +62,20 @@ const FollowerPage = () => {
               &#8249;
             </button>
             <h1 className="text-2xl sm:text-3xl font-bold text-center text-blue-100">
-              My Followers
+              User Connections
             </h1>
           </div>
 
           {/* Tabs */}
           <div className="flex justify-center space-x-4 mb-6">
+            <button
+              onClick={() => setActiveTab("all")}
+              className={`px-4 py-2 rounded-full font-medium transition-colors shadow-md ${
+                activeTab === "all" ? "bg-blue-500" : "bg-white/10 hover:bg-white/20"
+              }`}
+            >
+              All Users
+            </button>
             <button
               onClick={() => setActiveTab("following")}
               className={`px-4 py-2 rounded-full font-medium transition-colors shadow-md ${
@@ -77,30 +84,24 @@ const FollowerPage = () => {
             >
               Following
             </button>
-            <button
-              onClick={() => setActiveTab("followers")}
-              className={`px-4 py-2 rounded-full font-medium transition-colors shadow-md ${
-                activeTab === "followers" ? "bg-blue-500" : "bg-white/10 hover:bg-white/20"
-              }`}
-            >
-              Followers
-            </button>
           </div>
 
           {/* Search */}
           <div className="flex justify-center mb-6">
             <input
               type="text"
-              placeholder="Search followers..."
+              placeholder="Search users..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full max-w-md px-4 py-2 rounded-lg bg-white/10 text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
           </div>
 
-          {/* Users */}
+          {/* User Cards */}
           {loading ? (
             <p className="text-center text-white/70">Loading...</p>
+          ) : filteredUsers.length === 0 ? (
+            <p className="text-center text-white/70">No users found.</p>
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
               {filteredUsers.map((user) => (
@@ -110,14 +111,14 @@ const FollowerPage = () => {
                 >
                   <div className="flex items-center space-x-4">
                     <img
-                      src={user.avatar}
+                      src={user.avatar || `https://i.pravatar.cc/150?u=${user.id}`}
                       alt={user.name}
                       className="w-12 h-12 rounded-full border-2 border-blue-400"
                     />
                     <div>
                       <h3 className="text-lg font-semibold text-white">{user.name}</h3>
                       <p className="text-sm text-white/60">
-                        {activeTab === "following" ? "You follow them" : "Follows you"}
+                        {following.includes(user.id) ? "You follow them" : "User"}
                       </p>
                     </div>
                   </div>
