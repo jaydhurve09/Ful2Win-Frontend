@@ -18,6 +18,7 @@ const Home = () => {
   
   // Redirect to login if not authenticated
   if (!isAuthenticated) {
+    console.log('hiii');
     return <Navigate to="/login" replace />;
   }
 
