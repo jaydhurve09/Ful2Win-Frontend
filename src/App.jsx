@@ -95,7 +95,7 @@ function App() {
               <Route path="/games/:gameId" element={<GameWrapper />} />
               <Route path="/chat" element={<ChatScreen />} />
               <Route path="/kyc" element={<KYCStatusPage />} />
-              <Route path="/followers" element={<FollowerPage />} />
+              <Route path="/users" element={<FollowerPage />} />
               <Route path="/leaderboard" element={<LeaderboardPage />} />e:\internship\Ful2Win-Frontend\src\components\GameOn.jsx
               <Route path="/tournamenthistory" element={<TournamentHistory />} />
               <Route path="/leaderboard_singlegame/:gameName/:tournamentId" element={<Leaderboard />}/>

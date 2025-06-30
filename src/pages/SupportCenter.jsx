@@ -21,6 +21,7 @@ const SupportCenter = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [showChat, setShowChat] = useState(false);
+  const [showAboutModal, setShowAboutModal] = useState(false);
   const [chatMessage, setChatMessage] = useState('');
   const [chatMessages, setChatMessages] = useState([
     { id: 1, sender: 'bot', text: 'Hello! I\'m Nick, your support assistant. How can I help you today?', time: 'Just now' }
@@ -79,7 +80,7 @@ const SupportCenter = () => {
       alert('Please fill in all required fields');
       return;
     }
-    
+
     setIsSubmitting(true);
     // Simulate API call
     setTimeout(() => {
@@ -95,7 +96,7 @@ const SupportCenter = () => {
         issueType: 'Bug',
         file: null
       });
-      
+
       // Hide success message after 5 seconds
       setTimeout(() => setSubmitSuccess(false), 5000);
     }, 1500);
@@ -104,17 +105,17 @@ const SupportCenter = () => {
   const handleSendMessage = (e) => {
     e.preventDefault();
     if (!chatMessage.trim()) return;
-    
+
     const newMessage = {
       id: chatMessages.length + 1,
       sender: 'user',
       text: chatMessage,
       time: 'Just now'
     };
-    
+
     setChatMessages([...chatMessages, newMessage]);
     setChatMessage('');
-    
+
     // Simulate bot response
     setTimeout(() => {
       const botResponse = {
@@ -128,37 +129,37 @@ const SupportCenter = () => {
   };
 
   return (
-    
-<div
-  className="min-h-screen p-4 sm:p-6 lg:p-8"
-  style={{
-    background: 'linear-gradient(to bottom, #0A2472 0%, #0D47A1 45%, #1565C0 100%)'
-  }}
-   
-><BackgroundBubbles />
-  
 
-      
+    <div
+      className="min-h-screen p-4 sm:p-6 lg:p-8"
+      style={{
+        background: 'linear-gradient(to bottom, #0A2472 0%, #0D47A1 45%, #1565C0 100%)'
+      }}
+
+    ><BackgroundBubbles />
+
+
+
       <div className="max-w-4xl mx-auto px-4 pt-4 text-left">
-  <button
-    onClick={() => navigate(-1)}
-    className="flex items-center text-blue-600 hover:text-[#1b1f61] font-medium"
-  >
-    <svg className="h-5 w-5 mr-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-    </svg>  
-  </button>
-</div>
+        <button
+          onClick={() => navigate(-1)}
+          className="flex items-center text-blue-600 hover:text-[#1b1f61] font-medium"
+        >
+          <svg className="h-5 w-5 mr-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+      </div>
 
 
       <Navbar title="Support Center" />
-      
+
       <div className="max-w-4xl mx-auto px-4 py-6">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-amber-400 mb-2">Support Center</h1>
           <p className="text-blue-200">Need help? We're here for you.</p>
         </div>
-        
+
         {/* Tabs */}
         <div className="flex border-b border-gray-200 mb-8">
           <button
@@ -174,7 +175,7 @@ const SupportCenter = () => {
             Contact Support
           </button>
         </div>
-        
+
         {/* FAQ Section */}
         {activeTab === 'faq' && (
           <div className="space-y-4">
@@ -201,20 +202,11 @@ const SupportCenter = () => {
                 </div>
               ))}
             </div>
-            
-            {/* Chat with us button */}
-            <div className="mt-8 text-center">
-              <p className='text-white mb-4'>Still have questions?</p>
-              <button
-                onClick={() => setShowChat(true)}
-                className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-full font-medium shadow-md hover:shadow-lg transform transition-all hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
-              >
-                Chat with Us
-              </button>
-            </div>
+
+
           </div>
         )}
-        
+
         {/* Contact Form Section */}
         {activeTab === 'contact' && (
           <div className="max-w-2xl mx-auto">
@@ -234,7 +226,7 @@ const SupportCenter = () => {
                 </div>
               </div>
             )}
-            
+
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                 <div>
@@ -251,7 +243,7 @@ const SupportCenter = () => {
                     required
                   />
                 </div>
-                
+
                 <div>
                   <label htmlFor="email" className="block text-sm font-medium text-white mb-1">
                     Email <span className="text-red-500">*</span>
@@ -267,39 +259,39 @@ const SupportCenter = () => {
                   />
                 </div>
               </div>
-              
-             <div>
-  <label htmlFor="issueType" className="block text-sm font-medium text-white mb-1">
-    Issue Type <span className="text-red-500">*</span>
-  </label>
-  <select
-    id="issueType"
-    name="issueType"
-    value={formData.issueType}
-    onChange={handleInputChange}
-    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
-    required
-  >
-    <option value="Bug">Bug</option>
-    <option value="Payment Issue">Payment Issue</option>
-    <option value="Account Issue">Account Issue</option>
-    <option value="Other">Other</option>
-  </select>
 
-  {/* Show input if "Other" is selected */}
-  {formData.issueType === 'Other' && (
-    <input
-      type="text"
-      name="customIssue"
-      value={formData.customIssue || ''}
-      onChange={(e) => setFormData(prev => ({ ...prev, customIssue: e.target.value }))}
-      placeholder="Please describe your issue"
-      className="mt-3 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-    />
-  )}
-</div>
+              <div>
+                <label htmlFor="issueType" className="block text-sm font-medium text-white mb-1">
+                  Issue Type <span className="text-red-500">*</span>
+                </label>
+                <select
+                  id="issueType"
+                  name="issueType"
+                  value={formData.issueType}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  required
+                >
+                  <option value="Bug">Bug</option>
+                  <option value="Payment Issue">Payment Issue</option>
+                  <option value="Account Issue">Account Issue</option>
+                  <option value="Other">Other</option>
+                </select>
 
-              
+                {/* Show input if "Other" is selected */}
+                {formData.issueType === 'Other' && (
+                  <input
+                    type="text"
+                    name="customIssue"
+                    value={formData.customIssue || ''}
+                    onChange={(e) => setFormData(prev => ({ ...prev, customIssue: e.target.value }))}
+                    placeholder="Please describe your issue"
+                    className="mt-3 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                )}
+              </div>
+
+
               <div>
                 <label htmlFor="subject" className="block text-sm font-medium text-white mb-1">
                   Subject <span className="text-red-500">*</span>
@@ -314,7 +306,7 @@ const SupportCenter = () => {
                   required
                 />
               </div>
-              
+
               <div>
                 <label htmlFor="message" className="block text-sm font-medium text-white mb-1">
                   Message <span className="text-red-500">*</span>
@@ -329,7 +321,7 @@ const SupportCenter = () => {
                   required
                 ></textarea>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-white mb-1">
                   Attachment (Optional)
@@ -337,9 +329,9 @@ const SupportCenter = () => {
                 <div className="mt-1 flex items-center">
                   <label className="cursor-pointer bg-white py-2 px-3 border border-gray-300 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                     <span>Choose File</span>
-                    <input 
-                      type="file" 
-                      className="sr-only" 
+                    <input
+                      type="file"
+                      className="sr-only"
                       onChange={handleFileChange}
                       accept="image/*,.pdf,.doc,.docx"
                     />
@@ -348,8 +340,8 @@ const SupportCenter = () => {
                     {formData.file ? formData.file.name : 'No file chosen'}
                   </span>
                   {formData.file && (
-                    <button 
-                      type="button" 
+                    <button
+                      type="button"
                       onClick={removeFile}
                       className="block text-sm font-medium text-white mb-1"
                     >
@@ -358,11 +350,11 @@ const SupportCenter = () => {
                   )}
                 </div>
                 <p className="block text-sm font-medium text-white/70 mb-1"
->
+                >
                   Upload a screenshot or document (max 5MB)
                 </p>
               </div>
-              
+
               <div className="pt-2">
                 <button
                   type="submit"
@@ -373,7 +365,7 @@ const SupportCenter = () => {
                 </button>
               </div>
             </form>
-            
+
             <div className="mt-10 border-t border-gray-200 pt-6">
               <h3 className="text-lg font-medium text-gray-900 mb-4">Contact Information</h3>
               <div className="space-y-3">
@@ -384,33 +376,23 @@ const SupportCenter = () => {
                   </svg>
                   <div>
                     <p className="text-sm text-white">Email us at</p>
-                    <a href="mailto:support@yourapp.com" className="text-sm font-medium text-white/80 hover:text-white">
-                      support@yourapp.com
+                    <a href="mailto:support@ful2win.com" className="text-sm font-medium text-white/80 hover:text-white">
+                      support@ful2win.com
                     </a>
                   </div>
                 </div>
-                <div className="flex items-start">
-                  <svg className="h-5 w-5 text-gray-400 mr-3 mt-0.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
-                  </svg>
-                  <div>
-                    <p className="text-sm text-white">Call us at</p>
-                    <a href="tel:+911234567890" className="text-sm font-medium text-white/80 hover:text-white">
-                      +91 XXXX-XXX-XXX
-                    </a>
-                  </div>
-                </div>
+
               </div>
             </div>
           </div>
         )}
       </div>
-      
+
       {/* Chat Modal */}
       {showChat && (
         <div className="fixed inset-0 z-50 overflow-hidden">
           <div className="absolute inset-0 overflow-hidden">
-            <div 
+            <div
               className="absolute inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
               onClick={() => setShowChat(false)}
             ></div>
@@ -433,20 +415,19 @@ const SupportCenter = () => {
                         </button>
                       </div>
                     </div>
-                    
+
                     <div className="flex-1 p-4 overflow-y-auto">
                       <div className="space-y-4">
                         {chatMessages.map((msg) => (
-                          <div 
-                            key={msg.id} 
+                          <div
+                            key={msg.id}
                             className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
                           >
-                            <div 
-                              className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                                msg.sender === 'user' 
-                                  ? 'bg-blue-600 text-white rounded-br-none' 
-                                  : 'bg-gray-100 text-gray-800 rounded-bl-none'
-                              }`}
+                            <div
+                              className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${msg.sender === 'user'
+                                ? 'bg-blue-600 text-white rounded-br-none'
+                                : 'bg-gray-100 text-gray-800 rounded-bl-none'
+                                }`}
                             >
                               <p className="text-sm">{msg.text}</p>
                               <p className="text-xs opacity-70 mt-1 text-right">{msg.time}</p>
@@ -456,7 +437,7 @@ const SupportCenter = () => {
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="border-t border-gray-200 p-4">
                     <form onSubmit={handleSendMessage} className="flex items-center">
                       <input
@@ -481,49 +462,67 @@ const SupportCenter = () => {
         </div>
 
       )}
-      
+
       {/* Footer */}
       <footer className="bg-transparent border-t border-gray-600 mt-12">
-  <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-    <div className="flex flex-col md:flex-row justify-between items-center">
-      
-      {/* Left: Links */}
-      <div className="flex space-x-6 md:space-x-8">
-        <a 
-          href="#" 
-          className="text-white hover:text-blue-300 text-sm font-medium focus:outline-none focus:ring-0 active:bg-transparent"
-          onClick={(e) => {
-            e.preventDefault();
-            setActiveTab('contact');
-            window.scrollTo(0, 0);
-          }}
-        >
-          Contact Us
-        </a>
-        <a 
-          href="#" 
-          className="text-gray-300 hover:text-white text-sm font-medium focus:outline-none focus:ring-0 active:bg-transparent"
-          onClick={(e) => {
-            e.preventDefault();
-            alert('About our company: We are dedicated to providing the best gaming experience!');
-          }}
-        >
-          About Company
-        </a>
-      </div>
+        <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row justify-between items-center">
 
-      {/* Right: Copyright */}
-      <div className="mt-4 md:mt-0">
-        <p className="text-white text-xs md:text-sm">
-          © {new Date().getFullYear()} Your Game Name. All rights reserved.
-        </p>
-      </div>
+            {/* Left: Links */}
+            <div className="flex space-x-6 md:space-x-8">
+              <a
+                href="#"
+                className="text-white hover:text-blue-300 text-sm font-medium focus:outline-none focus:ring-0 active:bg-transparent"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setActiveTab('contact');
+                  window.scrollTo(0, 0);
+                }}
+              >
+                Contact Us
+              </a>
+              <a
+                href="#"
+                className="text-gray-300 hover:text-white text-sm font-medium focus:outline-none focus:ring-0 active:bg-transparent"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setShowAboutModal(true);
+                }}
+              >
+                About Company
+              </a>
+              {showAboutModal && (
+                <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+                  <div className="bg-white rounded-2xl p-6 w-[90%] max-w-sm text-center shadow-lg">
+                    <h2 className="text-lg font-semibold text-gray-800 mb-4">About Our Company</h2>
+                    <p className="text-gray-600 mb-6">
+                      We are dedicated to providing the best gaming experience! Your satisfaction is our priority.
+                    </p>
+                    <button
+                      onClick={() => setShowAboutModal(false)}
+                      className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                    >
+                      Close
+                    </button>
+                  </div>
+                </div>
+              )}
 
-    </div>
-  </div>
-</footer>
 
-    
+            </div>
+
+            {/* Right: Copyright */}
+            <div className="mt-4 md:mt-0">
+              <p className="text-white text-xs md:text-sm">
+                © {new Date().getFullYear()} Your Game Name. All rights reserved.
+              </p>
+            </div>
+
+          </div>
+        </div>
+      </footer>
+
+
 
 
     </div>
@@ -532,4 +531,3 @@ const SupportCenter = () => {
 
 
 export default SupportCenter;
-

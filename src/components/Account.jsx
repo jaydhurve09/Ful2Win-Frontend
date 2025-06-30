@@ -7,7 +7,7 @@ import {
 } from 'react-icons/fi';
 import { FaTrophy, FaGamepad, FaRupeeSign } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
-import authService from '../services/api';
+import { authService } from '../services/api';
 import Header from './Header';
 import Navbar from './Navbar';
 import BackgroundBubbles from './BackgroundBubbles';

@@ -23,13 +23,15 @@ import {
   FiUserPlus,
 } from 'react-icons/fi';
 import { RiSwordLine } from 'react-icons/ri';
-import { BsThreeDotsVertical, BsPencil, BsTrash, BsHeart, BsChat, BsShare, BsBookmark, BsEmojiSmile } from 'react-icons/bs';
+import { BsThreeDotsVertical, BsPencil, BsTrash, BsHeart, BsChat, BsShare, BsBookmark, BsEmojiSmile, BsFlag, BsPerson } from 'react-icons/bs';
 import { FaRegComment, FaRegBookmark, FaBookmark, FaRegHeart, FaHeart, FaRegShareSquare, FaImage, FaVideo, FaPoll } from 'react-icons/fa';
 import { IoMdSend } from 'react-icons/io';
 import { formatTimeAgo } from '../utils/timeUtils';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import api, { authService } from '../services/api';
+import postService from '../services/postService';
+import ReportModal from '../components/ReportModal';
 
 const Community = () => {
   const [activeTab, setActiveTab] = useState('feed');
@@ -50,24 +52,125 @@ const Community = () => {
   const [showComments, setShowComments] = useState({});
   const [showAllComments, setShowAllComments] = useState({});
   const [showCommentInput, setShowCommentInput] = useState(null);
-  const [dropdownOpen, setDropdownOpen] = useState(null);
   const [editingPost, setEditingPost] = useState(null);
   const [editContent, setEditContent] = useState('');
+  const [dropdownOpen, setDropdownOpen] = useState(null);
+  const [reportModalOpen, setReportModalOpen] = useState(false);
+  const [selectedPostForReport, setSelectedPostForReport] = useState(null);
   const dropdownRef = useRef(null);
   const navigate = useNavigate(); // For Challenges redirect
 
+  // Fetch current user when component mounts
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        console.log('Fetching current user profile...');
+        const user = await authService.getCurrentUserProfile();
+        console.log('Current user data:', user);
+        if (user) {
+          setCurrentUser(user);
+        } else {
+          console.log('No user data received');
+        }
+      } catch (error) {
+        console.error('Error fetching current user:', error);
+      }
+    };
+    
+    fetchCurrentUser();
+  }, []);
+
   // Close dropdown when clicking outside
   useEffect(() => {
-    function handleClickOutside(event) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+    if (dropdownOpen === null) return;
+    
+    const handleClickOutside = (event) => {
+      // Check if click is outside the dropdown and not on the three dots button
+      const dropdownElement = dropdownRef.current;
+      if (!dropdownElement) return;
+      
+      const isClickInsideDropdown = dropdownElement.contains(event.target);
+      const isThreeDotsButton = event.target.closest('[data-dropdown-toggle]');
+      
+      if (!isClickInsideDropdown && !isThreeDotsButton) {
         setDropdownOpen(null);
       }
-    }
+    };
+
+    // Use capture phase to handle the event early
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, []);
+  }, [dropdownOpen]);
+
+  // Open edit mode for a post
+  const openEditMode = (post) => {
+    setEditingPost(post._id);
+    setEditContent(post.content || '');
+    setDropdownOpen(null);
+  };
+
+  // Save edited post
+  const handleSaveEdit = async (postId) => {
+    if (!editContent.trim()) {
+      toast.error('Post content cannot be empty');
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      const response = await postService.updatePost(postId, { 
+        content: editContent,
+        isEdited: true // Explicitly set isEdited to true
+      });
+      
+      // Use the updated post from the response if available
+      const updatedPost = response?.data?.post || response;
+      
+      setPosts(posts.map(post => 
+        post._id === postId 
+          ? { 
+              ...post, 
+              content: updatedPost.content || editContent,
+              updatedAt: updatedPost.updatedAt || new Date().toISOString(),
+              isEdited: true
+            } 
+          : post
+      ));
+      
+      setEditingPost(null);
+      setEditContent('');
+      setDropdownOpen(null);
+      toast.success('Post updated successfully');
+    } catch (error) {
+      console.error('Error updating post:', error);
+      toast.error(error.response?.data?.message || 'Failed to update post');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Delete a post
+  const handleDeletePost = async (postId) => {
+    if (!window.confirm('Are you sure you want to delete this post? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      await postService.deletePost(postId);
+      
+      setPosts(posts.filter(post => post._id !== postId));
+      toast.success('Post deleted successfully');
+    } catch (error) {
+      console.error('Error deleting post:', error);
+      toast.error(error.response?.data?.message || 'Failed to delete post');
+    } finally {
+      setIsLoading(false);
+      setDropdownOpen(null);
+    }
+  };
 
   // Handle like action
   const handleLike = async (postId) => {
@@ -525,7 +628,7 @@ const Community = () => {
 
   const communityTabs = [
     { id: 'feed', label: 'Feed', icon: <FiHome className="mr-1" /> },
-    { id: 'chats', label: 'Chats', icon: <FiMessageSquare className="mr-1" /> },
+    { id: 'followers', label: 'Followers', icon: <FiMessageSquare className="mr-1" /> },
     { id: 'challenges', label: 'Challenges', icon: <RiSwordLine className="mr-1" /> },
     { id: 'leaderboard', label: 'Leaderboard', icon: <FiAward className="mr-1" /> },
   ];
@@ -721,61 +824,30 @@ const Community = () => {
 
   const handleViewProfile = async (userId, post) => {
     try {
-      // Navigate to the profile screen with the user ID
-      navigate(`/profile/${userId}`);
+      // Close dropdown if open
+      setDropdownOpen(null);
+      // Set the viewing profile to show the modal
+      const userData = post.user || { _id: userId };
+      // Use a timeout to ensure the dropdown is closed before opening the profile
+      setTimeout(() => {
+        setViewingProfile(userData);
+      }, 50);
     } catch (error) {
-      console.error('Error navigating to profile:', error);
+      console.error('Error showing profile:', error);
       toast.error('Failed to open profile');
     }
   };
 
   const handleTabChange = (tabId) => {
-    setActiveTab(tabId);
-  };
-
-  const handleEditPost = async (postId) => {
-    try {
-      const response = await authService.updatePost(postId, { content: editContent });
-      
-      setPosts(posts.map(post => 
-        post._id === postId 
-          ? { 
-              ...post, 
-              content: editContent,
-              isEdited: true,
-              updatedAt: new Date().toISOString() 
-            } 
-          : post
-      ));
-      
-      setEditingPost(null);
-      setEditContent('');
-      toast.success('Post updated successfully');
-    } catch (error) {
-      console.error('Error updating post:', error);
-      toast.error('Failed to update post');
+    if (tabId === 'challenges') {
+      navigate('/challenges'); // Navigate to the dedicated challenges page
+    } else {
+      setActiveTab(tabId);
     }
   };
 
-  const handleDeletePost = async (postId) => {
-    if (window.confirm('Are you sure you want to delete this post?')) {
-      try {
-        await authService.deletePost(postId);
-        setPosts(posts.filter(post => post._id !== postId));
-        toast.success('Post deleted successfully');
-      } catch (error) {
-        console.error('Error deleting post:', error);
-        toast.error('Failed to delete post');
-      }
-    }
-    setDropdownOpen(null);
-  };
-
-  const openEditMode = (post) => {
-    setEditingPost(post._id);
-    setEditContent(post.content);
-    setDropdownOpen(null);
-  };
+  // Using handleSaveEdit instead of handleEditPost for consistency
+  // Using openEditMode for consistency
 
   const renderPosts = () => {
     if (isLoading) {
@@ -833,30 +905,46 @@ const Community = () => {
                 </h4>
                 <span className="text-xs text-dullBlue" title={new Date(post.createdAt).toLocaleString()}>
                   {formatTimeAgo(post.createdAt)}
+                  {post.isEdited && ' • Edited'}
                 </span>
               </div>
               <p className="text-sm text-dullBlue">
                 @{userUsername}
               </p>
             </div>
-            {currentUser?._id === user?._id && (
-              <div className="relative" ref={dropdownRef}>
+            {(currentUser?._id === user?._id) ? (
+              <div className="relative ml-auto" ref={dropdownRef}>
                 <button 
-                  className="text-dullBlue hover:text-white p-1"
+                  className="text-dullBlue hover:text-white p-2 rounded-full hover:bg-white/10 transition-colors"
+                  data-dropdown-toggle
                   onClick={(e) => {
                     e.stopPropagation();
-                    setDropdownOpen(dropdownOpen === post._id ? null : post._id);
+                    const newState = dropdownOpen === post._id ? null : post._id;
+                    setDropdownOpen(newState);
                   }}
+                  aria-label="Post options"
                 >
-                  <BsThreeDotsVertical />
+                  <BsThreeDotsVertical className="text-lg" />
                 </button>
                 
                 {dropdownOpen === post._id && (
-                  <div className="absolute right-0 mt-2 w-36 bg-gray-800 rounded-md shadow-lg z-10 border border-white/10">
+                  <div 
+                    className="absolute right-0 mt-2 w-36 bg-gray-800 rounded-md shadow-lg z-50 border border-white/10"
+                    style={{ pointerEvents: 'auto' }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <button
                       onClick={(e) => {
-                        e.stopPropagation();
-                        openEditMode(post);
+                        try {
+                          console.log('Edit Post button clicked');
+                          e.stopPropagation();
+                          e.preventDefault();
+                          setDropdownOpen(null);
+                          console.log('Edit Post clicked for post:', post._id);
+                          setTimeout(() => openEditMode(post), 50);
+                        } catch (error) {
+                          console.error('Error in Edit Post click handler:', error);
+                        }
                       }}
                       className="flex items-center w-full px-4 py-2 text-sm text-white hover:bg-white/10"
                     >
@@ -864,12 +952,86 @@ const Community = () => {
                     </button>
                     <button
                       onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeletePost(post._id);
+                        try {
+                          console.log('Delete Post button clicked');
+                          e.stopPropagation();
+                          e.preventDefault();
+                          setDropdownOpen(null);
+                          console.log('Delete Post clicked for post:', post._id);
+                          setTimeout(() => handleDeletePost(post._id), 50);
+                        } catch (error) {
+                          console.error('Error in Delete Post click handler:', error);
+                        }
                       }}
                       className="flex items-center w-full px-4 py-2 text-sm text-red-400 hover:bg-white/10"
                     >
                       <BsTrash className="mr-2" /> Delete
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="relative ml-auto" ref={dropdownRef}>
+                <button 
+                  className="text-dullBlue hover:text-white p-2 rounded-full hover:bg-white/10 transition-colors"
+                  data-dropdown-toggle
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const newState = dropdownOpen === post._id ? null : post._id;
+                    setDropdownOpen(newState);
+                  }}
+                  aria-label="Post options"
+                >
+                  <BsThreeDotsVertical className="text-lg" />
+                </button>
+                
+                {dropdownOpen === post._id && (
+                  <div 
+                    className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg z-50 border border-white/10"
+                    style={{ pointerEvents: 'auto' }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <button
+                      onClick={(e) => {
+                        try {
+                          console.log('View Profile button clicked');
+                          e.stopPropagation();
+                          e.preventDefault();
+                          setDropdownOpen(null);
+                          console.log('View Profile clicked for user:', user);
+                          setTimeout(() => {
+                            setViewingProfile(user);
+                          }, 50);
+                        } catch (error) {
+                          console.error('Error in View Profile click handler:', error);
+                        }
+                      }}
+                      className="flex items-center w-full px-4 py-2 text-sm text-white hover:bg-white/10"
+                    >
+                      <BsPerson className="mr-2" /> View Profile
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        try {
+                          console.log('Report Post button clicked');
+                          e.stopPropagation();
+                          e.preventDefault();
+                          setDropdownOpen(null);
+                          console.log('Report Post clicked for post:', { postId: post._id, userId: user._id });
+                          setTimeout(() => {
+                            setSelectedPostForReport({
+                              postId: post._id,
+                              userId: user._id
+                            });
+                            setReportModalOpen(true);
+                          }, 50);
+                        } catch (error) {
+                          console.error('Error in Report Post click handler:', error);
+                        }
+                      }}
+                      className="flex items-center w-full px-4 py-2 text-sm text-yellow-400 hover:bg-white/10"
+                    >
+                      <BsFlag className="mr-2" /> Report Post
                     </button>
                   </div>
                 )}
@@ -894,7 +1056,7 @@ const Community = () => {
                   Cancel
                 </button>
                 <button
-                  onClick={() => handleEditPost(post._id)}
+                  onClick={() => handleSaveEdit(post._id)}
                   className="px-3 py-1 text-sm bg-blue-500 hover:bg-blue-600 rounded-md"
                   disabled={!editContent.trim()}
                 >
@@ -1153,27 +1315,41 @@ const Community = () => {
                       <div key={commentId} className="bg-white/5 rounded-lg p-3 text-sm">
                         <div className="flex items-start gap-2">
                           <div className="flex-shrink-0">
-                            {user?.profilePicture ? (
-                              <img 
-                                src={user.profilePicture} 
-                                alt={user.username || 'User'}
-                                className="w-8 h-8 rounded-full object-cover"
-                                onError={(e) => {
-                                  // If image fails to load, show fallback
-                                  e.target.style.display = 'none';
-                                  e.target.nextSibling.style.display = 'flex';
-                                }}
-                              />
-                            ) : null}
-                            <div className={`w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-medium ${
-                              user?.profilePicture ? 'hidden' : 'flex'
-                            }`}>
-                              {user?.username?.charAt(0)?.toUpperCase() || 'U'}
+                            <div 
+                              className="cursor-pointer"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleViewProfile(user?._id, { user });
+                              }}
+                            >
+                              {user?.profilePicture ? (
+                                <img 
+                                  src={user.profilePicture} 
+                                  alt={user.username || 'User'}
+                                  className="w-8 h-8 rounded-full object-cover"
+                                  onError={(e) => {
+                                    // If image fails to load, show fallback
+                                    e.target.style.display = 'none';
+                                    e.target.nextSibling.style.display = 'flex';
+                                  }}
+                                />
+                              ) : null}
+                              <div className={`w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-medium ${
+                                user?.profilePicture ? 'hidden' : 'flex'
+                              }`}>
+                                {user?.username?.charAt(0)?.toUpperCase() || 'U'}
+                              </div>
                             </div>
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
-                              <span className="font-medium text-blue-300 truncate">
+                              <span 
+                                className="font-medium text-blue-300 truncate cursor-pointer hover:underline"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleViewProfile(user?._id, { user });
+                                }}
+                              >
                                 {user?.username || 'User'}
                               </span>
                               <span className="text-xs text-gray-400" title={new Date(createdAt).toLocaleString()}>
@@ -1443,7 +1619,7 @@ const Community = () => {
               </div>
             )}
 
-            {activeTab === 'chats' && (
+            {activeTab === 'followers' && (
               <ChatScreen selectedFriend={selectedFriend} setSelectedFriend={setSelectedFriend} />
             )}
             {activeTab === 'leaderboard' && <LeaderboardPage />}
@@ -1456,6 +1632,56 @@ const Community = () => {
       )}
 
       {!selectedFriend && <Navbar />}
+
+      {/* Report Modal */}
+      {reportModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div 
+            className="fixed inset-0 bg-black/80 transition-opacity"
+            onClick={() => {
+              setReportModalOpen(false);
+              setSelectedPostForReport(null);
+            }}
+          ></div>
+          <div className="relative z-10 w-full max-w-md">
+            <ReportModal
+              isOpen={true}
+              onClose={() => {
+                setReportModalOpen(false);
+                setSelectedPostForReport(null);
+              }}
+              postId={selectedPostForReport?.postId}
+              reportedUserId={selectedPostForReport?.userId}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Community Profile View */}
+      {viewingProfile && (
+        <div className="fixed inset-0 z-[100] overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div 
+              className="fixed inset-0 bg-black/80 transition-opacity"
+              onClick={(e) => {
+                e.stopPropagation();
+                setViewingProfile(null);
+              }}
+              aria-hidden="true"
+            ></div>
+            <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div 
+              className="inline-block align-bottom bg-gray-900 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg w-full"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <CommunityProfile 
+                user={viewingProfile} 
+                onClose={() => setViewingProfile(null)} 
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

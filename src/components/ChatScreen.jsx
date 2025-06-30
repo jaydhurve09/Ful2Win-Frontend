@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { FiArrowLeft, FiSend } from 'react-icons/fi';
+import { FiArrowLeft, FiSend, FiMessageSquare } from 'react-icons/fi';
 import BackgroundBubbles from './BackgroundBubbles';
 
 const friendsList = [
@@ -109,16 +109,24 @@ const ChatScreen = ({ selectedFriend, setSelectedFriend }) => {
             {friendsList.map((friend) => (
               <div
                 key={friend.id}
-                onClick={() => handleFriendClick(friend)}
-                className="flex items-center bg-white bg-opacity-10 rounded-xl p-3 cursor-pointer hover:bg-opacity-20 transition"
+                className="flex items-center justify-between bg-white bg-opacity-10 rounded-xl p-3 pr-4 hover:bg-opacity-20 transition"
               >
-                <img src={friend.avatar} alt={friend.name} className="w-12 h-12 rounded-full mr-3" />
-                <div>
-                  <h3 className="font-semibold">{friend.name}</h3>
-                  <p className={`text-sm ${friend.online ? 'text-green-300' : 'text-gray-300'}`}>
-                    {friend.online ? 'Online' : 'Offline'}
-                  </p>
+                <div className="flex items-center">
+                  <img src={friend.avatar} alt={friend.name} className="w-12 h-12 rounded-full mr-3" />
+                  <div>
+                    <h3 className="font-semibold">{friend.name}</h3>
+                    <p className={`text-sm ${friend.online ? 'text-green-300' : 'text-gray-300'}`}>
+                      {friend.online ? 'Online' : 'Offline'}
+                    </p>
+                  </div>
                 </div>
+                <button 
+                  onClick={() => handleFriendClick(friend)}
+                  className="bg-blue-600 p-2 rounded-full hover:bg-blue-700 transition text-white"
+                  title="Chat with friend"
+                >
+                  <FiMessageSquare size={20} />
+                </button>
               </div>
             ))}
           </div>

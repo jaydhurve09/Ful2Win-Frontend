@@ -95,19 +95,11 @@ console.error('Error checking auth state:', error);
   // Handle login
   const login = useCallback(async (userData) => {
     try {
-      console.log('AuthContext: Starting login process');
-      console.log('AuthContext: Login request data:', {
-        phoneNumber: userData.phoneNumber,
-        hasPassword: !!userData.password
-      });
-      
       setIsLoading(true);
       setError(null);
       
       try {
         const response = await authService.login(userData);
-        console.log('AuthContext: Login successful, processing response...');
-        
         // The response format should be:
         // { data: { success: true, token: '...', data: { user data } } }
         if (response && response.data && response.data.success) {
@@ -116,11 +108,14 @@ console.error('Error checking auth state:', error);
           if (!token || !user) {
             throw new Error('Missing token or user data in response');
           }
+<<<<<<< HEAD
            toast.success('Login successful! Redirecting...');
           console.log('AuthContext: Login successful for user:', {
             id: user._id,
             phoneNumber: user.phoneNumber
           });
+=======
+>>>>>>> 8f8d59c7257709d1f2420318a1b757395df15df6
           
           // Update auth state and storage
           updateAuthState(user, true);
@@ -166,8 +161,6 @@ console.error('Error checking auth state:', error);
   // Handle logout
   const logout = useCallback(async () => {
     try {
-      console.log('AuthContext: Starting logout process');
-      
       // Clear auth data first
       authService.clearAuthData();
       
@@ -176,9 +169,7 @@ console.error('Error checking auth state:', error);
       
       // Make the API call to invalidate the token on the server
       try {
-        console.log('AuthContext: Making logout API call');
         await authService.logout();
-        console.log('AuthContext: Logout successful');
       } catch (apiError) {
         console.warn('AuthContext: Logout API call failed, but continuing with local cleanup', apiError);
         // Continue with the logout flow even if the API call fails
