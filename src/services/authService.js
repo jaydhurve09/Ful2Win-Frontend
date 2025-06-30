@@ -1,4 +1,6 @@
 import api from './api';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const authService = {
   /**
@@ -52,7 +54,7 @@ const authService = {
       });
       
       console.log('Login response:', response);
-      
+      toast.success(response.data.message || 'Login successful');
       // Format the response to match what AuthContext expects
       if (response.data) {
         let userData = response.data;

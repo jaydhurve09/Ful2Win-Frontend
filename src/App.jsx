@@ -41,12 +41,29 @@ import EggCatcher from './games/EggCatcher';
 import GravityHop from './games/GravityHop';
 import GameWrapper from './components/GameWrapper';
 import GameOn from './components/GameOn';
+import {ToastContainer,toast} from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css';
+
 
 function App() {
   return (
+    <div>
     <BrowserRouter>
       <AuthProvider>
         <ErrorBoundary>
+              
+          <ToastContainer 
+            position="top-center"
+            autoClose={2000}
+            hideProgressBar={false}
+            newestOnTop
+            closeOnClick
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+            theme="colored"
+          />
+          
           <Routes>
             {/* Public routes */}
             <Route path="/login" element={<Login />} />
@@ -90,10 +107,12 @@ function App() {
             
             {/* 404 - Not Found */}
             <Route path="*" element={<Navigate to="/" replace />} />
+          
           </Routes>
         </ErrorBoundary>
       </AuthProvider>
     </BrowserRouter>
+      </div>
   );
 }
 

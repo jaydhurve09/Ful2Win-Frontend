@@ -32,7 +32,7 @@ const useCountdown = (targetDate) => {
       const distance = target - now;
 
       if (distance < 0) {
-        setTimeLeft('Starting soon...');
+        setTimeLeft('really');
         return;
       }
 
@@ -248,7 +248,7 @@ const TournamentLobby = () => {
           }}
         >
           <FaClock className="mr-2" />
-          {countdown || 'Starting soon...'}
+          {countdown}
         </button>
       );
     };

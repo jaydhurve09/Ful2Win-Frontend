@@ -18,6 +18,7 @@ const Login = () => {
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
+      toast.info('You are  logged in');
       const from = location.state?.from?.pathname || '/';
       navigate(from, { replace: true });
     }
@@ -66,6 +67,7 @@ const Login = () => {
       if (result.success) {
         console.log('4. Login successful, checking user data...');
         toast.success('Login successful!');
+        
         
         if (result.user) {
           console.log('5. User data received:', result.user);

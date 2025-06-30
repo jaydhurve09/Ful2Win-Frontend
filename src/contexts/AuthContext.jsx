@@ -1,7 +1,8 @@
 import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import authService from '../services/authService';
-
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 // Helper function to get stored auth data
 const getStoredAuthData = () => {
   if (typeof window === 'undefined') {
@@ -62,6 +63,9 @@ export const AuthProvider = ({ children }) => {
       if (!token) {
         updateAuthState(null, false);
         return false;
+      }else {
+        updateAuthState(user, true);
+        return true;
       }
 
       try {
@@ -112,7 +116,7 @@ console.error('Error checking auth state:', error);
           if (!token || !user) {
             throw new Error('Missing token or user data in response');
           }
-          
+           toast.success('Login successful! Redirecting...');
           console.log('AuthContext: Login successful for user:', {
             id: user._id,
             phoneNumber: user.phoneNumber

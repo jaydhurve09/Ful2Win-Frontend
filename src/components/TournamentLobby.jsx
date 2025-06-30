@@ -32,7 +32,7 @@ const useCountdown = (targetDate) => {
       const now = new Date().getTime();
       const target = new Date(targetDate).getTime();
       const distance = target - now;
-
+   console.log(distance);
       if (distance < 0) {
         setTimeLeft('Starting soon...');
         return;
