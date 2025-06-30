@@ -125,7 +125,7 @@ const Header = () => {
                     </div>
                   )}
                 </div>
-                <button 
+                {/* <button 
                   onClick={(e) => {
                     e.stopPropagation();
                     refreshBalance();
@@ -135,13 +135,13 @@ const Header = () => {
                   disabled={isLoading}
                 >
                   <FiRefreshCw className={`w-3 h-3 ${isLoading ? 'animate-spin' : ''}`} />
-                </button>
+                </button> */}
               </div>
             </div>
 
             {/* Bell Notification */}
             <button
-              className="text-xl"
+              className="text-xl text-dullBlue"
               onClick={() => navigate('/notifications')}
             >
               <FaBell />

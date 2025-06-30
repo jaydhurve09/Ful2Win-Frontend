@@ -54,27 +54,13 @@ const Login = () => {
     
     try {
       setIsLoading(true);
-      
-      console.log('=== Login Attempt ===');
-      console.log('1. Attempting login with formatted phone:', formattedPhone);
       const userData = { phoneNumber: formattedPhone, password };
-      
-      console.log('2. Calling login function...');
       const result = await login(userData);
-      console.log('3. Login result:', result);
       
       if (result.success) {
-        console.log('4. Login successful, checking user data...');
         toast.success('Login successful!');
-        
         if (result.user) {
-          console.log('5. User data received:', result.user);
-          console.log('6. Location state:', location.state);
-          
-          // The useEffect hook will handle the redirection when isAuthenticated changes
-          console.log('7. Login successful, isAuthenticated should update');
         } else {
-          console.error('9. Login successful but no user data received');
           throw new Error('Login successful but unable to load user data');
         }
       } else {

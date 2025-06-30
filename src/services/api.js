@@ -233,9 +233,6 @@ const testBackendConnection = async () => {
 // Login user
 const login = async (userData) => {
   try {
-    console.log('\n=== Login Request ===');
-    console.log(`[${new Date().toISOString()}] Login attempt`);
-    
     // Prepare request data
     const requestData = {
       phoneNumber: userData.phoneNumber,
