@@ -197,7 +197,7 @@ const Community = () => {
 
   const communityTabs = [
     { id: 'feed', label: 'Feed', icon: <FiHome className="mr-1" /> },
-    { id: 'chats', label: 'Chats', icon: <FiMessageSquare className="mr-1" /> },
+    { id: 'followers', label: 'Followers', icon: <FiMessageSquare className="mr-1" /> },
     { id: 'challenges', label: 'Challenges', icon: <RiSwordLine className="mr-1" /> },
     { id: 'leaderboard', label: 'Leaderboard', icon: <FiAward className="mr-1" /> },
   ];
@@ -378,7 +378,11 @@ const Community = () => {
   };
 
   const handleTabChange = (tabId) => {
-    setActiveTab(tabId);
+    if (tabId === 'challenges') {
+      navigate('/challenges'); // Navigate to the dedicated challenges page
+    } else {
+      setActiveTab(tabId);
+    }
   };
 
   const renderPosts = () => {
@@ -793,7 +797,7 @@ const Community = () => {
               </div>
             )}
 
-            {activeTab === 'chats' && (
+            {activeTab === 'followers' && (
               <ChatScreen selectedFriend={selectedFriend} setSelectedFriend={setSelectedFriend} />
             )}
             {activeTab === 'leaderboard' && <LeaderboardPage />}
