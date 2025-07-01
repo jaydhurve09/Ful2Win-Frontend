@@ -254,6 +254,7 @@ const handleRegisterTournament = async (tournamentId) => {
     );
   }
 };
+
   // Handle view/join tournament
   const handleViewTournament = (tournamentId) => {
     const tournament = tournaments.find(t => t.id === tournamentId);
@@ -286,6 +287,7 @@ const handleRegisterTournament = async (tournamentId) => {
   // Tournament card component
   const TournamentCard = ({ id, name, entryFee, prizePool, participants, maxParticipants, startTime, status, tournamentType }) => {
     const countdown = useCountdown(startTime);
+    
     
     const handleCardClick = () => {
       // Only navigate if the tournament is live

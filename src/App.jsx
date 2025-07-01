@@ -98,7 +98,7 @@ function App() {
               <Route path="/ads" element={<Ads />} />
               <Route path="/history" element={<HistoryPage />} />
               <Route path="/classic-mode" element={<ClassicMode />} />
-              <Route path="/game-lobby" element={<GameLobby />} />
+              <Route path="/game-lobby/:gameId" element={<GameLobby />} />
               <Route path="/challenges" element={<Challenges />} />
               <Route path="/notifications" element={<Notification />} />
               <Route path="/refer" element={<ReferralPage />} />

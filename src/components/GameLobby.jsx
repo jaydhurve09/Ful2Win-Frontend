@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, Star, Clock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import BackgroundBubbles from './BackgroundBubbles';
+import { useNavigate } from 'react-router-dom';
 
 const GameLobby = ({
   gameTitle = "Game Title",
@@ -19,6 +20,7 @@ const GameLobby = ({
   onClose,
   onJoinGame,
   onJoinTournament,
+  gameId
 }) => {
   const [isOpen, setIsOpen] = useState(true);
   const isActionGame = gameCategory === "Action";
@@ -27,7 +29,7 @@ const GameLobby = ({
     classic: entryFees.classic || "₹10 - ₹50",
     tournament: entryFees.tournament || "₹20 - ₹100",
   };
-
+const navigate = useNavigate();
   const handleClose = () => {
     setIsOpen(false);
     if (onClose) onClose();
@@ -36,17 +38,9 @@ const GameLobby = ({
   const handleGameModeSelect = (mode) => {
     console.log(`Selected game mode: ${mode}`);
     if (mode === 'tournament') {
-      if (onJoinTournament) {
-        onJoinTournament();
+      navigate(`/tournament-lobby/${gameId}`);
       }
-    } else {
-      // For other modes, call onJoinGame with the mode and entry fee
-      const entryFee = entryFees[mode.toLowerCase()] || '0';
-      if (onJoinGame) {
-        onJoinGame(mode, entryFee);
-      }
-    }
-  };
+    };
   
   const getEntryFee = (mode) => {
     return entryFees[mode.toLowerCase()] || 'Free';
@@ -181,14 +175,14 @@ const GameLobby = ({
                   title="Classic"
                   description="Play with 2-4 players"
                   entryFee={getEntryFee('classic')}
-                  onClick={() => handleGameModeSelect('classic')}
+                  onClick={() => navigate(`/comingsoon`)}
                 />
                 
                 <GameModeCard
                   title="Quick Play"
                   description="Fast-paced matches"
                   entryFee={getEntryFee('quick')}
-                  onClick={() => handleGameModeSelect('quick')}
+                  onClick={() => navigate(`/comingsoon`)}
                 />
                 
                 <GameModeCard
