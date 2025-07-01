@@ -62,6 +62,9 @@ export const AuthProvider = ({ children }) => {
       if (!token) {
         updateAuthState(null, false);
         return false;
+      }else{
+        updateAuthState(user , true);
+        return true;
       }
 
       try {
