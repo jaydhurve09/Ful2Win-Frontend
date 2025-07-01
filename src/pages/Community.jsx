@@ -64,13 +64,9 @@ const Community = () => {
   useEffect(() => {
     const fetchCurrentUser = async () => {
       try {
-        console.log('Fetching current user profile...');
         const user = await authService.getCurrentUserProfile();
-        console.log('Current user data:', user);
         if (user) {
           setCurrentUser(user);
-        } else {
-          console.log('No user data received');
         }
       } catch (error) {
         console.error('Error fetching current user:', error);
