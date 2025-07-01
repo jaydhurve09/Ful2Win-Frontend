@@ -30,7 +30,7 @@ import Login from './pages/Login';
 import SignUp from './pages/SignUp';
 import PhoneVerification from './pages/PhoneVerification';
 import ForgotPassword from './pages/ForgotPassword';
-import { AuthProvider } from './contexts/AuthContext';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import ColorSmash from './games/ColorSmash';
 import Leaderboard from './components/Leaderboard';
@@ -42,8 +42,16 @@ import EggCatcher from './games/EggCatcher';
 import GravityHop from './games/GravityHop';
 import GameWrapper from './components/GameWrapper';
 import GameOn from './components/GameOn';
+import StartScreen from './components/StartScreen';
 
 function App() {
+  const { showSplash } = useAuth();
+  
+  // Show splash screen during initial load and after login
+  if (showSplash) {
+    return <StartScreen />;
+  }
+  
   return (
     <BrowserRouter>
       <AuthProvider>
@@ -87,6 +95,7 @@ function App() {
               <Route path="/tournament-lobby/:gameId" element={<TournamentLobby />} />
               <Route path="/gameOn/:gameId/:tournamentId" element={<GameOn />} />
               <Route path="/comingsoon" element={<ComingSoon />} />
+              <Route path="/startscreen" element={<StartScreen />} />
             </Route>
             
             {/* 404 - Not Found */}

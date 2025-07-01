@@ -243,9 +243,9 @@ const Games = () => {
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 bg-neonBlueGradient bg-clip-text text-transparent">
             Play & Win Amazing Rewards
           </h1>
-          <p className="text-gray-300 text-base sm:text-lg max-w-2xl mx-auto">
+          {/* <p className="text-gray-300 text-base sm:text-lg max-w-2xl mx-auto">
             Discover and compete in our exciting collection of games. Win rewards, challenge friends, and climb the leaderboards!
-          </p>
+          </p> */}
         </div>
 
         {/* Featured Games */}

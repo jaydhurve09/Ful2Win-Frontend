@@ -25,6 +25,7 @@ const AuthContext = createContext({
   user: null,
   isAuthenticated: false,
   isLoading: true,
+  showSplash: false,
   error: null,
   login: async () => {},
   logout: () => {},
@@ -36,6 +37,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [showSplash, setShowSplash] = useState(false);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
@@ -108,8 +110,11 @@ console.error('Error checking auth state:', error);
             throw new Error('Missing token or user data in response');
           }
           
-          // Update auth state and storage
+          // Update auth state immediately
           updateAuthState(user, true);
+          
+          // Show splash screen
+          setShowSplash(true);
           
           // Return success with user data
           return { success: true, user };
@@ -225,6 +230,7 @@ console.error('Error checking auth state:', error);
         user,
         isAuthenticated,
         isLoading,
+        showSplash,
         error,
         login,
         logout,
@@ -232,11 +238,7 @@ console.error('Error checking auth state:', error);
         checkAuthState,
       }}
     >
-      {!isLoading ? children : (
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-        </div>
-      )}
+      {children}
     </AuthContext.Provider>
   );
 };

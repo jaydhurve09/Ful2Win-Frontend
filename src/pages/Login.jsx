@@ -51,6 +51,8 @@ const Login = () => {
       const result = await login({ phoneNumber: formattedPhone, password });
       if (result.success) {
         toast.success('Login successful!');
+        // Navigate to home with state indicating we came from auth
+        navigate('/', { state: { from: 'auth' } });
       } else {
         toast.error('Invalid phone number or password');
       }
