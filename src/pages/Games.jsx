@@ -47,28 +47,13 @@ const Games = () => {
         setLoading(true);
         setError(null);
         
-        // Use relative URL for API requests
-       const apiUrl = '/api/games';
-        
-       // console.log('Fetching games from:', apiUrl);
-        
-        // Make the API request with relative URL
-        const response = await fetch(apiUrl, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include' // Include cookies for authenticated requests
-        });
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const responseData = await response.json();
+        // Use the configured API service
+        const response = await api.get('/games');
         
         // Handle different response formats
         let gamesData = [];
+        const responseData = response.data;
+        
         if (Array.isArray(responseData)) {
           // If the response is directly an array
           gamesData = responseData;
@@ -80,12 +65,42 @@ const Games = () => {
           gamesData = Array.isArray(responseData.games) ? responseData.games : [];
         }
         
+        // If no games found, use fallback data
+        if (gamesData.length === 0) {
+          console.warn('No games found in the response, using fallback data');
+          gamesData = [
+            {
+              id: 'flappyball',
+              name: 'Flappy Ball',
+              type: 'arcade',
+              description: 'Navigate the ball through obstacles',
+              image: '/games/flappy-ball.png',
+              featured: true,
+              path: '/games/flappyball'
+            },
+            // Add more fallback games as needed
+          ];
+        }
+        
         setGames(gamesData);
         
       } catch (err) {
         console.error('Error fetching games:', err);
-        setError('Failed to load games. Please try again later.');
-        setGames([]);
+        setError('Failed to load games. Using demo data.');
+        
+        // Set fallback games data
+        setGames([
+          {
+            id: 'flappyball',
+            name: 'Flappy Ball',
+            type: 'arcade',
+            description: 'Navigate the ball through obstacles',
+            image: '/games/flappy-ball.png',
+            featured: true,
+            path: '/games/flappyball'
+          },
+          // Add more fallback games as needed
+        ]);
       } finally {
         setLoading(false);
       }
@@ -281,10 +296,38 @@ const Games = () => {
                         transition={{ duration: 0.3 }}
                         className="flex-shrink-0 w-64 bg-gray-800/50 rounded-xl overflow-hidden border border-gray-700/50 hover:border-purple-500/50 cursor-pointer transition-all duration-200"
                         onClick={() => {
-                          const gameId = game._id || game.name;
-                          if (gameId) {
-                            navigate(`/games/${gameId}`);
-                          }
+                          const handleGameClick = (game) => {
+                            try {
+                              if (!game) return;
+                              
+                              // If game has a direct path
+                              if (game.path) {
+                                navigate(game.path);
+                                return;
+                              }
+                              
+                              // If game has an ID
+                              const gameId = game.id || game._id;
+                              if (gameId) {
+                                navigate(`/games/${gameId}`);
+                                return;
+                              }
+                              
+                              // Fallback to game name URL
+                              const gameName = (game.name || 'game')
+                                .toLowerCase()
+                                .replace(/[^a-z0-9]+/g, '-')  // Replace special chars with dash
+                                .replace(/(^-|-$)/g, '');      // Remove leading/trailing dashes
+                              
+                              navigate(`/games/${gameName}`);
+                              
+                            } catch (error) {
+                              console.error('Error navigating to game:', error);
+                              // Fallback to games list if navigation fails
+                              navigate('/games');
+                            }
+                          };
+                          handleGameClick(game);
                         }}
                       >
                         <div className="aspect-video bg-gray-900 relative overflow-hidden">
