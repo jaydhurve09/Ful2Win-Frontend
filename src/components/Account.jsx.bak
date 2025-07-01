@@ -1,15 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate, Navigate } from 'react-router-dom';
+import { useNavigate, Navigate, useLocation } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { 
   FiUser, FiMail, FiLock, FiEye, FiEyeOff, FiCamera, 
-  FiCalendar, FiGlobe, FiEdit2, FiSave, FiX 
+  FiCalendar, FiGlobe, FiEdit2, FiSave, FiX, FiArrowLeft 
 } from 'react-icons/fi';
 import { FaTrophy, FaGamepad, FaRupeeSign } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
 import { authService } from '../services/api';
 import Header from './Header';
-import Navbar from './Navbar';
 import BackgroundBubbles from './BackgroundBubbles';
 import '../App.css';
 import Select from 'react-select';
@@ -20,52 +19,15 @@ import defaultProfile from '../assets/default-profile.jpg';
 // Initialize countries
 countries.registerLocale(enLocale);
 
-// Custom styles for react-select
-const customSelectStyles = {
-  control: (base) => ({
-    ...base,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-    color: 'white',
-    '&:hover': {
-      borderColor: 'rgba(255, 255, 255, 0.3)',
-    },
-  }),
-  singleValue: (base) => ({
-    ...base,
-    color: 'white',
-  }),
-  input: (base) => ({
-    ...base,
-    color: 'white',
-  }),
-  menu: (base) => ({
-    ...base,
-    backgroundColor: '#1e293b',
-    zIndex: 9999,
-  }),
-  menuPortal: (base) => ({
-    ...base,
-    zIndex: 9999,
-  }),
-  option: (base, { isFocused, isSelected }) => ({
-    ...base,
-    backgroundColor: isSelected
-      ? '#3b82f6'
-      : isFocused
-      ? 'rgba(255, 255, 255, 0.1)'
-      : 'transparent',
-    color: 'white',
-    '&:active': {
-      backgroundColor: '#3b82f6',
-    },
-  }),
-};
-
 const Account = () => {
   const { user, updateUser, isAuthenticated, checkAuthState } = useAuth();
   const navigate = useNavigate();
-  const fileInputRef = useRef(null);
+  const location = useLocation();
+  
+  // Redirect to login if not authenticated
+  if (!isAuthenticated) {
+    return <Navigate to="/login" state={{ from: location.pathname }} replace />;
+  }
   
   // Form state
   const [formData, setFormData] = useState({
@@ -81,21 +43,16 @@ const Account = () => {
     password: '',
     confirmPassword: ''
   });
-  
-  // UI state
   const [isCheckingUsername, setIsCheckingUsername] = useState(false);
+  
   const [isEditing, setIsEditing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
   const [countryOptions, setCountryOptions] = useState([]);
+  const fileInputRef = useRef(null);
   const [originalData, setOriginalData] = useState(null);
-
-  // Redirect to login if not authenticated
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
   
   // Initialize country list
   useEffect(() => {
@@ -376,22 +333,97 @@ const Account = () => {
     setIsEditing(!isEditing);
   };
 
-  if (isLoading || !user) {
+  if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-      </div>
-    );
   }
+};
+
+const toggleEditMode = () => {
+  setIsEditing(!isEditing);
+  // Reset form to original values when canceling edit
+  if (isEditing && user) {
+    setFormData(prev => ({
+      ...prev,
+      username: user.username || '',
+      fullName: user.fullName || '',
+      phoneNumber: user.phoneNumber || '',
+      email: user.email || '',
+      dateOfBirth: user.dateOfBirth ? new Date(user.dateOfBirth).toISOString().split('T')[0] : '',
+      gender: user.gender || '',
+      country: user.country || '',
+      bio: user.bio || '',
+      profilePicture: user.profilePicture || '',
+      password: '',
+      confirmPassword: ''
+    }));
+    setErrors({});
+  }
+};
+
+if (!user) {
+  return <div className="flex items-center justify-center h-screen">Loading...</div>;
+}
+
+// Handle file upload
+const handleFileUpload = (file) => {
+  // Validate file type
+  if (!file.type.startsWith('image/')) {
+    toast.error('Please upload a valid image file (JPEG, PNG, etc.)');
+    return null;
+  }
+  
+  // Check file size (max 2MB)
+  const maxSize = 2 * 1024 * 1024; // 2MB
+  if (file.size > maxSize) {
+    toast.error(`Image size should be less than ${maxSize / (1024 * 1024)}MB`);
+    return null;
+  }
+  
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (e) => resolve(e.target.result);
+    reader.onerror = () => {
+      toast.error('Error reading file');
+      resolve(null);
+    };
+    reader.readAsDataURL(file);
+  });
+};
+
+const toggleEdit = (e) => {
+  if (e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+  
+  if (isEditing && originalData) {
+    // Reset to original data when canceling edit
+    setFormData(originalData);
+  }
+  setIsEditing(!isEditing);
+};
+
+if (isLoading) {
+  return (
+    <div className="flex justify-center items-center h-64">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+    </div>
+  );
+}
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-900 to-purple-900 text-white relative overflow-hidden">
+    <div className="min-h-screen bg-blueGradient text-white relative overflow-hidden">
       <BackgroundBubbles />
+      <div className="container mx-auto px-4 py-6 relative z-10">
+        <button 
+          onClick={() => navigate(-1)}
+          className="flex items-center text-white/80 hover:text-white mb-6 transition-colors"
+        >
+          <FiArrowLeft className="mr-2" /> Back to Profile
+        </button>
       <Header />
-      <div className="container mx-auto px-4 py-8">
-        <div className="pt-20 px-3 max-w-4xl mx-auto">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-bold">My Profile</h1>
             {!isEditing && (
               <button
                 type="button"
@@ -622,30 +654,34 @@ const Account = () => {
                         })
                       }}
                     />
-                  ) : (
-                    <p className="text-white text-lg">
-                      {formData.country ? (countryOptions.find(c => c.value === formData.country)?.label || formData.country) : 'Not provided'}
-                    </p>
-                  )}
-                </div>
-                <div className="mb-4 md:col-span-2">
-                  <label className="block text-gray-300 text-sm font-bold mb-1" htmlFor="bio">
-                    Bio
-                  </label>
-                  {isEditing ? (
-                    <textarea
-                      name="bio"
-                      value={formData.bio || ''}
-                      onChange={handleChange}
-                      className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline min-h-[100px]"
-                      placeholder="Tell us about yourself..."
-                    />
-                  ) : (
-                    <p className="text-white text-lg whitespace-pre-line">
-                      {formData.bio || 'Not provided'}
-                    </p>
-                  )}
-                </div>
+                      ) : (
+                        <p className="text-white text-lg">
+                          {formData.country ? (countryOptions.find(c => c.value === formData.country)?.label || formData.country) : 'Not provided'}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="mb-4 md:col-span-2">
+                      <label className="block text-gray-300 text-sm font-bold mb-1" htmlFor="bio">
+                        Bio
+                      </label>
+                      {isEditing ? (
+                        <textarea
+                          name="bio"
+                          value={formData.bio || ''}
+                          onChange={handleChange}
+                          className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline min-h-[100px]"
+                          placeholder="Tell us about yourself..."
+                        />
+                      ) : (
+                        <p className="text-white text-lg whitespace-pre-line">
+                          {formData.bio || 'Not provided'}
+                        </p>
+                      )}
+                    </div>
+
+
+
               </div>
               
               {isEditing && (
