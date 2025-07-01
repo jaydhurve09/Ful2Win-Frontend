@@ -23,6 +23,7 @@ import Account from './components/Account';
 import FollowerPage from './components/FollowerPage';
 import SupportCenter from './pages/SupportCenter';
 import LeaderboardPage from './components/LeaderboardPage';
+import CommunityLeaderboard from './components/CommunityLeaderboard';
 import TournamentHistory from './components/TournamentHistory';
 import FlappyBall from './games/FlappyBall';
 import Login from './pages/Login';
@@ -66,6 +67,7 @@ function App() {
               <Route path="/tournaments" element={<Tournaments />} />
               <Route path="/games" element={<Games />} />
               <Route path="/community" element={<Community />} />
+              <Route path="/community/leaderboard" element={<CommunityLeaderboard />} />
               <Route path="/support" element={<SupportCenter />} />
               <Route path="/supports" element={<SupportCenter />} />
               <Route path="/ads" element={<Ads />} />
@@ -79,7 +81,6 @@ function App() {
               <Route path="/chat" element={<ChatScreen />} />
               <Route path="/kyc" element={<KYCStatusPage />} />
               <Route path="/users" element={<FollowerPage />} />
-              <Route path="/leaderboard" element={<LeaderboardPage />} />e:\internship\Ful2Win-Frontend\src\components\GameOn.jsx
               <Route path="/tournamenthistory" element={<TournamentHistory />} />
               <Route path="/leaderboard_singlegame/:gameName/:tournamentId" element={<Leaderboard />}/>
               <Route path="/tournament/:tournamentId" element={<TournamentLobby />} />
