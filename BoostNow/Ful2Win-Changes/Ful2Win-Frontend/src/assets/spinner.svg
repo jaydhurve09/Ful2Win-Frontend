@@ -1,0 +1,26 @@
+<svg width="300" height="300" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <circle id="segment" cx="150" cy="150" r="120" fill="none" stroke-width="40" />
+  </defs>
+  <g transform="rotate(-90,150,150)">
+    <!-- 12 Segments with different colors -->
+    <g>
+      <path d="M150,150 L150,30 A120,120 0 0,1 210,44 Z" fill="red"/>
+      <path d="M150,150 L210,44 A120,120 0 0,1 255,89 Z" fill="orange"/>
+      <path d="M150,150 L255,89 A120,120 0 0,1 270,150 Z" fill="yellow"/>
+      <path d="M150,150 L270,150 A120,120 0 0,1 255,211 Z" fill="lightgreen"/>
+      <path d="M150,150 L255,211 A120,120 0 0,1 210,256 Z" fill="green"/>
+      <path d="M150,150 L210,256 A120,120 0 0,1 150,270 Z" fill="cyan"/>
+      <path d="M150,150 L150,270 A120,120 0 0,1 90,256 Z" fill="blue"/>
+      <path d="M150,150 L90,256 A120,120 0 0,1 45,211 Z" fill="indigo"/>
+      <path d="M150,150 L45,211 A120,120 0 0,1 30,150 Z" fill="violet"/>
+      <path d="M150,150 L30,150 A120,120 0 0,1 45,89 Z" fill="magenta"/>
+      <path d="M150,150 L45,89 A120,120 0 0,1 90,44 Z" fill="pink"/>
+      <path d="M150,150 L90,44 A120,120 0 0,1 150,30 Z" fill="crimson"/>
+    </g>
+  </g>
+  <!-- Center circle -->
+  <circle cx="150" cy="150" r="30" fill="#333" />
+  <!-- Pointer -->
+  <polygon points="140,5 160,5 150,30" fill="red" />
+</svg>
