@@ -106,7 +106,7 @@ const Signup = () => {
       <BackgroundBubbles />
       <div className="flex flex-col items-center justify-center flex-grow-0 mt-8">
         <img src={logo} alt="Ful2Win Logo" className="w-40 md:w-44 mb-2" />
-        <p className="text-white text-sm font-semibold text-center">
+        <p className="text-white mb-2 text-sm font-semibold text-center">
           Entertainment. <span className="text-yellow-300">Earning.</span> <span className="text-pink-400">Fame</span>
         </p>
       </div>
