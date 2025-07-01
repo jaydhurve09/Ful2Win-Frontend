@@ -243,9 +243,15 @@ const Games = () => {
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 bg-neonBlueGradient bg-clip-text text-transparent">
             Play & Win Amazing Rewards
           </h1>
+<<<<<<< HEAD
           <p className="text-gray-300 text-base sm:text-lg max-w-2xl mx-auto">
             Discover and compete in our exciting collection of games. Win rewards, challenge friends, and climb the leaderboards!
           </p>
+=======
+          {/* <p className="text-gray-300 text-base sm:text-lg max-w-2xl mx-auto">
+            Discover and compete in our exciting collection of games. Win rewards, challenge friends, and climb the leaderboards!
+          </p> */}
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
         </div>
 
         {/* Featured Games */}
@@ -384,7 +390,11 @@ const Games = () => {
                     onClick={() => {
                       const gameId = game._id || game.name;
                       if (gameId) {
+<<<<<<< HEAD
                         navigate(`/games/${gameId}`);
+=======
+                        navigate(`/game-lobby/${gameId}`);
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
                       }
                     }}
                   >
@@ -412,7 +422,11 @@ const Games = () => {
                             e.stopPropagation();
                             const gameId = game._id || game.name;
                             if (gameId) {
+<<<<<<< HEAD
                               navigate(`/games/${gameId}`);
+=======
+                              navigate(`/game-lobby/${gameId}`);
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
                             }
                           }}
                         >

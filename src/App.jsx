@@ -1,6 +1,9 @@
 import { useState } from 'react';
+<<<<<<< HEAD
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+=======
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
 import './App.css';
 import Home from './pages/Home';
 import Tournaments from './pages/Tournaments';
@@ -25,13 +28,21 @@ import Account from './components/Account';
 import FollowerPage from './components/FollowerPage';
 import SupportCenter from './pages/SupportCenter';
 import LeaderboardPage from './components/LeaderboardPage';
+<<<<<<< HEAD
+=======
+import CommunityLeaderboard from './components/CommunityLeaderboard';
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
 import TournamentHistory from './components/TournamentHistory';
 import FlappyBall from './games/FlappyBall';
 import Login from './pages/Login';
 import SignUp from './pages/SignUp';
 import PhoneVerification from './pages/PhoneVerification';
 import ForgotPassword from './pages/ForgotPassword';
+<<<<<<< HEAD
 import { AuthProvider } from './contexts/AuthContext';
+=======
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
 import ProtectedRoute from './components/ProtectedRoute';
 import ColorSmash from './games/ColorSmash';
 import Leaderboard from './components/Leaderboard';
@@ -43,6 +54,7 @@ import EggCatcher from './games/EggCatcher';
 import GravityHop from './games/GravityHop';
 import GameWrapper from './components/GameWrapper';
 import GameOn from './components/GameOn';
+<<<<<<< HEAD
 
 function App() {
   return (
@@ -74,6 +86,39 @@ function App() {
               margin: '0 auto 20px',
             }}
           />
+=======
+import StartScreen from './components/StartScreen';
+import {ToastContainer,toast} from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css';
+
+
+function App() {
+  const { showSplash } = useAuth();
+  
+  // Show splash screen during initial load and after login
+  if (showSplash) {
+    return <StartScreen />;
+  }
+  
+  return (
+    <div>
+    <BrowserRouter>
+      <AuthProvider>
+        <ErrorBoundary>
+              
+          <ToastContainer 
+            position="top-center"
+            autoClose={2000}
+            hideProgressBar={false}
+            newestOnTop
+            closeOnClick
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+            theme="colored"
+          />
+          
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
           <Routes>
             {/* Public routes */}
             <Route path="/login" element={<Login />} />
@@ -93,11 +138,16 @@ function App() {
               <Route path="/tournaments" element={<Tournaments />} />
               <Route path="/games" element={<Games />} />
               <Route path="/community" element={<Community />} />
+<<<<<<< HEAD
+=======
+              <Route path="/community/leaderboard" element={<CommunityLeaderboard />} />
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
               <Route path="/support" element={<SupportCenter />} />
               <Route path="/supports" element={<SupportCenter />} />
               <Route path="/ads" element={<Ads />} />
               <Route path="/history" element={<HistoryPage />} />
               <Route path="/classic-mode" element={<ClassicMode />} />
+<<<<<<< HEAD
               <Route path="/game-lobby" element={<GameLobby />} />
               <Route path="/challenges" element={<Challenges />} />
               <Route path="/notifications" element={<Notification />} />
@@ -107,20 +157,42 @@ function App() {
               <Route path="/kyc" element={<KYCStatusPage />} />
               <Route path="/followers" element={<FollowerPage />} />
               <Route path="/leaderboard" element={<LeaderboardPage />} />
+=======
+              <Route path="/game-lobby/:gameId" element={<GameLobby />} />
+              <Route path="/challenges" element={<Challenges />} />
+              <Route path="/notifications" element={<Notification />} />
+              <Route path="/refer" element={<ReferralPage />} />
+              <Route path="/games/:gameId" element={<GameWrapper />} />
+              <Route path="/chat" element={<ChatScreen />} />
+              <Route path="/kyc" element={<KYCStatusPage />} />
+              <Route path="/users" element={<FollowerPage />} />
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
               <Route path="/tournamenthistory" element={<TournamentHistory />} />
               <Route path="/leaderboard_singlegame/:gameName/:tournamentId" element={<Leaderboard />}/>
               <Route path="/tournament/:tournamentId" element={<TournamentLobby />} />
               <Route path="/tournament-lobby/:gameId" element={<TournamentLobby />} />
               <Route path="/gameOn/:gameId/:tournamentId" element={<GameOn />} />
               <Route path="/comingsoon" element={<ComingSoon />} />
+<<<<<<< HEAD
+=======
+              <Route path="/startscreen" element={<StartScreen />} />
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
             </Route>
             
             {/* 404 - Not Found */}
             <Route path="*" element={<Navigate to="/" replace />} />
+<<<<<<< HEAD
+=======
+          
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
           </Routes>
         </ErrorBoundary>
       </AuthProvider>
     </BrowserRouter>
+<<<<<<< HEAD
+=======
+      </div>
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
   );
 }
 

@@ -2,6 +2,10 @@ import React, { useState } from 'react';
 import { X, Star, Clock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import BackgroundBubbles from './BackgroundBubbles';
+<<<<<<< HEAD
+=======
+import { useNavigate } from 'react-router-dom';
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
 
 const GameLobby = ({
   gameTitle = "Game Title",
@@ -19,6 +23,10 @@ const GameLobby = ({
   onClose,
   onJoinGame,
   onJoinTournament,
+<<<<<<< HEAD
+=======
+  gameId
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
 }) => {
   const [isOpen, setIsOpen] = useState(true);
   const isActionGame = gameCategory === "Action";
@@ -27,7 +35,11 @@ const GameLobby = ({
     classic: entryFees.classic || "₹10 - ₹50",
     tournament: entryFees.tournament || "₹20 - ₹100",
   };
+<<<<<<< HEAD
 
+=======
+const navigate = useNavigate();
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
   const handleClose = () => {
     setIsOpen(false);
     if (onClose) onClose();
@@ -36,6 +48,7 @@ const GameLobby = ({
   const handleGameModeSelect = (mode) => {
     console.log(`Selected game mode: ${mode}`);
     if (mode === 'tournament') {
+<<<<<<< HEAD
       if (onJoinTournament) {
         onJoinTournament();
       }
@@ -47,6 +60,11 @@ const GameLobby = ({
       }
     }
   };
+=======
+      navigate(`/tournament-lobby/${gameId}`);
+      }
+    };
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
   
   const getEntryFee = (mode) => {
     return entryFees[mode.toLowerCase()] || 'Free';
@@ -181,14 +199,22 @@ const GameLobby = ({
                   title="Classic"
                   description="Play with 2-4 players"
                   entryFee={getEntryFee('classic')}
+<<<<<<< HEAD
                   onClick={() => handleGameModeSelect('classic')}
+=======
+                  onClick={() => navigate(`/comingsoon`)}
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
                 />
                 
                 <GameModeCard
                   title="Quick Play"
                   description="Fast-paced matches"
                   entryFee={getEntryFee('quick')}
+<<<<<<< HEAD
                   onClick={() => handleGameModeSelect('quick')}
+=======
+                  onClick={() => navigate(`/comingsoon`)}
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
                 />
                 
                 <GameModeCard

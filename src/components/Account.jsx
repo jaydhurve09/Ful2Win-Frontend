@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 import React, { useState, useEffect, useRef, useContext } from 'react';
+=======
+import React, { useState, useEffect, useRef } from 'react';
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
 import { useNavigate, Navigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { 
@@ -7,7 +11,11 @@ import {
 } from 'react-icons/fi';
 import { FaTrophy, FaGamepad, FaRupeeSign } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
+<<<<<<< HEAD
 import authService from '../services/api';
+=======
+import { authService } from '../services/api';
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
 import Header from './Header';
 import Navbar from './Navbar';
 import BackgroundBubbles from './BackgroundBubbles';
@@ -20,6 +28,7 @@ import defaultProfile from '../assets/default-profile.jpg';
 // Initialize countries
 countries.registerLocale(enLocale);
 
+<<<<<<< HEAD
 const Account = () => {
   const { user, updateUser, isAuthenticated, checkAuthState } = useAuth();
   const navigate = useNavigate();
@@ -28,6 +37,54 @@ const Account = () => {
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
+=======
+// Custom styles for react-select
+const customSelectStyles = {
+  control: (base) => ({
+    ...base,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+    color: 'white',
+    '&:hover': {
+      borderColor: 'rgba(255, 255, 255, 0.3)',
+    },
+  }),
+  singleValue: (base) => ({
+    ...base,
+    color: 'white',
+  }),
+  input: (base) => ({
+    ...base,
+    color: 'white',
+  }),
+  menu: (base) => ({
+    ...base,
+    backgroundColor: '#1e293b',
+    zIndex: 9999,
+  }),
+  menuPortal: (base) => ({
+    ...base,
+    zIndex: 9999,
+  }),
+  option: (base, { isFocused, isSelected }) => ({
+    ...base,
+    backgroundColor: isSelected
+      ? '#3b82f6'
+      : isFocused
+      ? 'rgba(255, 255, 255, 0.1)'
+      : 'transparent',
+    color: 'white',
+    '&:active': {
+      backgroundColor: '#3b82f6',
+    },
+  }),
+};
+
+const Account = () => {
+  const { user, updateUser, isAuthenticated, checkAuthState } = useAuth();
+  const navigate = useNavigate();
+  const fileInputRef = useRef(null);
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
   
   // Form state
   const [formData, setFormData] = useState({
@@ -43,16 +100,31 @@ const Account = () => {
     password: '',
     confirmPassword: ''
   });
+<<<<<<< HEAD
   const [isCheckingUsername, setIsCheckingUsername] = useState(false);
   
+=======
+  
+  // UI state
+  const [isCheckingUsername, setIsCheckingUsername] = useState(false);
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
   const [isEditing, setIsEditing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
   const [countryOptions, setCountryOptions] = useState([]);
+<<<<<<< HEAD
   const fileInputRef = useRef(null);
   const [originalData, setOriginalData] = useState(null);
+=======
+  const [originalData, setOriginalData] = useState(null);
+
+  // Redirect to login if not authenticated
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
   
   // Initialize country list
   useEffect(() => {
@@ -333,13 +405,18 @@ const Account = () => {
     setIsEditing(!isEditing);
   };
 
+<<<<<<< HEAD
   if (isLoading) {
+=======
+  if (isLoading || !user) {
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
     return (
       <div className="flex justify-center items-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
       </div>
     );
   }
+<<<<<<< HEAD
   
   return (
     <div className="relative min-h-screen pb-24 overflow-hidden text-white bg-gradient-to-b from-[#0b3fae] via-[#1555d1] to-[#2583ff]">
@@ -347,6 +424,14 @@ const Account = () => {
       <div className="relative z-10">
         <Header />
 
+=======
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-900 to-purple-900 text-white relative overflow-hidden">
+      <BackgroundBubbles />
+      <Header />
+      <div className="container mx-auto px-4 py-8">
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
         <div className="pt-20 px-3 max-w-4xl mx-auto">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-bold">My Profile</h1>
@@ -580,6 +665,7 @@ const Account = () => {
                         })
                       }}
                     />
+<<<<<<< HEAD
                       ) : (
                         <p className="text-white text-lg">
                           {formData.country ? (countryOptions.find(c => c.value === formData.country)?.label || formData.country) : 'Not provided'}
@@ -608,6 +694,32 @@ const Account = () => {
 
 
 
+=======
+                  ) : (
+                    <p className="text-white text-lg">
+                      {formData.country ? (countryOptions.find(c => c.value === formData.country)?.label || formData.country) : 'Not provided'}
+                    </p>
+                  )}
+                </div>
+                <div className="mb-4 md:col-span-2">
+                  <label className="block text-gray-300 text-sm font-bold mb-1" htmlFor="bio">
+                    Bio
+                  </label>
+                  {isEditing ? (
+                    <textarea
+                      name="bio"
+                      value={formData.bio || ''}
+                      onChange={handleChange}
+                      className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline min-h-[100px]"
+                      placeholder="Tell us about yourself..."
+                    />
+                  ) : (
+                    <p className="text-white text-lg whitespace-pre-line">
+                      {formData.bio || 'Not provided'}
+                    </p>
+                  )}
+                </div>
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
               </div>
               
               {isEditing && (

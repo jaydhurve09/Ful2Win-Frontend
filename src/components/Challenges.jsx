@@ -3,6 +3,10 @@ import Header from '../components/Header';
 import Navbar from '../components/Navbar';
 import BackgroundBubbles from '../components/BackgroundBubbles';
 import { useNavigate } from 'react-router-dom';
+<<<<<<< HEAD
+=======
+import { FiArrowLeft } from 'react-icons/fi';
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
 
 const Challenges = () => {
   const [isFormOpen, setIsFormOpen] = useState(true);
@@ -28,16 +32,28 @@ const Challenges = () => {
 
   const filteredFriends = friendName.length > 0
     ? allFriends.filter(
+<<<<<<< HEAD
         (name) =>
           name.toLowerCase().includes(friendName.toLowerCase()) &&
           name.toLowerCase() !== friendName.toLowerCase()
       )
+=======
+      (name) =>
+        name.toLowerCase().includes(friendName.toLowerCase()) &&
+        name.toLowerCase() !== friendName.toLowerCase()
+    )
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
     : [];
 
   const filteredGames = gameInput.length > 0
     ? allGames.filter((game) =>
+<<<<<<< HEAD
         game.toLowerCase().includes(gameInput.toLowerCase())
       )
+=======
+      game.toLowerCase().includes(gameInput.toLowerCase())
+    )
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
     : allGames;
 
   useEffect(() => {
@@ -96,7 +112,11 @@ const Challenges = () => {
             onClick={() => navigate(-1)}
             className="text-blue-400 hover:text-blue-500 text-lg font-semibold flex items-center"
           >
+<<<<<<< HEAD
             <span className="text-2xl mr-1">&lt;</span>
+=======
+            <FiArrowLeft size={40} className="mr-1" />
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
           </button>
         </div>
 
@@ -114,11 +134,18 @@ const Challenges = () => {
 
               <form
                 onSubmit={handleInviteSubmit}
+<<<<<<< HEAD
                 className={`mt-4 transition-all duration-300 ease-in-out ${
                   isFormOpen
                     ? 'max-h-[1000px] opacity-100 scale-100'
                     : 'max-h-0 opacity-0 scale-95 pointer-events-none'
                 }`}
+=======
+                className={`mt-4 transition-all duration-300 ease-in-out ${isFormOpen
+                    ? 'max-h-[1000px] opacity-100 scale-100'
+                    : 'max-h-0 opacity-0 scale-95 pointer-events-none'
+                  }`}
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
               >
                 <div className="relative">
                   <input

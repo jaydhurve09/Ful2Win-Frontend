@@ -18,6 +18,10 @@ const Home = () => {
   
   // Redirect to login if not authenticated
   if (!isAuthenticated) {
+<<<<<<< HEAD
+=======
+    
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
     return <Navigate to="/login" replace />;
   }
 

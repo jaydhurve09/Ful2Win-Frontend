@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+<<<<<<< HEAD
 import { 
   FiUser, 
   FiUsers, 
@@ -12,6 +13,21 @@ import {
   FiHelpCircle,
   FiRefreshCw,
   FiSettings 
+=======
+import {
+  FiUser,
+  FiUsers,
+  FiDollarSign,
+  FiEdit,
+  FiShare2,
+  FiLogOut,
+  FiMessageSquare,
+  FiMail,
+  FiHeadphones,
+  FiHelpCircle,
+  FiRefreshCw,
+  FiSettings
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
 } from "react-icons/fi";
 import { FaTrophy, FaGamepad, FaRupeeSign, FaCoins } from "react-icons/fa";
 import { IoMdPerson } from "react-icons/io";
@@ -42,6 +58,7 @@ const ProfileScreen = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [userPosts, setUserPosts] = useState([]);
+<<<<<<< HEAD
   const { userId } = useParams();
 
   // Function to fetch user posts
@@ -51,6 +68,15 @@ const ProfileScreen = () => {
     try {
       // Since we don't have a direct endpoint for user posts, we'll use the user profile
       // which might include posts or we can set an empty array if not available
+=======
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false); // ✅ New state
+
+  const { userId } = useParams();
+
+  const fetchUserPosts = useCallback(async (userId) => {
+    if (!userId) return;
+    try {
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
       const userData = await authService.getUserProfile(userId);
       setUserPosts(userData.posts || []);
     } catch (error) {
@@ -59,6 +85,7 @@ const ProfileScreen = () => {
     }
   }, []);
 
+<<<<<<< HEAD
   // Fetch user data function that can be called directly
   const fetchUserData = useCallback(async (forceRefresh = false) => {
     try {
@@ -69,14 +96,28 @@ const ProfileScreen = () => {
       const localUser = JSON.parse(localStorage.getItem('user') || '{}');
       
       // Always fetch fresh data from the server
+=======
+  const fetchUserData = useCallback(async () => {
+    try {
+      setLoading(true);
+      let userData = null;
+
+      const localUser = JSON.parse(localStorage.getItem('user') || '{}');
+
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
       try {
         const response = await authService.getCurrentUserProfile();
         if (response) {
           userData = response;
+<<<<<<< HEAD
           // Update local storage with fresh data
           localStorage.setItem('user', JSON.stringify(userData));
           
           // Update user stats with the latest data
+=======
+          localStorage.setItem('user', JSON.stringify(userData));
+
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
           const stats = {
             balance: userData.balance || userData.Balance || 0,
             coins: userData.coins || 0,
@@ -84,6 +125,7 @@ const ProfileScreen = () => {
             wins: userData.stats?.wins || 0,
             matches: userData.stats?.matches || 0
           };
+<<<<<<< HEAD
           
           setUserStats(stats);
           setCurrentUser(userData);
@@ -101,6 +143,22 @@ const ProfileScreen = () => {
       }
       
       // Fallback to local storage if API call fails or no response
+=======
+
+          setUserStats(stats);
+          setCurrentUser(userData);
+
+          if (userData._id) {
+            await fetchUserPosts(userData._id);
+          }
+
+          return;
+        }
+      } catch (error) {
+        console.error('Error fetching user profile:', error);
+      }
+
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
       if (localUser?._id) {
         setUserStats(prev => ({
           ...prev,
@@ -111,10 +169,15 @@ const ProfileScreen = () => {
           matches: localUser.stats?.matches || 0
         }));
         setCurrentUser(localUser);
+<<<<<<< HEAD
         // Fetch posts for local user
         await fetchUserPosts(localUser._id);
       } else {
         // No user data available, redirect to login
+=======
+        await fetchUserPosts(localUser._id);
+      } else {
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
         toast.error('Please log in again');
         navigate('/login');
       }
@@ -125,6 +188,7 @@ const ProfileScreen = () => {
       setLoading(false);
       setRefreshing(false);
     }
+<<<<<<< HEAD
   }, [userId, navigate]);
 
   // Initial data fetch
@@ -133,11 +197,20 @@ const ProfileScreen = () => {
   }, [fetchUserData]);
   
   // Pull to refresh handler
+=======
+  }, [userId, navigate, fetchUserPosts]);
+
+  useEffect(() => {
+    fetchUserData();
+  }, [fetchUserData]);
+
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
   const handleRefresh = useCallback(() => {
     setRefreshing(true);
     fetchUserData();
   }, [fetchUserData]);
 
+<<<<<<< HEAD
   // Stats configuration
   const stats = [
     { 
@@ -159,6 +232,28 @@ const ProfileScreen = () => {
       icon: <IoMdPerson className="text-purple-500" />, 
       label: "Followers", 
       value: userStats.followers.toLocaleString() 
+=======
+  const stats = [
+    {
+      icon: <FaRupeeSign className="text-green-500" />,
+      label: "Balance",
+      value: userStats.balance.toLocaleString()
+    },
+    {
+      icon: <FaCoins className="text-yellow-500" />,
+      label: "Coins",
+      value: userStats.coins.toLocaleString()
+    },
+    {
+      icon: <FaTrophy className="text-blue-500" />,
+      label: "Wins",
+      value: userStats.wins.toLocaleString()
+    },
+    {
+      icon: <IoMdPerson className="text-purple-500" />,
+      label: "Users",
+      value: userStats.followers.toLocaleString()
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
     },
   ];
 
@@ -166,7 +261,11 @@ const ProfileScreen = () => {
     const path = location.pathname;
     if (path.includes("wallet")) setActiveSection("wallet");
     else if (path.includes("tournamenthistory")) setActiveSection("tournament");
+<<<<<<< HEAD
     else if (path.includes("followers")) setActiveSection("followers");
+=======
+    else if (path.includes("users")) setActiveSection("users");
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
     else if (path.includes("account")) setActiveSection("account");
     else setActiveSection("profile");
   }, [location.pathname]);
@@ -174,11 +273,16 @@ const ProfileScreen = () => {
   const navItems = [
     { id: "account", label: "Account", icon: <FiUser />, path: "/account" },
     { id: "tournament", label: "Tournament Log", icon: <FaTrophy />, path: "/tournamenthistory" },
+<<<<<<< HEAD
     { id: "followers", label: "Followers", icon: <FiUsers />, path: "/followers" },
+=======
+    { id: "users", label: "Users", icon: <FiUsers />, path: "/users" },
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
     { id: "wallet", label: "Wallet", icon: <FaRupeeSign />, path: "/wallet" },
   ];
 
   const profileActions = [
+<<<<<<< HEAD
     {
       icon: <FiMail className="text-blue-600" />,
       text: "Email",
@@ -210,6 +314,13 @@ const ProfileScreen = () => {
       action: "logout",
       isDanger: true,
     },
+=======
+    { icon: <FiEdit className="text-blue-600" />, text: "Edit Info", action: "edit" },
+    { icon: <FiShare2 className="text-blue-600" />, text: "Referrals", action: "referrals" },
+    { icon: <span className="text-blue-600 font-bold">KYC</span>, text: "KYC Status", action: "kyc" },
+    { icon: <FiHeadphones className="text-blue-600" />, text: "Support", action: "support" },
+    { icon: <FiLogOut className="text-red-500" />, text: "Log Out", action: "logout", isDanger: true },
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
   ];
 
   const handleLogout = async () => {
@@ -226,14 +337,21 @@ const ProfileScreen = () => {
   const handleProfileAction = (action) => {
     setActiveProfileAction(action);
     switch (action) {
+<<<<<<< HEAD
       case "email":
         alert("Email section coming soon!");
         break;
+=======
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
       case "edit":
         navigate("/account");
         break;
       case "referrals":
+<<<<<<< HEAD
         navigate("/referrals");
+=======
+        navigate("/refer");
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
         break;
       case "kyc":
         navigate("/kyc");
@@ -242,9 +360,13 @@ const ProfileScreen = () => {
         navigate("/supports");
         break;
       case "logout":
+<<<<<<< HEAD
         if (window.confirm("Are you sure you want to log out?")) {
           handleLogout();
         }
+=======
+        setShowLogoutConfirm(true); // ✅ Open custom modal instead of window.confirm
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
         break;
       default:
         break;
@@ -255,12 +377,19 @@ const ProfileScreen = () => {
     <div className="min-h-screen w-full text-white overflow-x-hidden relative px-4 py-8"
       style={{
         background: "linear-gradient(to bottom, #0A2472 0%, #0D47A1 45%, #1565C0 100%)",
+<<<<<<< HEAD
         paddingBottom: '100px' // Add padding to account for fixed navbar
+=======
+        paddingBottom: '100px'
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
       }}>
       <BackgroundBubbles />
       <div className="relative z-10 py-4 max-w-2xl mx-auto px-4">
         <div className="flex items-start justify-between px-4 mb-4">
+<<<<<<< HEAD
           {/* Profile Picture with Name */}
+=======
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
           <div className="flex items-center space-x-4">
             <div className="relative group w-20 h-20">
               <div className="w-full h-full rounded-full overflow-hidden border-2 border-dullBlue bg-gray-100 flex items-center justify-center">
@@ -270,7 +399,10 @@ const ProfileScreen = () => {
                     alt="Profile"
                     className="w-full h-full object-cover"
                     onError={(e) => {
+<<<<<<< HEAD
                       console.log('Error loading profile picture, falling back to default');
+=======
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
                       e.target.onerror = null;
                       e.target.src = defaultProfile;
                     }}
@@ -280,8 +412,11 @@ const ProfileScreen = () => {
                 )}
               </div>
             </div>
+<<<<<<< HEAD
             
             {/* User Name and Username */}
+=======
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
             <div className="text-white">
               <h2 className="text-xl font-semibold">
                 {currentUser?.fullName || 'User Name'}
@@ -291,6 +426,7 @@ const ProfileScreen = () => {
               </p>
             </div>
           </div>
+<<<<<<< HEAD
 
           {/* <div className="flex items-center justify-between mb-6">
             <div className="flex items-center space-x-2">
@@ -320,6 +456,10 @@ const ProfileScreen = () => {
           {/* Action Buttons */}
           <div className="flex space-x-2">
             <button 
+=======
+          <div className="flex space-x-2">
+            <button
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
               onClick={() => fetchUserData(true)}
               className="text-white p-2 rounded-full hover:bg-white/10 transition-colors"
               title="Refresh data"
@@ -327,6 +467,7 @@ const ProfileScreen = () => {
             >
               <FiRefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
             </button>
+<<<<<<< HEAD
             {/* <button 
               onClick={() => navigate('/settings')}
               className="text-white p-2 rounded-full hover:bg-white/10 transition-colors"
@@ -391,6 +532,51 @@ const ProfileScreen = () => {
           }
           
           return (
+=======
+          </div>
+        </div>
+
+        <div className="flex justify-around mb-2 mt-4 px-3">
+          {navItems.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => {
+                setActiveSection(item.id);
+                navigate(item.path);
+              }}
+              className="flex flex-col items-center space-y-1"
+            >
+              <div
+                className={`w-14 h-14 rounded-full flex items-center justify-center text-xl transition-all ${
+                  activeSection === item.id
+                    ? "bg-blue-400 text-white"
+                    : "bg-blue-500 text-white"
+                }`}
+              >
+                {item.icon}
+              </div>
+              <span
+                className={`text-sm transition-all ${
+                  activeSection === item.id
+                    ? "text-white font-semibold"
+                    : "text-white/80 font-medium"
+                }`}
+              >
+                {item.label}
+              </span>
+            </button>
+          ))}
+        </div>
+
+        {activeSection === 'account' && (
+          <div className="mb-6 mt-4">
+            <Account />
+          </div>
+        )}
+
+        <div className="grid grid-cols-2 gap-3 mb-4 mt-4">
+          {stats.map((stat, i) => (
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
             <div
               key={i}
               className="bg-white p-4 rounded-xl flex items-center space-x-3 shadow-sm"
@@ -400,11 +586,16 @@ const ProfileScreen = () => {
               </div>
               <div>
                 <div className="font-bold text-gray-800 text-lg">
+<<<<<<< HEAD
                   {loading ? '...' : displayValue || '0'}
+=======
+                  {loading ? '...' : stat.value || '0'}
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
                 </div>
                 <div className="text-xs text-gray-600">{stat.label}</div>
               </div>
             </div>
+<<<<<<< HEAD
           );
         })}
       </div>
@@ -451,11 +642,86 @@ const ProfileScreen = () => {
       </div> {/* Close main content container */}
       
       {/* Bottom Navbar */}
+=======
+          ))}
+        </div>
+
+        <div className="bg-white rounded-2xl p-4 mb-20">
+          {profileActions.map((item, index, array) => (
+            <React.Fragment key={item.action}>
+              <button
+                onClick={() => handleProfileAction(item.action)}
+                className={`w-full flex items-center p-4 rounded-xl transition-all group ${
+                  item.isDanger ? "hover:bg-red-50" : "hover:bg-blue-50"
+                }`}
+              >
+                <div
+                  className={`w-10 h-10 flex items-center justify-center mr-3 rounded-full transition-colors ${
+                    item.isDanger
+                      ? "bg-red-50 group-hover:bg-red-100"
+                      : "bg-blue-50 group-hover:bg-blue-100"
+                  }`}
+                >
+                  {item.icon}
+                </div>
+                <div
+                  className={`flex-1 text-left text-sm sm:text-base font-medium ${
+                    item.isDanger ? "text-red-600" : "text-gray-800"
+                  }`}
+                >
+                  {item.text}
+                </div>
+                <div className="text-gray-400 group-hover:text-blue-600 text-lg">
+                  &gt;
+                </div>
+              </button>
+              {index < array.length - 1 && (
+                <div key={`divider-${index}`} className="px-4 py-1">
+                  <div className="w-full h-px bg-gray-200"></div>
+                </div>
+              )}
+            </React.Fragment>
+          ))}
+        </div>
+      </div>
+
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
       <div className="fixed bottom-0 left-0 right-0 z-20">
         <div className="max-w-2xl mx-auto">
           <Navbar />
         </div>
       </div>
+<<<<<<< HEAD
+=======
+
+      {/* ✅ Logout Confirmation Modal */}
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-6 w-[90%] max-w-sm text-center shadow-lg">
+            <h2 className="text-lg font-semibold text-gray-800 mb-4">
+              Are you sure you want to logout?
+            </h2>
+            <div className="flex justify-center gap-4">
+              <button
+                onClick={() => {
+                  setShowLogoutConfirm(false);
+                  handleLogout();
+                }}
+                className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600"
+              >
+                Yes
+              </button>
+              <button
+                onClick={() => setShowLogoutConfirm(false)}
+                className="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300"
+              >
+                No
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
     </div>
   );
 };

@@ -1,5 +1,9 @@
 
+<<<<<<< HEAD
 import React, { useEffect, useState } from 'react';
+=======
+import React, { useEffect, useState, useCallback } from 'react';
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
 import { GiTwoCoins } from 'react-icons/gi';
 import { FaRedoAlt, FaPlay, FaBolt } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
@@ -7,6 +11,12 @@ import Header from '../components/Header';
 import Navbar from '../components/Navbar';
 import BackgroundBubbles from '../components/BackgroundBubbles';
 import SpinWheelScreen from '../components/SpinWheelScreen';
+<<<<<<< HEAD
+=======
+import { useAuth } from '../contexts/AuthContext';
+import authService from '../services/authService';
+import { toast } from 'react-toastify';
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
 
 const Wallet = () => {
   const navigate = useNavigate();
@@ -15,6 +25,7 @@ const Wallet = () => {
     winning: 0,
     bonus: 0,
     coins: 0,
+<<<<<<< HEAD
     transactions: [],
   });
   const [loading, setLoading] = useState(true);
@@ -51,6 +62,63 @@ const Wallet = () => {
 
     fetchWalletData();
   }, []);
+=======
+    balance: 0,
+    profilePicture: '',
+    transactions: [],
+  });
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [showSpinWheel, setShowSpinWheel] = useState(false);
+  const { currentUser } = useAuth();
+
+  const fetchUserData = useCallback(async () => {
+    try {
+      setRefreshing(true);
+      const userData = await authService.getCurrentUserProfile();
+      
+      if (userData) {
+        setWalletData(prev => ({
+          ...prev,
+          coins: userData.coins || 0,
+          balance: userData.balance || userData.Balance || 0,
+          deposit: userData.deposit || 0,
+          winning: userData.winning || 0,
+          bonus: userData.bonus || 0,
+          profilePicture: userData.profilePicture || userData.avatar || '',
+        }));
+      }
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      toast.error('Failed to load wallet data');
+      
+      // Fallback to local storage if available
+      const localUser = JSON.parse(localStorage.getItem('user') || '{}');
+      if (localUser) {
+        setWalletData(prev => ({
+          ...prev,
+          coins: localUser.coins || 0,
+          balance: localUser.balance || localUser.Balance || 0,
+          deposit: localUser.deposit || 0,
+          winning: localUser.winning || 0,
+          bonus: localUser.bonus || 0,
+          profilePicture: localUser.profilePicture || localUser.avatar || '',
+        }));
+      }
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchUserData();
+  }, [fetchUserData]);
+
+  const handleRefresh = () => {
+    fetchUserData();
+  };
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
 
   const handleSpinClick = () => setShowSpinWheel(true);
   const handleCloseSpin = () => setShowSpinWheel(false);
@@ -74,6 +142,7 @@ const Wallet = () => {
         <div className="pt-20 mt-7  px-4 max-w-4xl mx-auto space-y-6">
           {/* Wallet Card */}
           <div className="w-full border border-white/30 rounded-xl text-white text-center p-4">
+<<<<<<< HEAD
             {/* Logo */}
             <div className="w-20 h-20 rounded-full bg-yellow-400 mx-auto flex items-center justify-center overflow-hidden mb-4">
               <img
@@ -81,15 +150,50 @@ const Wallet = () => {
                 alt="Profile"
                 className="w-16 h-16 object-contain"
               />
+=======
+            {/* Profile Picture */}
+            <div className="w-20 h-20 rounded-full bg-yellow-400 mx-auto flex items-center justify-center overflow-hidden mb-4 border-[3px] border-dullBlue">
+              {walletData.profilePicture ? (
+                <img
+                  src={walletData.profilePicture}
+                  alt="Profile"
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = 'https://cdn-icons-png.flaticon.com/512/3069/3069172.png';
+                  }}
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-blue-600 text-white text-2xl font-bold">
+                  {currentUser?.name?.[0]?.toUpperCase() || 'U'}
+                </div>
+              )}
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
             </div>
             
 
             {/* Coins Section */}
             <div className="flex flex-col items-center gap-1">
+<<<<<<< HEAD
               <p className="text-white/80 text-sm">Coins</p>
               <h3 className="text-lg font-semibold text-yellow-300 flex items-center gap-1">
                 {walletData.coins} <GiTwoCoins size={18} />
               </h3>
+=======
+              <div className="flex items-center gap-2">
+              <p className="text-white/80 text-sm">Coins</p>
+              <button 
+                onClick={handleRefresh}
+                disabled={refreshing}
+                className="text-white/60 hover:text-white transition-colors"
+              >
+                <FaRedoAlt size={14} className={refreshing ? 'animate-spin' : ''} />
+              </button>
+            </div>
+            <h3 className="text-lg font-semibold text-yellow-300 flex items-center gap-1">
+              {walletData.coins.toLocaleString()} <GiTwoCoins size={18} />
+            </h3>
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
             </div>
 
             <div className="my-3 h-[1px] w-full bg-white/30" />
@@ -97,8 +201,13 @@ const Wallet = () => {
             {/* Row: Deposit | Winning | Bonus */}
             <div className="flex justify-between text-sm sm:text-base font-medium">
               <div className="flex-1">
+<<<<<<< HEAD
                 <p className="text-white/80">Deposit</p>
                 <h2 className="text-lg font-bold">₹ {walletData.deposit}</h2>
+=======
+                <p className="text-white/80">Balance</p>
+                <p className="text-yellow-300">₹{walletData.balance.toLocaleString()}</p>
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
               </div>
               <div className="flex-1">
                 <p className="text-white/80">Winning</p>

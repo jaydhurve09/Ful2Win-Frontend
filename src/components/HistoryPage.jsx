@@ -1,6 +1,15 @@
+<<<<<<< HEAD
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaArrowLeft, FaTimes, FaCoins } from 'react-icons/fa';
+=======
+import React, { useEffect, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { FaArrowLeft, FaTimes, FaCoins, FaRedoAlt } from 'react-icons/fa';
+import { useAuth } from '../contexts/AuthContext';
+import authService from '../services/authService';
+import { toast } from 'react-toastify';
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
 import Header from '../components/Header';
 import Navbar from '../components/Navbar';
 import BackgroundBubbles from '../components/BackgroundBubbles';
@@ -24,6 +33,7 @@ const getIcon = (type) => {
 
 const HistoryPage = () => {
   const navigate = useNavigate();
+<<<<<<< HEAD
   const [wallet, setWallet] = useState({ balance: 0, coins: 0, transactions: [] });
   const [loading, setLoading] = useState(true);
   const [selectedTxn, setSelectedTxn] = useState(null);
@@ -55,6 +65,81 @@ const HistoryPage = () => {
 
   const cashTxns = wallet.transactions.filter(t => t.category === 'cash');
   const coinTxns = wallet.transactions.filter(t => t.category === 'coins');
+=======
+  const { currentUser } = useAuth();
+  const [wallet, setWallet] = useState({ 
+    balance: 0, 
+    coins: 0, 
+    transactions: [],
+    profilePicture: ''
+  });
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [selectedTxn, setSelectedTxn] = useState(null);
+
+  const fetchWalletData = useCallback(async () => {
+    try {
+      setRefreshing(true);
+      const userData = await authService.getCurrentUserProfile();
+      
+      if (userData) {
+        // Transform transactions from the user data to match our format
+        const transactions = userData.transactions || [];
+        const formattedTxns = transactions.map(txn => ({
+          id: txn._id || Date.now().toString(),
+          type: txn.type || 'Transaction',
+          title: txn.description || 'Transaction',
+          date: new Date(txn.createdAt || Date.now()).toLocaleString(),
+          amount: txn.amount || 0,
+          isPositive: txn.transactionType === 'credit',
+          category: txn.currency === 'coins' ? 'coins' : 'cash',
+          status: txn.status || 'completed'
+        }));
+
+        setWallet({
+          balance: userData.balance || userData.Balance || 0,
+          coins: userData.coins || 0,
+          transactions: formattedTxns,
+          profilePicture: userData.profilePicture || userData.avatar || ''
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching wallet data:', error);
+      toast.error('Failed to load transaction history');
+      
+      // Fallback to local storage if available
+      const localUser = JSON.parse(localStorage.getItem('user') || '{}');
+      if (localUser) {
+        setWallet(prev => ({
+          ...prev,
+          balance: localUser.balance || localUser.Balance || 0,
+          coins: localUser.coins || 0,
+          profilePicture: localUser.profilePicture || localUser.avatar || ''
+        }));
+      }
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchWalletData();
+  }, [fetchWalletData]);
+
+  const handleRefresh = () => {
+    setRefreshing(true);
+    fetchWalletData();
+  };
+
+  const cashTxns = wallet.transactions
+    .filter(t => t.category === 'cash')
+    .sort((a, b) => new Date(b.date) - new Date(a.date));
+    
+  const coinTxns = wallet.transactions
+    .filter(t => t.category === 'coins')
+    .sort((a, b) => new Date(b.date) - new Date(a.date));
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
 
   const renderTransactions = (txns) => (
     <div className="space-y-3">
@@ -96,6 +181,7 @@ const HistoryPage = () => {
         <Header />
 
         <div className="pt-20 px-4 max-w-md mx-auto">
+<<<<<<< HEAD
           <button
             onClick={() => navigate(-1)}
             className="flex items-center gap-2 text-sm bg-white/10 px-3 py-2 rounded-full hover:bg-white/20"
@@ -127,6 +213,98 @@ const HistoryPage = () => {
             <h3 className="text-lg font-bold mb-2">Coin Transactions</h3>
             {loading ? <p className="text-center text-white/70">Loading...</p> : renderTransactions(coinTxns)}
           </div>
+=======
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => navigate(-1)}
+              className="flex items-center gap-2 text-sm bg-white/10 px-3 py-2 rounded-full hover:bg-white/20"
+            >
+              <FaArrowLeft size={18} /> <span className="hidden sm:inline">Back</span>
+            </button>
+            <button
+              onClick={handleRefresh}
+              disabled={refreshing}
+              className="flex items-center gap-2 text-sm bg-white/10 px-3 py-2 rounded-full hover:bg-white/20 disabled:opacity-50"
+            >
+              <FaRedoAlt className={refreshing ? 'animate-spin' : ''} />
+              <span className="hidden sm:inline">{refreshing ? 'Refreshing...' : 'Refresh'}</span>
+            </button>
+          </div>
+        </div>
+
+        <div className="px-4 pt-6 space-y-6 max-w-md mx-auto">
+          <div className="bg-blue-600 rounded-xl p-4 flex items-center gap-4 shadow-inner">
+            <div className="w-16 h-16 rounded-full bg-yellow-400 flex-shrink-0 overflow-hidden border-[3px] border-dullBlue">
+              {wallet.profilePicture ? (
+                <img
+                  src={wallet.profilePicture}
+                  alt="Profile"
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = 'https://cdn-icons-png.flaticon.com/512/3069/3069172.png';
+                  }}
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-blue-600 text-white text-2xl font-bold">
+                  {currentUser?.name?.[0]?.toUpperCase() || 'U'}
+                </div>
+              )}
+            </div>
+            <div className="flex-1">
+              <div className="flex justify-between items-center">
+                <div>
+                  <p className="text-sm text-white/80">Wallet Balance</p>
+                  <h2 className="text-lg font-bold">₹{wallet.balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h2>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm text-white/80">Total Coins</p>
+                  <h2 className="text-lg font-bold flex items-center justify-end">
+                    {wallet.coins.toLocaleString()} <FaCoins className="text-yellow-300 ml-1" />
+                  </h2>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            <div>
+              <div className="flex justify-between items-center mb-2">
+                <h3 className="text-lg font-bold">Cash Transactions</h3>
+                <span className="text-sm text-white/70">{cashTxns.length} transactions</span>
+              </div>
+              {loading ? (
+                <div className="text-center py-4">
+                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-white"></div>
+                </div>
+              ) : cashTxns.length > 0 ? (
+                renderTransactions(cashTxns)
+              ) : (
+                <div className="bg-white/5 rounded-xl p-4 text-center text-white/70">
+                  No cash transactions found
+                </div>
+              )}
+            </div>
+
+            <div>
+              <div className="flex justify-between items-center mb-2">
+                <h3 className="text-lg font-bold">Coin Transactions</h3>
+                <span className="text-sm text-white/70">{coinTxns.length} transactions</span>
+              </div>
+              {loading ? (
+                <div className="text-center py-4">
+                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-white"></div>
+                </div>
+              ) : coinTxns.length > 0 ? (
+                renderTransactions(coinTxns)
+              ) : (
+                <div className="bg-white/5 rounded-xl p-4 text-center text-white/70">
+                  No coin transactions found
+                </div>
+              )}
+            </div>
+          </div>
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
         </div>
       </div>
 

@@ -21,6 +21,10 @@ const SupportCenter = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [showChat, setShowChat] = useState(false);
+<<<<<<< HEAD
+=======
+  const [showAboutModal, setShowAboutModal] = useState(false);
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
   const [chatMessage, setChatMessage] = useState('');
   const [chatMessages, setChatMessages] = useState([
     { id: 1, sender: 'bot', text: 'Hello! I\'m Nick, your support assistant. How can I help you today?', time: 'Just now' }
@@ -79,7 +83,11 @@ const SupportCenter = () => {
       alert('Please fill in all required fields');
       return;
     }
+<<<<<<< HEAD
     
+=======
+
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
     setIsSubmitting(true);
     // Simulate API call
     setTimeout(() => {
@@ -95,7 +103,11 @@ const SupportCenter = () => {
         issueType: 'Bug',
         file: null
       });
+<<<<<<< HEAD
       
+=======
+
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
       // Hide success message after 5 seconds
       setTimeout(() => setSubmitSuccess(false), 5000);
     }, 1500);
@@ -104,17 +116,28 @@ const SupportCenter = () => {
   const handleSendMessage = (e) => {
     e.preventDefault();
     if (!chatMessage.trim()) return;
+<<<<<<< HEAD
     
+=======
+
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
     const newMessage = {
       id: chatMessages.length + 1,
       sender: 'user',
       text: chatMessage,
       time: 'Just now'
     };
+<<<<<<< HEAD
     
     setChatMessages([...chatMessages, newMessage]);
     setChatMessage('');
     
+=======
+
+    setChatMessages([...chatMessages, newMessage]);
+    setChatMessage('');
+
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
     // Simulate bot response
     setTimeout(() => {
       const botResponse = {
@@ -128,6 +151,7 @@ const SupportCenter = () => {
   };
 
   return (
+<<<<<<< HEAD
     
 <div
   className="min-h-screen p-4 sm:p-6 lg:p-8"
@@ -153,12 +177,43 @@ const SupportCenter = () => {
 
       <Navbar title="Support Center" />
       
+=======
+
+    <div
+      className="min-h-screen p-4 sm:p-6 lg:p-8"
+      style={{
+        background: 'linear-gradient(to bottom, #0A2472 0%, #0D47A1 45%, #1565C0 100%)'
+      }}
+
+    ><BackgroundBubbles />
+
+
+
+      <div className="max-w-4xl mx-auto px-4 pt-4 text-left">
+        <button
+          onClick={() => navigate(-1)}
+          className="flex items-center text-blue-600 hover:text-[#1b1f61] font-medium"
+        >
+          <svg className="h-5 w-5 mr-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+      </div>
+
+
+      <Navbar title="Support Center" />
+
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
       <div className="max-w-4xl mx-auto px-4 py-6">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-amber-400 mb-2">Support Center</h1>
           <p className="text-blue-200">Need help? We're here for you.</p>
         </div>
+<<<<<<< HEAD
         
+=======
+
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
         {/* Tabs */}
         <div className="flex border-b border-gray-200 mb-8">
           <button
@@ -174,7 +229,11 @@ const SupportCenter = () => {
             Contact Support
           </button>
         </div>
+<<<<<<< HEAD
         
+=======
+
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
         {/* FAQ Section */}
         {activeTab === 'faq' && (
           <div className="space-y-4">
@@ -201,6 +260,7 @@ const SupportCenter = () => {
                 </div>
               ))}
             </div>
+<<<<<<< HEAD
             
             {/* Chat with us button */}
             <div className="mt-8 text-center">
@@ -215,6 +275,13 @@ const SupportCenter = () => {
           </div>
         )}
         
+=======
+
+
+          </div>
+        )}
+
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
         {/* Contact Form Section */}
         {activeTab === 'contact' && (
           <div className="max-w-2xl mx-auto">
@@ -234,7 +301,11 @@ const SupportCenter = () => {
                 </div>
               </div>
             )}
+<<<<<<< HEAD
             
+=======
+
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                 <div>
@@ -251,7 +322,11 @@ const SupportCenter = () => {
                     required
                   />
                 </div>
+<<<<<<< HEAD
                 
+=======
+
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
                 <div>
                   <label htmlFor="email" className="block text-sm font-medium text-white mb-1">
                     Email <span className="text-red-500">*</span>
@@ -267,6 +342,7 @@ const SupportCenter = () => {
                   />
                 </div>
               </div>
+<<<<<<< HEAD
               
              <div>
   <label htmlFor="issueType" className="block text-sm font-medium text-white mb-1">
@@ -300,6 +376,41 @@ const SupportCenter = () => {
 </div>
 
               
+=======
+
+              <div>
+                <label htmlFor="issueType" className="block text-sm font-medium text-white mb-1">
+                  Issue Type <span className="text-red-500">*</span>
+                </label>
+                <select
+                  id="issueType"
+                  name="issueType"
+                  value={formData.issueType}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  required
+                >
+                  <option value="Bug">Bug</option>
+                  <option value="Payment Issue">Payment Issue</option>
+                  <option value="Account Issue">Account Issue</option>
+                  <option value="Other">Other</option>
+                </select>
+
+                {/* Show input if "Other" is selected */}
+                {formData.issueType === 'Other' && (
+                  <input
+                    type="text"
+                    name="customIssue"
+                    value={formData.customIssue || ''}
+                    onChange={(e) => setFormData(prev => ({ ...prev, customIssue: e.target.value }))}
+                    placeholder="Please describe your issue"
+                    className="mt-3 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                )}
+              </div>
+
+
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
               <div>
                 <label htmlFor="subject" className="block text-sm font-medium text-white mb-1">
                   Subject <span className="text-red-500">*</span>
@@ -314,7 +425,11 @@ const SupportCenter = () => {
                   required
                 />
               </div>
+<<<<<<< HEAD
               
+=======
+
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
               <div>
                 <label htmlFor="message" className="block text-sm font-medium text-white mb-1">
                   Message <span className="text-red-500">*</span>
@@ -329,7 +444,11 @@ const SupportCenter = () => {
                   required
                 ></textarea>
               </div>
+<<<<<<< HEAD
               
+=======
+
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
               <div>
                 <label className="block text-sm font-medium text-white mb-1">
                   Attachment (Optional)
@@ -337,9 +456,15 @@ const SupportCenter = () => {
                 <div className="mt-1 flex items-center">
                   <label className="cursor-pointer bg-white py-2 px-3 border border-gray-300 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                     <span>Choose File</span>
+<<<<<<< HEAD
                     <input 
                       type="file" 
                       className="sr-only" 
+=======
+                    <input
+                      type="file"
+                      className="sr-only"
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
                       onChange={handleFileChange}
                       accept="image/*,.pdf,.doc,.docx"
                     />
@@ -348,8 +473,13 @@ const SupportCenter = () => {
                     {formData.file ? formData.file.name : 'No file chosen'}
                   </span>
                   {formData.file && (
+<<<<<<< HEAD
                     <button 
                       type="button" 
+=======
+                    <button
+                      type="button"
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
                       onClick={removeFile}
                       className="block text-sm font-medium text-white mb-1"
                     >
@@ -358,11 +488,19 @@ const SupportCenter = () => {
                   )}
                 </div>
                 <p className="block text-sm font-medium text-white/70 mb-1"
+<<<<<<< HEAD
 >
                   Upload a screenshot or document (max 5MB)
                 </p>
               </div>
               
+=======
+                >
+                  Upload a screenshot or document (max 5MB)
+                </p>
+              </div>
+
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
               <div className="pt-2">
                 <button
                   type="submit"
@@ -373,7 +511,11 @@ const SupportCenter = () => {
                 </button>
               </div>
             </form>
+<<<<<<< HEAD
             
+=======
+
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
             <div className="mt-10 border-t border-gray-200 pt-6">
               <h3 className="text-lg font-medium text-gray-900 mb-4">Contact Information</h3>
               <div className="space-y-3">
@@ -384,6 +526,7 @@ const SupportCenter = () => {
                   </svg>
                   <div>
                     <p className="text-sm text-white">Email us at</p>
+<<<<<<< HEAD
                     <a href="mailto:support@yourapp.com" className="text-sm font-medium text-white/80 hover:text-white">
                       support@yourapp.com
                     </a>
@@ -400,17 +543,33 @@ const SupportCenter = () => {
                     </a>
                   </div>
                 </div>
+=======
+                    <a href="mailto:support@ful2win.com" className="text-sm font-medium text-white/80 hover:text-white">
+                      support@ful2win.com
+                    </a>
+                  </div>
+                </div>
+
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
               </div>
             </div>
           </div>
         )}
       </div>
+<<<<<<< HEAD
       
+=======
+
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
       {/* Chat Modal */}
       {showChat && (
         <div className="fixed inset-0 z-50 overflow-hidden">
           <div className="absolute inset-0 overflow-hidden">
+<<<<<<< HEAD
             <div 
+=======
+            <div
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
               className="absolute inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
               onClick={() => setShowChat(false)}
             ></div>
@@ -433,6 +592,7 @@ const SupportCenter = () => {
                         </button>
                       </div>
                     </div>
+<<<<<<< HEAD
                     
                     <div className="flex-1 p-4 overflow-y-auto">
                       <div className="space-y-4">
@@ -447,6 +607,21 @@ const SupportCenter = () => {
                                   ? 'bg-blue-600 text-white rounded-br-none' 
                                   : 'bg-gray-100 text-gray-800 rounded-bl-none'
                               }`}
+=======
+
+                    <div className="flex-1 p-4 overflow-y-auto">
+                      <div className="space-y-4">
+                        {chatMessages.map((msg) => (
+                          <div
+                            key={msg.id}
+                            className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+                          >
+                            <div
+                              className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${msg.sender === 'user'
+                                ? 'bg-blue-600 text-white rounded-br-none'
+                                : 'bg-gray-100 text-gray-800 rounded-bl-none'
+                                }`}
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
                             >
                               <p className="text-sm">{msg.text}</p>
                               <p className="text-xs opacity-70 mt-1 text-right">{msg.time}</p>
@@ -456,7 +631,11 @@ const SupportCenter = () => {
                       </div>
                     </div>
                   </div>
+<<<<<<< HEAD
                   
+=======
+
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
                   <div className="border-t border-gray-200 p-4">
                     <form onSubmit={handleSendMessage} className="flex items-center">
                       <input
@@ -481,6 +660,7 @@ const SupportCenter = () => {
         </div>
 
       )}
+<<<<<<< HEAD
       
       {/* Footer */}
       <footer className="bg-transparent border-t border-gray-600 mt-12">
@@ -524,6 +704,69 @@ const SupportCenter = () => {
 </footer>
 
     
+=======
+
+      {/* Footer */}
+      <footer className="bg-transparent border-t border-gray-600 mt-12">
+        <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row justify-between items-center">
+
+            {/* Left: Links */}
+            <div className="flex space-x-6 md:space-x-8">
+              <a
+                href="#"
+                className="text-white hover:text-blue-300 text-sm font-medium focus:outline-none focus:ring-0 active:bg-transparent"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setActiveTab('contact');
+                  window.scrollTo(0, 0);
+                }}
+              >
+                Contact Us
+              </a>
+              <a
+                href="#"
+                className="text-gray-300 hover:text-white text-sm font-medium focus:outline-none focus:ring-0 active:bg-transparent"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setShowAboutModal(true);
+                }}
+              >
+                About Company
+              </a>
+              {showAboutModal && (
+                <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+                  <div className="bg-white rounded-2xl p-6 w-[90%] max-w-sm text-center shadow-lg">
+                    <h2 className="text-lg font-semibold text-gray-800 mb-4">About Our Company</h2>
+                    <p className="text-gray-600 mb-6">
+                      We are dedicated to providing the best gaming experience! Your satisfaction is our priority.
+                    </p>
+                    <button
+                      onClick={() => setShowAboutModal(false)}
+                      className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                    >
+                      Close
+                    </button>
+                  </div>
+                </div>
+              )}
+
+
+            </div>
+
+            {/* Right: Copyright */}
+            <div className="mt-4 md:mt-0">
+              <p className="text-white text-xs md:text-sm">
+                © {new Date().getFullYear()} Your Game Name. All rights reserved.
+              </p>
+            </div>
+
+          </div>
+        </div>
+      </footer>
+
+
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
 
 
     </div>
@@ -532,4 +775,7 @@ const SupportCenter = () => {
 
 
 export default SupportCenter;
+<<<<<<< HEAD
 
+=======
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b

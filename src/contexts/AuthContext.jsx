@@ -1,7 +1,12 @@
 import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import authService from '../services/authService';
+<<<<<<< HEAD
 
+=======
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
 // Helper function to get stored auth data
 const getStoredAuthData = () => {
   if (typeof window === 'undefined') {
@@ -25,6 +30,10 @@ const AuthContext = createContext({
   user: null,
   isAuthenticated: false,
   isLoading: true,
+<<<<<<< HEAD
+=======
+  showSplash: false,
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
   error: null,
   login: async () => {},
   logout: () => {},
@@ -36,6 +45,10 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+<<<<<<< HEAD
+=======
+  const [showSplash, setShowSplash] = useState(false);
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
@@ -51,6 +64,7 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
+<<<<<<< HEAD
   // Handle unauthorized events (e.g., 401 responses)
   useEffect(() => {
     const handleUnauthorized = () => {
@@ -65,6 +79,8 @@ export const AuthProvider = ({ children }) => {
     return () => window.removeEventListener('unauthorized', handleUnauthorized);
   }, [navigate]);
 
+=======
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
   // Check and validate authentication state
   const checkAuthState = useCallback(async () => {
     try {
@@ -74,6 +90,7 @@ export const AuthProvider = ({ children }) => {
       const { token, user: storedUser } = getStoredAuthData();
       
       if (!token) {
+<<<<<<< HEAD
         console.log('No token found during auth check');
         updateAuthState(null, false);
         return false;
@@ -92,16 +109,35 @@ export const AuthProvider = ({ children }) => {
         console.log('No user data in response');
         throw new Error('Failed to fetch user profile');
         
+=======
+        updateAuthState(null, false);
+        return false;
+      }else {
+        updateAuthState(user, true);
+        return true;
+      }
+
+      try {
+        const response = await authService.getCurrentUserProfile();
+        if (response && response.data) {
+          updateAuthState(response.data, true);
+          return true;
+        }
+        throw new Error('Failed to fetch user profile');
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
       } catch (error) {
         console.error('Token validation failed:', error);
         authService.clearAuthData();
         updateAuthState(null, false);
+<<<<<<< HEAD
         
         // Only show error if it's not a 401 (handled by the service)
         if (error.message !== 'Session expired. Please login again.') {
           toast.error(error.message || 'Authentication failed');
         }
         
+=======
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
         return false;
       }
     } catch (error) {
@@ -118,19 +154,25 @@ console.error('Error checking auth state:', error);
   // Handle login
   const login = useCallback(async (userData) => {
     try {
+<<<<<<< HEAD
       console.log('AuthContext: Starting login process');
       console.log('AuthContext: Login request data:', {
         phoneNumber: userData.phoneNumber,
         hasPassword: !!userData.password
       });
       
+=======
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
       setIsLoading(true);
       setError(null);
       
       try {
         const response = await authService.login(userData);
+<<<<<<< HEAD
         console.log('AuthContext: Login successful, processing response...');
         
+=======
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
         // The response format should be:
         // { data: { success: true, token: '...', data: { user data } } }
         if (response && response.data && response.data.success) {
@@ -140,6 +182,7 @@ console.error('Error checking auth state:', error);
             throw new Error('Missing token or user data in response');
           }
           
+<<<<<<< HEAD
           console.log('AuthContext: Login successful for user:', {
             id: user._id,
             phoneNumber: user.phoneNumber
@@ -148,6 +191,14 @@ console.error('Error checking auth state:', error);
           // Update auth state and storage
           updateAuthState(user, true);
           
+=======
+          // Update auth state immediately
+          updateAuthState(user, true);
+          
+          // Show splash screen
+          setShowSplash(true);
+          
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
           // Return success with user data
           return { success: true, user };
         }
@@ -189,8 +240,11 @@ console.error('Error checking auth state:', error);
   // Handle logout
   const logout = useCallback(async () => {
     try {
+<<<<<<< HEAD
       console.log('AuthContext: Starting logout process');
       
+=======
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
       // Clear auth data first
       authService.clearAuthData();
       
@@ -199,9 +253,13 @@ console.error('Error checking auth state:', error);
       
       // Make the API call to invalidate the token on the server
       try {
+<<<<<<< HEAD
         console.log('AuthContext: Making logout API call');
         await authService.logout();
         console.log('AuthContext: Logout successful');
+=======
+        await authService.logout();
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
       } catch (apiError) {
         console.warn('AuthContext: Logout API call failed, but continuing with local cleanup', apiError);
         // Continue with the logout flow even if the API call fails
@@ -266,6 +324,10 @@ console.error('Error checking auth state:', error);
         user,
         isAuthenticated,
         isLoading,
+<<<<<<< HEAD
+=======
+        showSplash,
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
         error,
         login,
         logout,
@@ -273,11 +335,15 @@ console.error('Error checking auth state:', error);
         checkAuthState,
       }}
     >
+<<<<<<< HEAD
       {!isLoading ? children : (
         <div className="flex items-center justify-center min-h-screen">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
         </div>
       )}
+=======
+      {children}
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
     </AuthContext.Provider>
   );
 };

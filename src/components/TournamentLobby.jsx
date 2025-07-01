@@ -17,6 +17,7 @@ import Header from './Header';
 import BackgroundBubbles from './BackgroundBubbles';
 import Navbar from './Navbar';
 
+<<<<<<< HEAD
 // Base URL for API requests
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 const API_URL = `${API_BASE_URL}/api`;
@@ -25,6 +26,21 @@ const API_URL = `${API_BASE_URL}/api`;
 const useCountdown = (targetDate) => {
   const [timeLeft, setTimeLeft] = useState('');
 
+=======
+
+
+// Base URL for API requests
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+const API_URL = `${API_BASE_URL}/api`;
+ 
+// Countdown timer hook
+const useCountdown = (targetDate) => {
+  const [timeLeft, setTimeLeft] = useState('');
+  
+  
+
+ 
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
   useEffect(() => {
     if (!targetDate) return;
     
@@ -32,7 +48,11 @@ const useCountdown = (targetDate) => {
       const now = new Date().getTime();
       const target = new Date(targetDate).getTime();
       const distance = target - now;
+<<<<<<< HEAD
 
+=======
+  // console.log(distance);
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
       if (distance < 0) {
         setTimeLeft('Starting soon...');
         return;
@@ -91,11 +111,54 @@ const formatPlayerCount = (current, max) => {
   if (!max) return `${current} joined`;
   return `${current}/${max} players`;
 };
+<<<<<<< HEAD
+=======
+// 🔽 Place this ConfirmRegisterModal ABOVE TournamentLobby
+const ConfirmRegisterModal = ({ tournament, onConfirm, onCancel }) => {
+  const isCoin = tournament?.tournamentType === 'coin';
+  const entryFee = isCoin
+    ? `${tournament?.entryFee} coins`
+    : `₹${tournament?.entryFee}`;
+  const prizePool = isCoin
+    ? `${tournament?.prizePool} coins`
+    : `₹${tournament?.prizePool}`;
+
+  return (
+    <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/50">
+      <div className="bg-gray-900 text-white rounded-lg p-6 w-11/12 max-w-sm text-center shadow-xl border border-yellow-400">
+        <h3 className="text-xl font-bold text-yellow-400 mb-3">Register for Tournament?</h3>
+        <p className="mb-2 text-white">Entry Fee: <span className="font-semibold">{entryFee}</span></p>
+        <p className="mb-4 text-white">Prize Pool: <span className="font-semibold">{prizePool}</span></p>
+        <div className="flex justify-center gap-4">
+          <button
+            className="bg-yellow-400 text-gray-900 font-semibold py-2 px-6 rounded hover:bg-yellow-300 transition"
+            onClick={onConfirm}
+          >
+            Yes
+          </button>
+          <button
+            className="bg-gray-700 text-white font-medium py-2 px-6 rounded hover:bg-gray-600 transition"
+            onClick={onCancel}
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
 
 const TournamentLobby = () => {
   const { gameId } = useParams();
   const navigate = useNavigate();
+<<<<<<< HEAD
   
+=======
+  const [showModal, setShowModal] = useState(false);
+  const [modalMessage, setModalMessage] = useState('');
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
   const [game, setGame] = useState(null);
   const [tournaments, setTournaments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -104,6 +167,52 @@ const TournamentLobby = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [userId, setUserId] = useState(null);
 
+<<<<<<< HEAD
+=======
+
+  const showPopup = (message) => {
+  setModalMessage(message);
+  setShowModal(true);
+};
+const [confirmModal, setConfirmModal] = useState({
+  visible: false,
+  tournament: null,
+});
+
+const handleConfirmRegister = async () => {
+  const tournament = confirmModal.tournament;
+  if (!tournament) return;
+
+  const tournamentId = tournament._id || tournament.id;
+
+  await handleRegisterTournament(tournamentId);
+  setConfirmModal({ visible: false, tournament: null });
+
+  navigate(`/gameOn/${gameId}/${tournamentId}`);
+};
+
+const handleCancelRegister = () => {
+  setConfirmModal({ visible: false, tournament: null });
+};
+
+
+
+const SimpleModal = ({ message, onClose }) => (
+  <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/50">
+    <div className="bg-gray-800 text-white rounded-lg p-6 w-11/12 max-w-xs text-center shadow-lg border border-yellow-400">
+      <h3 className="text-xl font-bold text-yellow-400 mb-2">Notification</h3>
+      <p className="text-white text-base mb-4">{message}</p>
+      <button
+        className="bg-yellow-400 text-gray-900 font-semibold py-2 px-6 rounded hover:bg-yellow-300 transition"
+        onClick={onClose}
+      >
+        OK
+      </button>
+    </div>
+  </div>
+);
+
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
   // Get user ID from local storage
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -136,6 +245,7 @@ const handleRegisterTournament = async (tournamentId) => {
   }
 
   const isCoinTournament = tournament.tournamentType === 'coin';
+<<<<<<< HEAD
   const isConfirmed = window.confirm(
     `Register for ${tournament.name}?\n\n` +
     `Entry Fee: ${formatPrizeString(tournament.entryFee || 0, isCoinTournament)}\n` +
@@ -143,6 +253,8 @@ const handleRegisterTournament = async (tournamentId) => {
   );
 
   if (!isConfirmed) return;
+=======
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
 
   try {
     const token = localStorage.getItem('token');
@@ -165,7 +277,11 @@ const handleRegisterTournament = async (tournamentId) => {
 
     if (response.data.success) {
       toast.success('Registered successfully!');
+<<<<<<< HEAD
       // Redirect to play page
+=======
+      // ✅ Navigate to the game page
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
       handleViewTournament(tournamentId);
     } else {
       toast.error(response.data.message || 'Registration failed');
@@ -177,6 +293,10 @@ const handleRegisterTournament = async (tournamentId) => {
     );
   }
 };
+<<<<<<< HEAD
+=======
+
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
   // Handle view/join tournament
   const handleViewTournament = (tournamentId) => {
     const tournament = tournaments.find(t => t.id === tournamentId);
@@ -210,6 +330,10 @@ const handleRegisterTournament = async (tournamentId) => {
   const TournamentCard = ({ id, name, entryFee, prizePool, participants, maxParticipants, startTime, status, tournamentType }) => {
     const countdown = useCountdown(startTime);
     
+<<<<<<< HEAD
+=======
+    
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
     const handleCardClick = () => {
       // Only navigate if the tournament is live
       if (status === 'live') {
@@ -244,7 +368,10 @@ const handleRegisterTournament = async (tournamentId) => {
 const hasJoined = tournaments[0].currentPlayers?.some(p =>
   typeof p === 'string' ? p === userId : p?.userId === userId
 );
+<<<<<<< HEAD
 console.log('hasJoined:', hasJoined);
+=======
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
 
   return (
     <div className="flex gap-2 w-full">
@@ -252,6 +379,7 @@ console.log('hasJoined:', hasJoined);
   className={`flex-1 ${hasJoined ? 'bg-green-500 hover:bg-green-400' : 'bg-yellow-500 hover:bg-yellow-400'} text-gray-900 font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center`}
   onClick={(e) => {
     e.stopPropagation();
+<<<<<<< HEAD
 
     if (!hasJoined) {
          handleRegisterTournament(id);
@@ -259,6 +387,13 @@ console.log('hasJoined:', hasJoined);
     }
 
     handleViewTournament(id); // dono case me call hoga
+=======
+    if (!hasJoined) {
+    setConfirmModal({ visible: true, tournament: tournaments.find(t => t._id === id || t.id === id) });
+  } else {
+    handleViewTournament(id);
+  }
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
   }}
 >
   <FaGamepad className="mr-2" />
@@ -286,7 +421,11 @@ console.log('hasJoined:', hasJoined);
             className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center"
             onClick={(e) => {
               e.stopPropagation();
+<<<<<<< HEAD
               console.log('Notify me clicked for tournament:', id);
+=======
+              showPopup(`You will be notified before "${name}" starts.`);
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
               // TODO: Implement notification logic
             }}
           >
@@ -467,7 +606,11 @@ console.log('hasJoined:', hasJoined);
     <div className="min-h-screen felx flex-col bg-blueGradient text-white">
       <BackgroundBubbles />
       <Header />
+<<<<<<< HEAD
       <main className="container mx-auto mt-11 px-4 py-8 relative z-10">
+=======
+      <main className="container mx-auto mt-11 px-4 pt-8 pb-20 relative z-10">
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
         <div className="flex items-center mb-8">
           <button 
             onClick={() => navigate(-1)}
@@ -579,6 +722,24 @@ console.log('hasJoined:', hasJoined);
         )}
       </main>
       <Navbar />
+<<<<<<< HEAD
+=======
+      {showModal && (
+  <SimpleModal
+    message={modalMessage}
+    onClose={() => setShowModal(false)}
+  />
+)}
+{confirmModal.visible && (
+  <ConfirmRegisterModal
+    tournament={confirmModal.tournament}
+    onConfirm={handleConfirmRegister}
+    onCancel={handleCancelRegister}
+  />
+)}
+
+
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
     </div>
   );
 };

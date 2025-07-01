@@ -125,7 +125,11 @@ const Header = () => {
                     </div>
                   )}
                 </div>
+<<<<<<< HEAD
                 <button 
+=======
+                {/* <button 
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
                   onClick={(e) => {
                     e.stopPropagation();
                     refreshBalance();
@@ -135,13 +139,21 @@ const Header = () => {
                   disabled={isLoading}
                 >
                   <FiRefreshCw className={`w-3 h-3 ${isLoading ? 'animate-spin' : ''}`} />
+<<<<<<< HEAD
                 </button>
+=======
+                </button> */}
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
               </div>
             </div>
 
             {/* Bell Notification */}
             <button
+<<<<<<< HEAD
               className="text-xl"
+=======
+              className="text-xl text-dullBlue"
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
               onClick={() => navigate('/notifications')}
             >
               <FaBell />

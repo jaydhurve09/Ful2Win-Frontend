@@ -16,7 +16,11 @@ const ComingSoon = () => {
       <div className="relative z-10 flex flex-col items-center justify-center">
         <h1 className="text-5xl font-bold mb-4 bg-neonBlueGradient bg-clip-text text-transparent">Coming Soon!</h1>
         <p className="text-lg mb-8 text-white">This feature is under development. Stay tuned!</p>
+<<<<<<< HEAD
         <img src="/vite.svg" alt="Coming Soon" className="w-32 h-32 animate-bounce" />
+=======
+        <img src="/logo.png" alt="Coming Soon" className="max-w-xs w-auto h-auto animate-bounce" style={{ maxHeight: '128px' }} />
+>>>>>>> bced60bd76460f363b7b931c2d1ca19819f69d8b
       </div>
     </div>
   );
