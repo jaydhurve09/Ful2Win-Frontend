@@ -3,6 +3,7 @@ import Header from '../components/Header';
 import Navbar from '../components/Navbar';
 import BackgroundBubbles from '../components/BackgroundBubbles';
 import { useNavigate } from 'react-router-dom';
+import { FiArrowLeft } from 'react-icons/fi';
 
 const Challenges = () => {
   const [isFormOpen, setIsFormOpen] = useState(true);
@@ -28,16 +29,16 @@ const Challenges = () => {
 
   const filteredFriends = friendName.length > 0
     ? allFriends.filter(
-        (name) =>
-          name.toLowerCase().includes(friendName.toLowerCase()) &&
-          name.toLowerCase() !== friendName.toLowerCase()
-      )
+      (name) =>
+        name.toLowerCase().includes(friendName.toLowerCase()) &&
+        name.toLowerCase() !== friendName.toLowerCase()
+    )
     : [];
 
   const filteredGames = gameInput.length > 0
     ? allGames.filter((game) =>
-        game.toLowerCase().includes(gameInput.toLowerCase())
-      )
+      game.toLowerCase().includes(gameInput.toLowerCase())
+    )
     : allGames;
 
   useEffect(() => {
@@ -96,7 +97,7 @@ const Challenges = () => {
             onClick={() => navigate(-1)}
             className="text-blue-400 hover:text-blue-500 text-lg font-semibold flex items-center"
           >
-            <span className="text-2xl mr-1">&lt;</span>
+            <FiArrowLeft size={40} className="mr-1" />
           </button>
         </div>
 
@@ -114,11 +115,10 @@ const Challenges = () => {
 
               <form
                 onSubmit={handleInviteSubmit}
-                className={`mt-4 transition-all duration-300 ease-in-out ${
-                  isFormOpen
+                className={`mt-4 transition-all duration-300 ease-in-out ${isFormOpen
                     ? 'max-h-[1000px] opacity-100 scale-100'
                     : 'max-h-0 opacity-0 scale-95 pointer-events-none'
-                }`}
+                  }`}
               >
                 <div className="relative">
                   <input

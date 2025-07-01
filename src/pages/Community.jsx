@@ -841,6 +841,8 @@ const Community = () => {
   const handleTabChange = (tabId) => {
     if (tabId === 'challenges') {
       navigate('/challenges'); // Navigate to the dedicated challenges page
+    } else if (tabId === 'leaderboard') {
+      navigate('/community/leaderboard'); // Navigate to the leaderboard page
     } else {
       setActiveTab(tabId);
     }

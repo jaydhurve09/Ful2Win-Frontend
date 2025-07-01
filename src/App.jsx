@@ -23,13 +23,14 @@ import Account from './components/Account';
 import FollowerPage from './components/FollowerPage';
 import SupportCenter from './pages/SupportCenter';
 import LeaderboardPage from './components/LeaderboardPage';
+import CommunityLeaderboard from './components/CommunityLeaderboard';
 import TournamentHistory from './components/TournamentHistory';
 import FlappyBall from './games/FlappyBall';
 import Login from './pages/Login';
 import SignUp from './pages/SignUp';
 import PhoneVerification from './pages/PhoneVerification';
 import ForgotPassword from './pages/ForgotPassword';
-import { AuthProvider } from './contexts/AuthContext';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import ColorSmash from './games/ColorSmash';
 import Leaderboard from './components/Leaderboard';
@@ -41,11 +42,19 @@ import EggCatcher from './games/EggCatcher';
 import GravityHop from './games/GravityHop';
 import GameWrapper from './components/GameWrapper';
 import GameOn from './components/GameOn';
+import StartScreen from './components/StartScreen';
 import {ToastContainer,toast} from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css';
 
 
 function App() {
+  const { showSplash } = useAuth();
+  
+  // Show splash screen during initial load and after login
+  if (showSplash) {
+    return <StartScreen />;
+  }
+  
   return (
     <div>
     <BrowserRouter>
@@ -83,6 +92,7 @@ function App() {
               <Route path="/tournaments" element={<Tournaments />} />
               <Route path="/games" element={<Games />} />
               <Route path="/community" element={<Community />} />
+              <Route path="/community/leaderboard" element={<CommunityLeaderboard />} />
               <Route path="/support" element={<SupportCenter />} />
               <Route path="/supports" element={<SupportCenter />} />
               <Route path="/ads" element={<Ads />} />
@@ -96,13 +106,13 @@ function App() {
               <Route path="/chat" element={<ChatScreen />} />
               <Route path="/kyc" element={<KYCStatusPage />} />
               <Route path="/users" element={<FollowerPage />} />
-              <Route path="/leaderboard" element={<LeaderboardPage />} />e:\internship\Ful2Win-Frontend\src\components\GameOn.jsx
               <Route path="/tournamenthistory" element={<TournamentHistory />} />
               <Route path="/leaderboard_singlegame/:gameName/:tournamentId" element={<Leaderboard />}/>
               <Route path="/tournament/:tournamentId" element={<TournamentLobby />} />
               <Route path="/tournament-lobby/:gameId" element={<TournamentLobby />} />
               <Route path="/gameOn/:gameId/:tournamentId" element={<GameOn />} />
               <Route path="/comingsoon" element={<ComingSoon />} />
+              <Route path="/startscreen" element={<StartScreen />} />
             </Route>
             
             {/* 404 - Not Found */}

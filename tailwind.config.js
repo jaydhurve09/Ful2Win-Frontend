@@ -21,10 +21,17 @@ export default {
         glassDark: "linear-gradient(to bottom right, rgba(31, 41, 55, 0.1), rgba(0, 0, 0, 0.1))",
         blueGradient: "linear-gradient(to bottom right, #1565C0, #0D47A1, #0A2472)",
         communityGradient:"linear-gradient(to bottom, #1565C0 0%, #0D47A1 42%, #0A2472 100%)",
-    
-      }
+      },
+      animation: {
+        'fade-in-out': 'fadeInOut 2s ease-in-out',
+      },
+      keyframes: {
+        fadeInOut: {
+          '0%, 100%': { opacity: '0' },
+          '25%, 75%': { opacity: '1' },
+        },
+      },
     },
   },
   plugins: [],
 }
-

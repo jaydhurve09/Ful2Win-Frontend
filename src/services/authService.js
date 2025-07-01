@@ -51,11 +51,9 @@ const authService = {
         password: credentials.password
       });
       
-<<<<<<< HEAD
       console.log('Login response:', response);
       toast.success(response.data.message || 'Login successful');
-=======
->>>>>>> 8f8d59c7257709d1f2420318a1b757395df15df6
+
       // Format the response to match what AuthContext expects
       if (response.data) {
         let userData = response.data;
