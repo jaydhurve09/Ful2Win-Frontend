@@ -837,7 +837,8 @@ export const authService = {
         throw new Error('No authentication token found. Please log in again.');
       }
 
-      const apiUrl = `/api/users/profile/${userId}`;
+      // Remove the extra /api prefix since ENV.apiBaseUrl already includes it
+      const apiUrl = `/users/profile/${userId}`;
       
       // Log the FormData contents if it's a FormData object
       if (isFormData && userData instanceof FormData) {
@@ -847,29 +848,42 @@ export const authService = {
             `File: ${pair[1].name} (${pair[1].size} bytes, ${pair[1].type})` : 
             pair[1]);
         }
+      } else {
+        console.log('Request data:', userData);
       }
 
       console.log('Sending request with config:', {
-        url: apiUrl,
+        url: `${ENV.apiBaseUrl}${apiUrl}`,
         method: 'PUT',
         hasData: !!userData,
         isFormData: isFormData
       });
 
+      // Configure axios request with extended timeout for uploads
+      const config = {
+        headers: {
+          'Content-Type': isFormData ? 'multipart/form-data' : 'application/json',
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        withCredentials: true,
+        timeout: 120000, // 2 minutes timeout for file uploads
+        onUploadProgress: (progressEvent) => {
+          if (progressEvent.total) {
+            const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            console.log(`Upload Progress: ${percentCompleted}%`);
+          }
+        }
+      };
+
       // Make the API request
       const response = await axios.put(
         `${ENV.apiBaseUrl}${apiUrl}`,
         userData,
-        {
-          headers: {
-            'Content-Type': isFormData ? 'multipart/form-data' : 'application/json',
-            'Accept': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          withCredentials: true,
-          timeout: 60000 // 60 seconds timeout for file uploads
-        }
+        config
       );
+      
+      console.log('Update profile response:', response.data);
       
       // If the response is successful and contains data
       if (response.data) {
@@ -890,14 +904,46 @@ export const authService = {
       }
     } catch (error) {
       console.error('Update profile error:', error);
-      
-      // Handle network errors
-      if (error.message === 'Network Error') {
-        throw new Error('Unable to connect to the server. Please check your internet connection.');
+      if (error.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        console.error('Response data:', error.response.data);
+        console.error('Response status:', error.response.status);
+        console.error('Response headers:', error.response.headers);
+        throw new Error(error.response.data?.message || 'Failed to update profile');
+      } else if (error.request) {
+        // The request was made but no response was received
+        console.error('No response received:', error.request);
+        throw new Error('No response from server. Please check your connection.');
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        console.error('Request setup error:', error.message);
+        throw error;
       }
       
-      // Default error
-      throw error.message || 'Failed to update profile. Please try again.';
+      // Handle specific error cases
+      if (error.code === 'ECONNABORTED') {
+        throw new Error('Request timed out. The server is taking too long to respond. Please try again with a smaller file or check your connection.');
+      } else if (error.message === 'Network Error') {
+        throw new Error('Unable to connect to the server. Please check your internet connection and try again.');
+      } else if (error.response) {
+        // Server responded with an error status code
+        const { status, data } = error.response;
+        if (status === 413) {
+          throw new Error('File size is too large. Please upload a smaller file.');
+        } else if (status === 415) {
+          throw new Error('Unsupported file type. Please upload a valid image (JPEG, PNG, etc.).');
+        } else if (status === 401) {
+          authService.clearAuthData();
+          window.location.href = '/login';
+          throw new Error('Your session has expired. Please log in again.');
+        } else if (data && data.message) {
+          throw new Error(data.message);
+        }
+      }
+      
+      // Default error message
+      throw new Error(error.message || 'Failed to update profile. Please try again later.');
     }
   },
 

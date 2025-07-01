@@ -11,35 +11,39 @@ const ProtectedRoute = ({ children }) => {
 
   // Check authentication status on mount
   useEffect(() => {
+    let isMounted = true;
+    
     const verifyAuth = async () => {
       try {
         // Skip verification if it's a public route
         if (isAuthRoute) {
-          setIsVerifying(false);
+          if (isMounted) setIsVerifying(false);
           return;
         }
-
-        // If we're still loading the initial auth state, wait for it
-        if (isLoading) return;
 
         // If we're not authenticated, try to refresh the token
         if (!isAuthenticated) {
           const isStillAuthed = await checkAuthState();
           if (!isStillAuthed && !isAuthRoute) {
             console.log('User not authenticated, redirecting to login');
-            return; // The auth context will handle the redirect
+            return;
           }
         }
       } catch (error) {
         console.error('Auth verification error:', error);
         toast.error('Session expired. Please log in again.');
       } finally {
-        setIsVerifying(false);
+        if (isMounted) setIsVerifying(false);
       }
     };
 
     verifyAuth();
-  }, [isAuthenticated, isLoading, isAuthRoute, checkAuthState]);
+    
+    // Cleanup function to prevent state updates after unmount
+    return () => {
+      isMounted = false;
+    };
+  }, [isAuthenticated, isAuthRoute, checkAuthState]);
 
   // Show loading state while verifying
   if (isVerifying || isLoading) {

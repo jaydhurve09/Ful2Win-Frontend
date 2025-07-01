@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useContext, useCallback } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { 
@@ -20,52 +20,11 @@ import defaultProfile from '../assets/default-profile.jpg';
 // Initialize countries
 countries.registerLocale(enLocale);
 
-// Custom styles for react-select
-const customSelectStyles = {
-  control: (base) => ({
-    ...base,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-    color: 'white',
-    '&:hover': {
-      borderColor: 'rgba(255, 255, 255, 0.3)',
-    },
-  }),
-  singleValue: (base) => ({
-    ...base,
-    color: 'white',
-  }),
-  input: (base) => ({
-    ...base,
-    color: 'white',
-  }),
-  menu: (base) => ({
-    ...base,
-    backgroundColor: '#1e293b',
-    zIndex: 9999,
-  }),
-  menuPortal: (base) => ({
-    ...base,
-    zIndex: 9999,
-  }),
-  option: (base, { isFocused, isSelected }) => ({
-    ...base,
-    backgroundColor: isSelected
-      ? '#3b82f6'
-      : isFocused
-      ? 'rgba(255, 255, 255, 0.1)'
-      : 'transparent',
-    color: 'white',
-    '&:active': {
-      backgroundColor: '#3b82f6',
-    },
-  }),
-};
-
 const Account = () => {
   const { user, updateUser, isAuthenticated, checkAuthState } = useAuth();
   const navigate = useNavigate();
-  const fileInputRef = useRef(null);
+  
+  // Remove the redundant auth check as ProtectedRoute already handles this
   
   // Form state
   const [formData, setFormData] = useState({
@@ -81,21 +40,16 @@ const Account = () => {
     password: '',
     confirmPassword: ''
   });
-  
-  // UI state
   const [isCheckingUsername, setIsCheckingUsername] = useState(false);
+  
   const [isEditing, setIsEditing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
   const [countryOptions, setCountryOptions] = useState([]);
+  const fileInputRef = useRef(null);
   const [originalData, setOriginalData] = useState(null);
-
-  // Redirect to login if not authenticated
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
   
   // Initialize country list
   useEffect(() => {
@@ -126,29 +80,49 @@ const Account = () => {
 
   // Initialize form with user data
   useEffect(() => {
-    if (user) {
-      const userData = {
-        username: user.username || '',
-        fullName: user.fullName || '',
-        phoneNumber: user.phoneNumber || '',
-        email: user.email || '',
-        dateOfBirth: user.dateOfBirth ? new Date(user.dateOfBirth).toISOString().split('T')[0] : '',
-        gender: user.gender || '',
-        country: user.country || '',
-        bio: user.bio || '',
-        profilePicture: user.profilePicture || '',
-        password: '',
-        confirmPassword: ''
-      };
-      
-      setFormData(userData);
-      setOriginalData(userData);
-      setIsLoading(false);
-    } else {
-      // Redirect to login if no user is logged in
-      navigate('/login', { state: { from: '/account' } });
-    }
-  }, [user, navigate]);
+    let isMounted = true;
+    
+    const initializeForm = () => {
+      try {
+        if (!user) {
+          console.log('User data not available yet');
+          return;
+        }
+        
+        const userData = {
+          username: user.username || '',
+          fullName: user.fullName || '',
+          phoneNumber: user.phoneNumber || '',
+          email: user.email || '',
+          dateOfBirth: user.dateOfBirth ? new Date(user.dateOfBirth).toISOString().split('T')[0] : '',
+          gender: user.gender || '',
+          country: user.country || '',
+          bio: user.bio || '',
+          profilePicture: user.profilePicture || '',
+          password: '',
+          confirmPassword: ''
+        };
+        
+        if (isMounted) {
+          setFormData(userData);
+          setOriginalData(userData);
+          setIsLoading(false);
+        }
+      } catch (error) {
+        console.error('Error initializing account form:', error);
+        if (isMounted) {
+          setIsLoading(false);
+          toast.error('Failed to load account information');
+        }
+      }
+    };
+
+    initializeForm();
+    
+    return () => {
+      isMounted = false;
+    };
+  }, [user]);
 
   const handleChange = async (e) => {
     // Handle country selection from react-select
@@ -164,18 +138,8 @@ const Account = () => {
     
     const { name, value, files, type } = e.target;
     
-    if (name === 'profilePicture' && files && files[0]) {
-      const file = files[0];
-      
-      // Create a preview URL for the image
-      const previewUrl = URL.createObjectURL(file);
-      
-      // Update form data with both the file and preview URL
-      setFormData(prev => ({
-        ...prev,
-        profilePicture: previewUrl,  // Set preview URL for display
-        profilePictureFile: file     // Store the actual file for upload
-      }));
+    // Skip file handling for profile picture (handled separately)
+    if (name === 'profilePicture') {
       return;
     }
     
@@ -197,113 +161,176 @@ const Account = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Validate form
-    const validationErrors = {};
-    
-    // Only validate username if it's being changed
-    if (formData.username !== user?.username) {
-      if (!formData.username) {
-        validationErrors.username = 'Username is required';
-      } else if (!/^[a-z0-9._-]+$/.test(formData.username)) {
-        validationErrors.username = 'Username can only contain lowercase letters, numbers, dots, underscores, and hyphens';
-      } else {
-        // Only check username availability if it's a new username
-        try {
-          const { available, error } = await checkUsernameAvailability(formData.username);
-          if (error) {
-            validationErrors.username = error;
-          } else if (!available) {
-            validationErrors.username = 'Username is already taken';
-          }
-        } catch (err) {
-          console.error('Error checking username:', err);
-          validationErrors.username = 'Error checking username availability';
-        }
-      }
-    }
-    
-    // Validate required fields
-    if (!formData.fullName) {
-      validationErrors.fullName = 'Full name is required';
-    }
-    
-    if (!formData.email) {
-      validationErrors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      validationErrors.email = 'Email is invalid';
-    }
-    
-    if (!formData.phoneNumber) {
-      validationErrors.phoneNumber = 'Phone number is required';
-    } else if (!/^\d{10}$/.test(formData.phoneNumber)) {
-      validationErrors.phoneNumber = 'Please enter a valid 10-digit phone number';
-    }
-    
-    // Only validate password if it's being changed
-    if (formData.password) {
-      if (formData.password.length < 6) {
-        validationErrors.password = 'Password must be at least 6 characters';
-      } else if (formData.password !== formData.confirmPassword) {
-        validationErrors.confirmPassword = 'Passwords do not match';
-      }
-    }
-    
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      return;
-    }
-    
+    // Clear previous errors and set loading state
+    setErrors({});
     setIsSubmitting(true);
     
+    // Create FormData for the request
+    const formDataToSend = new FormData();
+    
     try {
-      // Create FormData for the request
-      const formDataToSend = new FormData();
+      // Validate form
+      const validationErrors = {};
       
-      // Add profile picture file if it exists
+      // Only validate username if it's being changed
+      if (formData.username !== user?.username) {
+        if (!formData.username) {
+          validationErrors.username = 'Username is required';
+        } else if (!/^[a-z0-9._-]+$/.test(formData.username)) {
+          validationErrors.username = 'Username can only contain lowercase letters, numbers, dots, underscores, and hyphens';
+        } else {
+          try {
+            const { available, error } = await checkUsernameAvailability(formData.username);
+            if (error) {
+              validationErrors.username = error;
+            } else if (!available) {
+              validationErrors.username = 'Username is already taken';
+            }
+          } catch (err) {
+            console.error('Error checking username:', err);
+            validationErrors.username = 'Error checking username availability';
+          }
+        }
+      }
+    
+      // Validate required fields
+      if (!formData.fullName) {
+        validationErrors.fullName = 'Full name is required';
+      }
+      
+      if (!formData.email) {
+        validationErrors.email = 'Email is required';
+      } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+        validationErrors.email = 'Email is invalid';
+      }
+      
+      if (!formData.phoneNumber) {
+        validationErrors.phoneNumber = 'Phone number is required';
+      } else if (!/^\d{10}$/.test(formData.phoneNumber)) {
+        validationErrors.phoneNumber = 'Please enter a valid 10-digit phone number';
+      }
+      
+      // Only validate password if it's being changed
+      if (formData.password) {
+        if (formData.password.length < 6) {
+          validationErrors.password = 'Password must be at least 6 characters';
+        } else if (formData.password !== formData.confirmPassword) {
+          validationErrors.confirmPassword = 'Passwords do not match';
+        }
+      }
+      
+      // Validate profile picture if it's being changed
       if (formData.profilePictureFile) {
-        // Ensure we're appending the actual File object with the correct field name
-        formDataToSend.append('profilePicture', formData.profilePictureFile);
+        const file = formData.profilePictureFile;
+        const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        const maxSize = 5 * 1024 * 1024; // 5MB
+        
+        if (!validTypes.includes(file.type)) {
+          validationErrors.profilePicture = 'Please upload a valid image (JPEG, PNG, GIF, or WebP)';
+        } else if (file.size > maxSize) {
+          validationErrors.profilePicture = 'Image size should be less than 5MB';
+        }
+      }
+      
+      // If there are validation errors, show them and stop submission
+      if (Object.keys(validationErrors).length > 0) {
+        setErrors(validationErrors);
+        toast.error('Please fix the form errors before submitting');
+        return;
+      }
+    
+      // Add profile picture file if it exists and is a new file
+      if (formData.profilePictureFile) {
+        // Compress image before upload if it's an image
+        if (formData.profilePictureFile.type.startsWith('image/')) {
+          try {
+            // Show loading state for image processing
+            toast.info('Processing image, please wait...');
+            
+            // Create a compressed version of the image
+            const compressedFile = await compressImage(formData.profilePictureFile, {
+              maxSizeMB: 1,          // Max size 1MB
+              maxWidthOrHeight: 1024, // Max dimension 1024px
+              useWebWorker: true     // Use web worker for better performance
+            });
+            
+            // Add the compressed file to form data
+            formDataToSend.append('profilePicture', compressedFile, formData.profilePictureFile.name);
+            console.log('Added compressed image to form data');
+          } catch (compressError) {
+            console.error('Error compressing image, using original:', compressError);
+            // Fallback to original file if compression fails
+            formDataToSend.append('profilePicture', formData.profilePictureFile);
+          }
+        } else {
+          // For non-image files, add as is
+          formDataToSend.append('profilePicture', formData.profilePictureFile);
+        }
       } else if (formData.profilePicture && !formData.profilePicture.startsWith('blob:')) {
         // If it's not a blob URL, it's a regular URL that should be sent as a string
         formDataToSend.append('profilePicture', formData.profilePicture);
       }
-      
-      // Add other form fields
-      const formFields = ['username', 'fullName', 'email', 'phoneNumber', 'bio', 'dateOfBirth', 'gender', 'country'];
-      formFields.forEach(field => {
-        if (formData[field] !== undefined && formData[field] !== '') {
-          formDataToSend.append(field, formData[field]);
-        }
-      });
+        
+        // Prepare non-file form data as a JSON string
+      const formFields = {
+        username: formData.username,
+        fullName: formData.fullName,
+        email: formData.email,
+        phoneNumber: formData.phoneNumber,
+        bio: formData.bio || '',
+        dateOfBirth: formData.dateOfBirth || '',
+        gender: formData.gender || '',
+        country: formData.country || ''
+      };
       
       // Only add password if it's being changed
       if (formData.password) {
-        formDataToSend.append('password', formData.password);
+        formFields.password = formData.password;
       }
       
-      // Update user profile using the API service
-      const response = await authService.updateUserProfile(user._id, formDataToSend, true);
+      // Add the form fields as a JSON string in the 'data' field
+      formDataToSend.append('data', JSON.stringify(formFields));
       
-      if (response && response.success) {
-        // Update local user data with the returned user object
-        const updatedUser = response.user || response.data;
-        if (updatedUser) {
-          await updateUser(updatedUser);
-          // Exit edit mode and show success message
-          setIsEditing(false);
-          toast.success(response.message || 'Profile updated successfully!');
-          // Refresh user data
-          await checkAuthState();
-        } else {
-          throw new Error('Failed to get updated user data');
+      console.log('Sending form data with files:', {
+        hasFile: !!formData.profilePictureFile,
+        formFields: formFields
+      });
+      
+      // Show loading state
+      const toastId = toast.loading('Updating profile...');
+      
+      try {
+        // Update user profile using the API service
+        const response = await authService.updateUserProfile(user._id, formDataToSend, true);
+        
+        if (response) {
+          // Update local user data with the returned user object
+          const updatedUser = response.user || response.data;
+          if (updatedUser) {
+            await updateUser(updatedUser);
+            // Exit edit mode and show success message
+            setIsEditing(false);
+            toast.dismiss(toastId);
+            toast.success(response.message || 'Profile updated successfully!');
+            // Refresh user data
+            await checkAuthState();
+            return;
+          }
         }
-      } else {
-        const errorMessage = response?.message || 'Failed to update profile';
-        throw new Error(errorMessage);
+        
+        throw new Error(response?.message || 'Failed to update profile');
+        
+      } catch (error) {
+        console.error('Error updating profile:', error);
+        toast.dismiss(toastId);
+        toast.error(error.message || 'An error occurred while updating your profile');
+        throw error; // Re-throw to be caught by the outer catch
+      } finally {
+        setIsSubmitting(false);
       }
     } catch (error) {
-      console.error('Error updating profile:', error);
-      toast.error(error.message || 'An error occurred while updating your profile');
+      console.error('Error in form submission:', error);
+      // Error is already shown by the inner catch
     } finally {
       setIsSubmitting(false);
     }
@@ -331,36 +358,63 @@ const Account = () => {
     }
   };
   
-  if (!user) {
-    return <div className="flex items-center justify-center h-screen">Loading...</div>;
+  // Show loading state while initializing
+  if (isLoading || !user) {
+    return (
+      <div className="min-h-screen pb-16 bg-blueGradient text-white relative overflow-hidden">
+        <BackgroundBubbles />
+        <Header />
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
 
 
-  // Handle file upload
-  const handleFileUpload = (file) => {
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      toast.error('Please upload a valid image file (JPEG, PNG, etc.)');
-      return null;
+  // Compress image before upload
+  const compressImage = async (file, options = {}) => {
+    try {
+      // Use dynamic import for browser-image-compression to reduce initial bundle size
+      const imageCompression = (await import('browser-image-compression')).default;
+      return await imageCompression(file, options);
+    } catch (error) {
+      console.error('Image compression error:', error);
+      throw error;
     }
-    
-    // Check file size (max 2MB)
-    const maxSize = 2 * 1024 * 1024; // 2MB
+  };
+
+  // Handle file upload with preview
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      toast.error('Please upload a valid image (JPEG, PNG, GIF, or WebP)');
+      return;
+    }
+
+    // Check file size (max 5MB)
+    const maxSize = 5 * 1024 * 1024; // 5MB
     if (file.size > maxSize) {
       toast.error(`Image size should be less than ${maxSize / (1024 * 1024)}MB`);
-      return null;
+      return;
     }
+
+    // Create preview URL
+    const previewUrl = URL.createObjectURL(file);
     
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onload = (e) => resolve(e.target.result);
-      reader.onerror = () => {
-        toast.error('Error reading file');
-        resolve(null);
-      };
-      reader.readAsDataURL(file);
-    });
+    // Update form data with preview and file
+    setFormData(prev => ({
+      ...prev,
+      profilePicture: previewUrl,
+      profilePictureFile: file
+    }));
   };
 
   const toggleEdit = (e) => {
@@ -376,19 +430,20 @@ const Account = () => {
     setIsEditing(!isEditing);
   };
 
-  if (isLoading || !user) {
+  if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
       </div>
     );
   }
-
+  
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-900 to-purple-900 text-white relative overflow-hidden">
+    <div className="relative min-h-screen pb-24 overflow-hidden text-white bg-gradient-to-b from-[#0b3fae] via-[#1555d1] to-[#2583ff]">
       <BackgroundBubbles />
-      <Header />
-      <div className="container mx-auto px-4 py-8">
+      <div className="relative z-10">
+        <Header />
+
         <div className="pt-20 px-3 max-w-4xl mx-auto">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-bold">My Profile</h1>
@@ -406,6 +461,14 @@ const Account = () => {
           <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6">
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* File upload feedback */}
+                {errors.profilePicture && (
+                  <div className="md:col-span-2">
+                    <div className="p-3 bg-red-100 text-red-700 rounded-lg">
+                      {errors.profilePicture}
+                    </div>
+                  </div>
+                )}
                 <div className="md:col-span-2">
                   <div className="mb-4">
                     <label htmlFor="username" className="block text-sm font-medium mb-1">
@@ -450,16 +513,23 @@ const Account = () => {
                     />
                     {isEditing && (
                       <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                        <label className="cursor-pointer p-2 bg-blue-500 rounded-full hover:bg-blue-600 transition-colors">
-                          <FiCamera className="text-white text-xl" />
-                          <input
-                            type="file"
-                            name="profilePicture"
-                            accept="image/*"
-                            onChange={handleChange}
-                            className="hidden"
-                            ref={fileInputRef}
-                          />
+                        <label className={`relative cursor-pointer p-2 bg-blue-500 rounded-full ${isSubmitting ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-600'} transition-colors`}>
+                          {isSubmitting ? (
+                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          ) : (
+                            <>
+                              <FiCamera className="text-white text-xl" />
+                              <input
+                                type="file"
+                                name="profilePicture"
+                                accept="image/jpeg, image/png, image/gif, image/webp"
+                                onChange={handleFileChange}
+                                className="hidden"
+                                ref={fileInputRef}
+                                disabled={isSubmitting}
+                              />
+                            </>
+                          )}
                         </label>
                       </div>
                     )}
@@ -622,30 +692,34 @@ const Account = () => {
                         })
                       }}
                     />
-                  ) : (
-                    <p className="text-white text-lg">
-                      {formData.country ? (countryOptions.find(c => c.value === formData.country)?.label || formData.country) : 'Not provided'}
-                    </p>
-                  )}
-                </div>
-                <div className="mb-4 md:col-span-2">
-                  <label className="block text-gray-300 text-sm font-bold mb-1" htmlFor="bio">
-                    Bio
-                  </label>
-                  {isEditing ? (
-                    <textarea
-                      name="bio"
-                      value={formData.bio || ''}
-                      onChange={handleChange}
-                      className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline min-h-[100px]"
-                      placeholder="Tell us about yourself..."
-                    />
-                  ) : (
-                    <p className="text-white text-lg whitespace-pre-line">
-                      {formData.bio || 'Not provided'}
-                    </p>
-                  )}
-                </div>
+                      ) : (
+                        <p className="text-white text-lg">
+                          {formData.country ? (countryOptions.find(c => c.value === formData.country)?.label || formData.country) : 'Not provided'}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="mb-4 md:col-span-2">
+                      <label className="block text-gray-300 text-sm font-bold mb-1" htmlFor="bio">
+                        Bio
+                      </label>
+                      {isEditing ? (
+                        <textarea
+                          name="bio"
+                          value={formData.bio || ''}
+                          onChange={handleChange}
+                          className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline min-h-[100px]"
+                          placeholder="Tell us about yourself..."
+                        />
+                      ) : (
+                        <p className="text-white text-lg whitespace-pre-line">
+                          {formData.bio || 'Not provided'}
+                        </p>
+                      )}
+                    </div>
+
+
+
               </div>
               
               {isEditing && (

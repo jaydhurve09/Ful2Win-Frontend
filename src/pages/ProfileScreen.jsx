@@ -19,7 +19,7 @@ import { useNavigate, useLocation, useParams } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import defaultProfile from "../assets/default-profile.jpg";
 import BackgroundBubbles from "../components/BackgroundBubbles";
-import Account from "../components/Account";
+import Account from "../components/Account.old";
 import { useAuth } from "../contexts/AuthContext";
 import { toast } from "react-toastify";
 import authService from "../services/authService";
@@ -58,16 +58,15 @@ const ProfileScreen = () => {
   }, []);
 
   const fetchUserData = useCallback(async () => {
+    setLoading(true);
+    setRefreshing(true);
+    
     try {
-      setLoading(true);
-      let userData = null;
-
-      const localUser = JSON.parse(localStorage.getItem('user') || '{}');
-
+      // First try to get fresh data from API
       try {
         const response = await authService.getCurrentUserProfile();
         if (response) {
-          userData = response;
+          const userData = response;
           localStorage.setItem('user', JSON.stringify(userData));
 
           const stats = {
@@ -84,13 +83,15 @@ const ProfileScreen = () => {
           if (userData._id) {
             await fetchUserPosts(userData._id);
           }
-
           return;
         }
-      } catch (error) {
-        console.error('Error fetching user profile:', error);
+      } catch (apiError) {
+        console.warn('API fetch warning:', apiError);
+        // Continue to fallback to local storage if API fails
       }
 
+      // Fallback to local storage if API fails
+      const localUser = JSON.parse(localStorage.getItem('user') || '{}');
       if (localUser?._id) {
         setUserStats(prev => ({
           ...prev,
@@ -103,12 +104,18 @@ const ProfileScreen = () => {
         setCurrentUser(localUser);
         await fetchUserPosts(localUser._id);
       } else {
-        toast.error('Please log in again');
-        navigate('/login');
+        // If no local user data, redirect to login
+        toast.error('Session expired. Please log in again.');
+        navigate('/login', { replace: true });
+        return;
       }
     } catch (error) {
-      console.error('Error fetching user data:', error);
-      toast.error('Failed to load user data');
+      console.error('Error in fetchUserData:', error);
+      if (!navigator.onLine) {
+        toast.error('No internet connection. Using cached data.');
+      } else {
+        toast.error('Failed to load profile data. Please try again.');
+      }
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -142,7 +149,7 @@ const ProfileScreen = () => {
     },
     {
       icon: <IoMdPerson className="text-purple-500" />,
-      label: "Users",
+      label: "Followers",
       value: userStats.followers.toLocaleString()
     },
   ];
