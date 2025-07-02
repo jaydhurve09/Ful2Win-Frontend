@@ -2,6 +2,27 @@ import api from './api';
 
 const postService = {
   /**
+   * Get all posts
+   * @param {Object} [filters] - Optional filters for posts
+   * @returns {Promise<Array>} Array of posts
+   */
+  async getPosts(filters = {}) {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await api.get('/posts', {
+        params: filters,
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching posts:', error);
+      throw error;
+    }
+  },
+  /**
    * Update a post
    * @param {string} postId - Post ID
    * @param {Object} postData - Updated post data
@@ -30,7 +51,7 @@ const postService = {
   async deletePost(postId) {
     try {
       const token = localStorage.getItem('token');
-      const response = await api.delete(`/api/posts/${postId}`, {
+      const response = await api.delete(`/posts/${postId}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'

@@ -60,6 +60,34 @@ const Community = () => {
   const dropdownRef = useRef(null);
   const navigate = useNavigate(); // For Challenges redirect
 
+  // Fetch posts based on active tab and type
+  const fetchPosts = async () => {
+    try {
+      setIsLoading(true);
+      const filters = {};
+      
+      // Apply filters based on activeTab and activeType
+      if (activeTab === 'feed') {
+        if (activeType !== 'all') {
+          filters.type = activeType;
+        }
+      } else if (activeTab === 'challenges') {
+        filters.type = 'challenge';
+      } else if (activeTab === 'leaderboard') {
+        // Leaderboard doesn't need posts
+        return;
+      }
+      
+      const postsData = await postService.getPosts(filters);
+      setPosts(postsData);
+    } catch (error) {
+      console.error('Error fetching posts:', error);
+      toast.error('Failed to load posts. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Fetch current user when component mounts
   useEffect(() => {
     const fetchCurrentUser = async () => {
@@ -75,6 +103,13 @@ const Community = () => {
     
     fetchCurrentUser();
   }, []);
+
+  // Fetch posts when component mounts or when activeTab/activeType changes
+  useEffect(() => {
+    if (activeTab !== 'leaderboard') {
+      fetchPosts();
+    }
+  }, [activeTab, activeType]);
 
   // Close dropdown when clicking outside
   useEffect(() => {

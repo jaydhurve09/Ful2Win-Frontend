@@ -139,8 +139,6 @@ const ProfileScreen = () => {
           wins: response.stats?.wins || 0,
           matches: response.stats?.matches || 0
         });
-        
-        console.log('User data refreshed from server:', response);
         return true;
       }
     } catch (error) {
@@ -185,13 +183,21 @@ const ProfileScreen = () => {
       }
       
       // Try to refresh user data from the server
-      const refreshSuccess = await refreshUserData();
-      
-      // If refresh failed, try to use cached data
-      if (!refreshSuccess) {
+      try {
+        await refreshUserData();
+        // If refresh was successful, fetch posts for the user
         const localUser = JSON.parse(localStorage.getItem('user') || '{}');
         if (localUser?._id) {
-          console.log('Using cached user data');
+          await fetchUserPosts(localUser._id);
+        }
+      } catch (refreshError) {
+        // Only show toast if we're online and it's not a network error
+        if (navigator.onLine && !refreshError.message.includes('Network Error')) {
+          toast.warning('User data loaded.');
+        }
+        
+        const localUser = JSON.parse(localStorage.getItem('user') || '{}');
+        if (localUser?._id) {
           setUserStats({
             balance: localUser.balance || localUser.Balance || 0,
             coins: localUser.coins || 0,
@@ -201,21 +207,8 @@ const ProfileScreen = () => {
           });
           setCurrentUser(localUser);
           await fetchUserPosts(localUser._id);
-          
-          // Show warning about using cached data
-          if (navigator.onLine) {
-            toast.warning('Using cached data. Some information might be outdated.');
-          } else {
-            toast.warning('No internet connection. Using cached data.');
-          }
         } else {
           throw new Error('No user data available');
-        }
-      } else {
-        // If refresh was successful, fetch posts for the user
-        const localUser = JSON.parse(localStorage.getItem('user') || '{}');
-        if (localUser?._id) {
-          await fetchUserPosts(localUser._id);
         }
       }
       
@@ -223,15 +216,16 @@ const ProfileScreen = () => {
       console.error('Error in fetchUserData:', error);
       if (error.message === 'No authentication token found' || 
           (error.response && error.response.status === 401)) {
-        // Clear any stale auth data
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-        // Redirect to login page
         navigate('/login', { replace: true });
         toast.error('Please log in to continue');
       } else if (!navigator.onLine) {
-        toast.error('No internet connection. Using cached data.');
-      } else {
+        // Only show offline toast if we haven't already shown it
+        if (!toast.isActive('offline-toast')) {
+          toast.warning('No internet connection. Using cached data.', { toastId: 'offline-toast' });
+        }
+      } else if (error.message !== 'No user data available') {
         toast.error('Failed to load profile data. Please try again.');
       }
     } finally {
@@ -356,14 +350,6 @@ const ProfileScreen = () => {
     }
   };
 
-  // Log current user data for debugging
-  console.log('Current user in render:', {
-    hasUser: !!currentUser,
-    hasProfilePicture: currentUser?.profilePicture ? true : false,
-    profilePictureType: typeof currentUser?.profilePicture,
-    profilePictureValue: currentUser?.profilePicture || '(none)'
-  });
-  
   return (
     <>
       <div className="min-h-screen w-full text-white overflow-x-hidden relative px-4 py-8"
