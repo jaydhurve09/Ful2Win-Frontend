@@ -134,6 +134,65 @@ const authService = {
    * @param {Object|FormData} userData - Updated user data
    * @returns {Promise<Object>} Updated user data
    */
+  /**
+   * Upload a new profile picture
+   * @param {string} userId - User ID
+   * @param {FormData} formData - FormData containing the file
+   * @returns {Promise<Object>} Response with updated user data
+   */
+  uploadProfilePicture: async (userId, formData) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      // Log FormData contents for debugging
+      console.log('=== Uploading Profile Picture ===');
+      for (let [key, value] of formData.entries()) {
+        if (value instanceof File) {
+          console.log(`${key}: File - ${value.name} (${value.type}, ${value.size} bytes)`);
+        } else {
+          console.log(`${key}:`, value);
+        }
+      }
+
+      // Make the request to upload the profile picture
+      const response = await fetch(`${API_BASE_URL}/api/users/profile/${userId}/picture`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`
+          // Let the browser set the Content-Type with boundary for FormData
+        },
+        body: formData,
+        credentials: 'include'
+      });
+
+      const responseData = await response.json();
+      
+      if (!response.ok) {
+        console.error('Error uploading profile picture:', responseData);
+        throw new Error(responseData.message || 'Failed to upload profile picture');
+      }
+
+      // Update local storage with new user data
+      if (responseData.user) {
+        localStorage.setItem('user', JSON.stringify(responseData.user));
+      }
+
+      return responseData;
+    } catch (error) {
+      console.error('Error in uploadProfilePicture:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Update user profile
+   * @param {string} userId - User ID
+   * @param {Object} userData - Updated user data
+   * @returns {Promise<Object>} Updated user data
+   */
   updateUserProfile: async (userId, userData) => {
     try {
       const token = localStorage.getItem('token');
@@ -141,114 +200,67 @@ const authService = {
         throw new Error('No authentication token found');
       }
 
-      // Create a new FormData instance
-      const formData = new FormData();
-      
-      // Log the incoming userData for debugging (without the file)
-      const { profilePicture, profilePictureFile, ...userDataWithoutFiles } = userData;
-      console.log('User data to update:', userDataWithoutFiles);
-      
-      // Handle profile picture file if it exists and is not a URL
-      const hasNewFile = profilePictureFile && 
-                        !(typeof profilePictureFile === 'string') && 
-                        !(profilePictureFile.uri && profilePictureFile.uri.startsWith('http'));
-      
-      if (hasNewFile) {
-        console.log('Processing new file upload');
-        const file = profilePictureFile;
-        const timestamp = Date.now();
-        const fileName = file.name || `profile_${timestamp}.jpg`;
-        const fileExtension = fileName.split('.').pop() || 'jpg';
-        const uniqueFileName = `profile_${timestamp}.${fileExtension}`;
-        
-        // Create a new File object
-        const fileToUpload = new File(
-          [file],
-          uniqueFileName,
-          {
-            type: file.type || 'image/jpeg',
-            lastModified: timestamp
-          }
-        );
-        
-        console.log('Prepared file for upload:', {
-          name: fileToUpload.name,
-          type: fileToUpload.type,
-          size: fileToUpload.size,
-          isFile: fileToUpload instanceof File
-        });
-        
-        // Append the file to FormData
-        formData.append('profilePicture', fileToUpload);
-      } else if (profilePictureFile) {
-        console.log('Skipping file upload - appears to be a URL:', 
-          profilePictureFile.uri || profilePictureFile);
-      }
-      
-      // Add all user data fields to FormData
-      Object.entries(userDataWithoutFiles).forEach(([key, value]) => {
-        if (value !== null && value !== undefined && value !== '') {
-          // Convert dates to ISO string if needed
-          const formattedValue = key === 'dateOfBirth' && value ? 
-            new Date(value).toISOString().split('T')[0] : 
-            String(value);
-          
-          formData.append(key, formattedValue);
-          console.log(`Added field to FormData: ${key} = ${formattedValue}`);
-        }
-      });
-      
-      // Force a change by adding a timestamp parameter
-      formData.append('_t', Date.now().toString());
-
-      // Log FormData contents before sending
-      console.log('=== FormData Contents ===');
-      for (let [key, value] of formData.entries()) {
-        if (value instanceof File) {
-          console.log(`${key}: File - ${value.name} (${value.type}, ${value.size} bytes)`);
-        } else if (typeof value === 'string' && value.length > 100) {
-          console.log(`${key}: String (${value.length} chars)`);
-        } else {
-          console.log(`${key}:`, value);
-        }
-      }
-
-      // Get the auth token fresh from localStorage
-      const authToken = localStorage.getItem('token');
-      
       // Log the request details
       console.log('Sending request to:', `${API_BASE_URL}/api/users/profile/${userId}`);
       console.log('Request method: PUT');
       
+      // Handle both FormData and plain objects
+      const requestBody = userData instanceof FormData ? userData : new URLSearchParams();
+      
+      // If it's not FormData, convert the object to URLSearchParams
+      if (!(userData instanceof FormData)) {
+        Object.entries(userData).forEach(([key, value]) => {
+          if (value !== null && value !== undefined) {
+            requestBody.append(key, value);
+          }
+        });
+      }
+      
+      // Log request body for debugging
+      console.log('=== Request Body ===');
+      if (requestBody instanceof FormData) {
+        for (let [key, value] of requestBody.entries()) {
+          if (value instanceof File) {
+            console.log(`${key}: File - ${value.name} (${value.type}, ${value.size} bytes)`);
+          } else {
+            console.log(`${key}:`, value);
+          }
+        }
+      } else {
+        console.log(requestBody.toString());
+      }
+      
+      // Set appropriate headers based on the request body type
+      const headers = {
+        'Authorization': `Bearer ${token}`
+      };
+      
+      // Only set Content-Type for non-FormData requests
+      if (!(requestBody instanceof FormData)) {
+        headers['Content-Type'] = 'application/x-www-form-urlencoded';
+      }
+      
       // Make the fetch request
       const response = await fetch(`${API_BASE_URL}/api/users/profile/${userId}`, {
         method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${authToken}`
-          // Let the browser set the Content-Type with boundary for FormData
-        },
-        body: formData,
+        headers: headers,
+        body: requestBody,
         credentials: 'include'
       });
       
       console.log('Received response status:', response.status);
       
-      // Log response headers for debugging
-      const responseHeaders = {};
-      response.headers.forEach((value, key) => {
-        responseHeaders[key] = value;
-      });
-      console.log('Response headers:', responseHeaders);
-
       // Parse response as JSON
-      const responseData = await response.json();
+      let responseData;
+      try {
+        responseData = await response.json();
+      } catch (error) {
+        console.error('Error parsing JSON response:', error);
+        throw new Error('Invalid response from server');
+      }
       
       if (!response.ok) {
         console.error('Error response from server:', responseData);
-        // Handle Cloudinary-specific errors
-        if (responseData.error && responseData.error.includes('Cloudinary')) {
-          throw new Error('Profile picture upload service is currently unavailable. Please try again later.');
-        }
         throw new Error(responseData.message || 'Failed to update profile');
       }
       
@@ -266,16 +278,10 @@ const authService = {
         }
         
         localStorage.setItem('user', JSON.stringify(updatedUser));
-        console.log('Local storage updated with:', updatedUser);
-      } else {
-        console.warn('[Profile] No user data in response');
+        console.log('Local storage updated with profile picture:', updatedUser.profilePicture ? 'Yes' : 'No');
       }
       
-      // Return the complete response data
-      return {
-        ...responseData,
-        user: responseData.user || JSON.parse(localStorage.getItem('user') || '{}')
-      };
+      return responseData;
     } catch (error) {
       console.error('Error in updateUserProfile:', error);
       

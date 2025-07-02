@@ -171,75 +171,64 @@ const Account = () => {
     const toastId = toast.loading('Updating profile...');
     
     try {
-      // Prepare the data to send
-      const dataToSend = { ...formData };
+      // First, update the profile without the picture
+      const { profilePictureFile, ...profileData } = formData;
       
-      // Check if we have a file to process
-      if (formData.profilePictureFile) {
-        const file = formData.profilePictureFile;
+      // 1. Update profile data first
+      toast.loading('Updating profile information...', { id: toastId });
+      const response = await authService.updateUserProfile(user._id, profileData);
+      
+      // 2. If there's a new profile picture, try to upload it
+      if (profilePictureFile && 
+          !(typeof profilePictureFile === 'string') && 
+          !(profilePictureFile.uri && profilePictureFile.uri.startsWith('http'))) {
         
-        // Skip if it's a string (URL) or has a URL property (already uploaded)
-        if (typeof file === 'string' || (file && file.uri && file.uri.startsWith('http'))) {
-          console.log('Skipping URL/Cloudinary image, not a new file upload');
-          delete dataToSend.profilePicture;
-          delete dataToSend.profilePictureFile;
-        }
-        // Handle File objects (standard web file upload)
-        else if (file instanceof File) {
-          if (file.size > 0 && file.type.startsWith('image/')) {
-            const timestamp = Date.now();
-            const fileExtension = file.name.split('.').pop() || 'jpg';
-            const uniqueName = `profile_${timestamp}.${fileExtension}`;
-            
-            // Create a new File object with the correct name and type
-            const fileToUpload = new File(
-              [file],
-              uniqueName,
-              {
-                type: file.type || 'image/jpeg',
-                lastModified: timestamp
-              }
-            );
-            
-            // Add the file to the data
-            dataToSend.profilePicture = fileToUpload;
-            
-            console.log('File prepared for upload:', {
-              name: fileToUpload.name,
-              type: fileToUpload.type,
-              size: fileToUpload.size,
-              isFile: fileToUpload instanceof File
-            });
-          } else {
-            console.warn('Invalid file, skipping upload:', file);
-            delete dataToSend.profilePicture;
-            delete dataToSend.profilePictureFile;
-          }
-        }
-        // Handle React Native file objects
-        else if (file.uri) {
-          const timestamp = Date.now();
-          const fileName = file.fileName || `profile_${timestamp}.jpg`;
-          const fileToUpload = {
-            uri: file.uri,
-            type: file.type || 'image/jpeg',
-            name: fileName
-          };
+        try {
+          toast.loading('Uploading profile picture...', { id: toastId });
           
-          dataToSend.profilePicture = fileToUpload;
-          console.log('File prepared for upload (React Native):', fileToUpload);
-        }
-        // Clean up if the file is not in a supported format
-        else {
-          console.warn('Unsupported file format, skipping upload:', file);
-          delete dataToSend.profilePicture;
-          delete dataToSend.profilePictureFile;
+          // Create FormData for the file upload
+          const formDataToSend = new FormData();
+          const file = profilePictureFile;
+          const timestamp = Date.now();
+          const fileName = file.name || `profile_${timestamp}.jpg`;
+          
+          // Create a new File object with proper type
+          const fileToUpload = new File(
+            [file],
+            fileName,
+            {
+              type: file.type || 'image/jpeg',
+              lastModified: timestamp
+            }
+          );
+          
+          // Add file to FormData
+          formDataToSend.append('profilePicture', fileToUpload, fileName);
+          formDataToSend.append('_t', timestamp.toString());
+          
+          // Log file details for debugging
+          console.log('Uploading profile picture:', {
+            name: fileToUpload.name,
+            type: fileToUpload.type,
+            size: fileToUpload.size
+          });
+          
+          // Try to upload the picture
+          await authService.updateUserProfile(user._id, formDataToSend);
+          
+          // Update the local user data with the new picture
+          if (response.user) {
+            updateUser({ ...response.user });
+          }
+          
+        } catch (uploadError) {
+          console.warn('Profile picture upload failed:', uploadError);
+          // Don't fail the entire update - just show a warning
+          toast.warning('Profile updated, but picture upload failed. Please try again later.');
         }
       }
       
-      // Call the API to update the user profile
-      const response = await authService.updateUserProfile(user._id, dataToSend);
-      
+      // Update the UI with the response
       if (response.success) {
         toast.update(toastId, {
           render: 'Profile updated successfully!',
