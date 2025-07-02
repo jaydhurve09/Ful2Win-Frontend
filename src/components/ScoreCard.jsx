@@ -7,8 +7,8 @@ const ScoreCard = ({ game, userId, score, roomId, gameName }) => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-900 to-blue-800 text-white flex items-center justify-center px-4">
-      <div className="w-full max-w-sm bg-gradient-to-br from-blue-700 to-blue-600 rounded-2xl shadow-xl p-6 relative border-2 border-yellow-400/40">
+   <div className="w-screen h-screen bg-gradient-to-b from-blue-900 to-blue-800 text-white flex items-center justify-center">
+  <div className="w-full max-w-sm bg-gradient-to-br from-blue-700 to-blue-600 rounded-2xl shadow-xl p-6 relative border-2 border-yellow-400/40">
         
         {/* Cancel Button */}
         <button
@@ -37,7 +37,7 @@ const ScoreCard = ({ game, userId, score, roomId, gameName }) => {
         {/* Actions */}
         <div className="mt-6 flex flex-col items-center gap-4">
           <button
-            onClick={() => window.location.reload()}
+            onClick={() => navigate( `/tournament-lobby/${game}`)}
             className="w-full bg-yellow-400 hover:bg-yellow-500 text-blue-900 font-bold py-2 px-6 rounded-xl shadow transition-all duration-200"
           >
             🔁 Play Again

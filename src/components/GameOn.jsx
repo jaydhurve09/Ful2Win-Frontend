@@ -4,7 +4,7 @@ import axios from "axios";
 import ScoreCard from "./ScoreCard"; // Make sure this component exists
 
 const API_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
-
+  
 const GameOn = () => {
   const { gameId, tournamentId } = useParams(); // ✅ fetch route params
 
@@ -13,9 +13,7 @@ const GameOn = () => {
   const [gameOver, setGameOver] = useState(false);
   const [scoreData, setScoreData] = useState(null);
 
-  const userId = JSON.parse(localStorage.getItem("user"))?._id;
-  const userName = JSON.parse(localStorage.getItem("user"))?.username;
-
+  
   // ✅ Fetch Game Details by ID
   useEffect(() => {
     const fetchGameById = async () => {
@@ -26,7 +24,7 @@ const GameOn = () => {
             Authorization: `Bearer ${token}`,
           },
         });
-
+     
         const allGames = response.data?.data || [];
         const foundGame = allGames.find((g) => g._id === gameId);
 
@@ -47,16 +45,31 @@ const GameOn = () => {
       setError("Invalid game ID");
     }
   }, [gameId]);
+const getUserInfo = async() => {
+  try {
+    const user = JSON.parse(localStorage.getItem("user"));
+    return {
+      userId: user?._id,
+      userName: user?.username,
+    };
+  } catch (e) {
+    return { userId: null, userName: null };
+  }
+};
 
   // ✅ Handle GAME_OVER event from the iframe
   useEffect(() => {
     const handleMessage = async (event) => {
+    
       const { type, score } = event.data;
       if (type === "GAME_OVER") {
+        const { userId, userName } = await getUserInfo();
         try {
+       
+
           await axios.post(`${API_URL}/api/score/submit-score`, {
-            userId,
-            userName,
+            userId,        
+             userName,
             score,
             roomId: tournamentId,
             gameName: game?.name || "Game",
@@ -66,6 +79,7 @@ const GameOn = () => {
             userId,
             userName,
             score,
+            game: game?._id || gameId,
             roomId: tournamentId,
             gameName: game?.name,
           });
@@ -100,7 +114,7 @@ const GameOn = () => {
   const iframeSrc = game.assets?.gameUrl?.baseUrl;
 
   return gameOver && scoreData ? (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+    <div className="min-h-screen w-full bg-gray-100 flex items-center justify-center">
       <ScoreCard {...scoreData} />
     </div>
   ) : (

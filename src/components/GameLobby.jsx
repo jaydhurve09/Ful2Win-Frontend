@@ -175,6 +175,7 @@ const navigate = useNavigate();
                   title="Classic"
                   description="Play with 2-4 players"
                   entryFee={getEntryFee('classic')}
+                  comingSoon={!isActionGame}
                   onClick={() => navigate(`/comingsoon`)}
                 />
                 
@@ -182,6 +183,7 @@ const navigate = useNavigate();
                   title="Quick Play"
                   description="Fast-paced matches"
                   entryFee={getEntryFee('quick')}
+                  comingSoon={!isActionGame}
                   onClick={() => navigate(`/comingsoon`)}
                 />
                 
