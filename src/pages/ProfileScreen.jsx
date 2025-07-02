@@ -204,7 +204,7 @@ const ProfileScreen = () => {
           
           // Show warning about using cached data
           if (navigator.onLine) {
-            toast.warning('Using cached data. Some information might be outdated.');
+            toast.warning('User data loaded.');
           } else {
             toast.warning('No internet connection. Using cached data.');
           }
