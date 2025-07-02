@@ -10,6 +10,7 @@ import Banner from '../components/Banner';
 import SpinWheelScreen from '../components/SpinWheelScreen';
 import BackgroundBubbles from '../components/BackgroundBubbles';
 import BackgroundCircles from '../components/BackgroundCircles';
+import SpinIcon from '../assets/SpinIcon.png';
 
 
 const Home = () => {
@@ -51,9 +52,13 @@ const Home = () => {
         <div className="hidden md:block absolute top-20 right-4 z-10">
           <button
             onClick={() => setShowSpinWheel(true)}
-            className="bg-yellow-400 text-black font-bold px-4 py-2 rounded"
+            className="p-2 focus:outline-none"
           >
-            Daily Spin
+            <img 
+              src={SpinIcon} 
+              alt="Spin Wheel" 
+              className="w-16 h-16 hover:scale-110 transition-transform duration-200"
+            />
           </button>
         </div>
 

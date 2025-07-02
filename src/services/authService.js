@@ -314,13 +314,26 @@ async getCurrentUserProfile() {
  */
 getWalletBalance: async () => {
   try {
+    // Check for token first
+    const token = localStorage.getItem('token');
+    if (!token) {
+      return { balance: 0, currency: 'INR' };
+    }
+    
     const response = await api.get('/users/me');
     const userData = response.data.data || response.data;
     const balance = userData.balance || 0;
     return { balance, currency: 'INR' };
   } catch (error) {
-    console.error('Error fetching wallet balance:', error);
-    // Return default values in case of error
+    // Only log non-401 errors
+    if (!error.response || error.response.status !== 401) {
+      console.error('Error fetching wallet balance:', error);
+    }
+    // Clear auth data on 401
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+    }
     return { balance: 0, currency: 'INR' };
   }
 },
