@@ -5,6 +5,7 @@ import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import BackgroundBubbles from '../components/BackgroundBubbles';
 import axios from 'axios';
+import authService from '../services/authService';
 import {
   FaArrowLeft,
   FaClipboard,
@@ -156,17 +157,40 @@ const Signup = () => {
         password: formData.password,
         referralCode: formData.referralCode
       };
-      const result = { success: true, message: 'OTP sent successfully' };
+     // const result = { success: true, message: 'OTP sent successfully' };
+     const result = await authService.register(userData);
+      
       if (result && result.success) {
-        navigate('/verify-phone', {
-          state: {
-            formData: userData,
-            message: result.message
-          }
+        // Registration successful, handle success
+        // Store user data in localStorage
+        localStorage.setItem('user', JSON.stringify(result.user));
+        localStorage.setItem('token', result.token);
+        console.log('Registration successful:', result);
+        toast.success(result.message || 'Registration successful! Please login.');
+        // Clear form
+        setFormData({
+          fullName: '',
+          name: '',
+          phoneNumber: '',
+          password: '',
+          confirmPassword: '',
+          agree: false
         });
+        // Redirect to login page
+        navigate('/');
       } else {
         throw new Error(result?.message || 'Registration failed');
       }
+      // if (result && result.success) {
+      //   navigate('/verify-phone', {
+      //     state: {
+      //       formData: userData,
+      //       message: result.message
+      //     }
+      //   });
+      // } else {
+      //   throw new Error(result?.message || 'Registration failed');
+      // }
     } catch (error) {
       const message = error.response?.data?.message || 'Registration failed. Please try again.';
       toast.error(message);

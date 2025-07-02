@@ -23,7 +23,7 @@ const Home = () => {
     // Show main content after a short delay to allow splash screen to show
     const timer = setTimeout(() => {
       setShowMainContent(true);
-    }, 5000); // Adjust the delay as needed
+    }, 3000); // Adjust the delay as needed
     return () => clearTimeout(timer);
   }, []);
   // Redirect to login if not authenticated
