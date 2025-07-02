@@ -24,7 +24,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000
 const API_URL = `${API_BASE_URL}/api`;
  
 // Countdown timer hook
-const useCountdown = (targetDate) => {
+const useCountdown = ({targetDate,endTime,status},onStart,onComplete) => {
   const [timeLeft, setTimeLeft] = useState('');
   
   
@@ -36,13 +36,21 @@ const useCountdown = (targetDate) => {
     const updateCountdown = () => {
       const now = new Date().getTime();
       const target = new Date(targetDate).getTime();
+      const end = new Date(endTime).getTime();
       const distance = target - now;
+      const tend=end-now;
   // console.log(distance);
-      if (distance < 0) {
-        setTimeLeft('Starting soon...');
+   if(distance <0 && status == 'upcoming') {
+          onStart?.(); 
+          return;
+
+      }
+      if ( tend <0 && status === 'live') {
+        onComplete?.(); // Mark as completed if passed endTime by 10+ seconds
         return;
       }
-
+     
+      // F
       const days = Math.floor(distance / (1000 * 60 * 60 * 24));
       const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
       const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
@@ -154,7 +162,20 @@ const [confirmModal, setConfirmModal] = useState({
   visible: false,
   tournament: null,
 });
-
+ const setTournamentStatus = async (tournamentId, newStatus) => {
+  console.log("run setTournamentStatus");
+  try {
+    const token = localStorage.getItem('token');
+    const res = await axios.put(`${API_URL}/tournaments/${tournamentId}/status`, 
+      { status: newStatus },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    return res.data.success;
+  } catch (error) {
+    console.error('Failed to set tournament status:', error);
+    return false;
+  }
+};
 const handleConfirmRegister = async () => {
   const tournament = confirmModal.tournament;
   if (!tournament) return;
@@ -285,9 +306,23 @@ const handleRegisterTournament = async (tournamentId) => {
 
 
   // Tournament card component
-  const TournamentCard = ({ id, name, entryFee, prizePool, participants, maxParticipants, startTime, status, tournamentType }) => {
-    const countdown = useCountdown(startTime);
-    
+  const TournamentCard = ({ id, name, entryFee, prizePool, participants, maxParticipants, startTime, status, tournamentType,endTime,currentPlayers=[] }) => {
+    const countdown = useCountdown({targetDate:startTime,endTime,status },async () => {
+  const success = await setTournamentStatus(id, 'live');
+  if (success) {
+    fetchGameAndTournaments();  // re-fetch to show updated status
+  }
+},
+async () => {
+    await setTournamentStatus(id, 'completed');
+    fetchGameAndTournaments();
+  });
+
+    const tournament = tournaments.find(t => t._id === id || t.id === id);
+  const hasJoined = currentPlayers?.some(p =>
+    typeof p === 'string' ? p === userId : p?.userId === userId
+  );
+
     
     const handleCardClick = () => {
       // Only navigate if the tournament is live
@@ -320,9 +355,6 @@ const handleRegisterTournament = async (tournamentId) => {
       }
       
      if (status === 'live') {
-const hasJoined = tournaments[0].currentPlayers?.some(p =>
-  typeof p === 'string' ? p === userId : p?.userId === userId
-);
 
   return (
     <div className="flex gap-2 w-full">
@@ -618,6 +650,8 @@ const hasJoined = tournaments[0].currentPlayers?.some(p =>
                       participants={tournament.participants || []}
                       maxParticipants={tournament.maxParticipants}
                       startTime={tournament.startTime}
+                      endTime={tournament.endTime}
+                      currentPlayers={tournament.currentPlayers || []}
                       status={tournament.status}
                       tournamentType={tournament.tournamentType || 'cash'}
                     />
@@ -646,6 +680,8 @@ const hasJoined = tournaments[0].currentPlayers?.some(p =>
                       startTime={tournament.startTime}
                       status={tournament.status}
                       tournamentType={tournament.tournamentType}
+                      endTime={tournament.endTime}
+                      currentPlayers={tournament.currentPlayers || []}
                     />
                   ))}
                 </div>
