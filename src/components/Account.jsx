@@ -88,10 +88,6 @@ const Account = () => {
     
     const initializeForm = () => {
       try {
-        if (!user) {
-          console.log('User data not available yet');
-          return;
-        }
         
         const userData = {
           username: user.username || '',
@@ -142,7 +138,7 @@ const Account = () => {
     
     const { name, value, files, type } = e.target;
     
-    // Skip file handling for profile picture (handled separately)
+    // Skip file handling for profile picture (handled by handleFileChange)
     if (name === 'profilePicture') {
       return;
     }
@@ -172,7 +168,7 @@ const Account = () => {
     let response;
     
     try {
-      // First, update the profile without the picture
+      // Prepare profile data for submission
       const { profilePictureFile, password, confirmPassword, ...profileData } = formData;
       
       // Remove empty strings and undefined values
@@ -180,89 +176,23 @@ const Account = () => {
         Object.entries(profileData).filter(([_, v]) => v !== '' && v !== undefined && v !== null)
       );
       
-      // 1. Update profile data first
+      // If there's a profile picture URL (already uploaded to Cloudinary), include it in the update
+      if (formData.profilePicture) {
+        cleanProfileData.profilePicture = formData.profilePicture;
+      }
+      
+      // Update profile data
       toast.update(toastId, { 
         render: 'Updating profile information...',
         type: 'info',
         isLoading: true 
       });
       
+      // Send the update to the server
       response = await authService.updateUserProfile(user._id, cleanProfileData);
       
       if (!response?.success) {
         throw new Error(response?.message || 'Failed to update profile');
-      }
-      
-      // 2. If there's a new profile picture, try to upload it in a separate request
-      if (profilePictureFile && 
-          !(typeof profilePictureFile === 'string') && 
-          !(profilePictureFile.uri && profilePictureFile.uri.startsWith('http'))) {
-        
-        // Use a separate try-catch block for the picture upload
-        // so it doesn't affect the main profile update
-        try {
-          // Create a new toast for the picture upload
-          const uploadToastId = toast.loading('Uploading profile picture...');
-          
-          // Create FormData for the file upload
-          const formDataToSend = new FormData();
-          const file = profilePictureFile;
-          const timestamp = Date.now();
-          const fileName = file.name || `profile_${timestamp}.jpg`;
-          
-          // Create a new File object with proper type
-          const fileToUpload = new File(
-            [file],
-            fileName,
-            {
-              type: file.type || 'image/jpeg',
-              lastModified: timestamp
-            }
-          );
-          
-          // Add file to FormData
-          formDataToSend.append('profilePicture', fileToUpload, fileName);
-          formDataToSend.append('_t', timestamp.toString());
-          
-          // Try to upload the picture in the background
-          authService.updateUserProfile(user._id, formDataToSend)
-            .then(uploadResponse => {
-              // If we have user data in the response, update the UI
-              if (uploadResponse?.success && uploadResponse.user) {
-                updateUser({ ...uploadResponse.user });
-                toast.update(uploadToastId, {
-                  render: uploadResponse.message || 'Profile picture updated successfully!',
-                  type: 'success',
-                  isLoading: false,
-                  autoClose: 3000
-                });
-              } else if (uploadResponse?.success) {
-                // If the API returned success but no user data
-                toast.update(uploadToastId, {
-                  render: uploadResponse.message || 'Profile picture updated!',
-                  type: 'success',
-                  isLoading: false,
-                  autoClose: 3000
-                });
-              } else {
-                // If we don't have a success response
-                throw new Error(uploadResponse?.message || 'Failed to update profile picture');
-              }
-            })
-            .catch(uploadError => {
-              console.warn('Profile picture upload failed:', uploadError);
-              toast.update(uploadToastId, {
-                render: 'Could not update profile picture. You can try again later.',
-                type: 'warning',
-                isLoading: false,
-                autoClose: 5000
-              });
-            });
-            
-        } catch (error) {
-          console.error('Error preparing profile picture upload:', error);
-          // Don't show an error to the user for this background operation
-        }
       }
       
       // Update the UI with the response
@@ -273,69 +203,59 @@ const Account = () => {
         autoClose: 3000
       });
       
-      // Update success message
-      setSuccess('Profile updated successfully!');
-      
-      // Update form data with the new user data
-      if (response?.user) {
+      // Update the user in local storage and context
+      if (response.user || response.data) {
+        const updatedUser = response.user || response.data;
+        const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+        
+        // Merge with existing user data
+        const mergedUser = { ...currentUser, ...updatedUser };
+        
+        // Update local storage
+        localStorage.setItem('user', JSON.stringify(mergedUser));
+        
+        // Update context
+        if (updateUser) {
+          updateUser(mergedUser);
+        }
+        
+        // Update form data with the new user data
         setFormData(prev => ({
           ...prev,
-          username: response.user.username,
-          fullName: response.user.fullName,
-          email: response.user.email,
-          phoneNumber: response.user.phoneNumber,
-          bio: response.user.bio || '',
-          dateOfBirth: response.user.dateOfBirth ? new Date(response.user.dateOfBirth).toISOString().split('T')[0] : '',
-          gender: response.user.gender || '',
-          country: response.user.country || '',
+          username: mergedUser.username,
+          fullName: mergedUser.fullName,
+          email: mergedUser.email,
+          phoneNumber: mergedUser.phoneNumber,
+          bio: mergedUser.bio || '',
+          dateOfBirth: mergedUser.dateOfBirth ? new Date(mergedUser.dateOfBirth).toISOString().split('T')[0] : '',
+          gender: mergedUser.gender || '',
+          country: mergedUser.country || '',
           // Reset password fields
           password: '',
           confirmPassword: ''
         }));
-        
-        // Update the user context
-        updateUser(response.user);
       }
+      
+      // Update success message
+      setSuccess('Profile updated successfully!');
       
       // Exit edit mode
       setIsEditing(false);
       
-      // Clear any remaining loading states
-      setLoading(false);
-      toast.dismiss(toastId);
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to update profile';
       
-    } catch (err) {
-      console.error('Error updating profile:', err);
-      
-      // Dismiss any existing loading toast
-      toast.dismiss(toastId);
-      
-      // Extract error message
-      const errorMessage = err.response?.data?.message || err.message || 'An error occurred while updating your profile';
-      
-      // Show error toast
-      toast.error(errorMessage, {
-        autoClose: 5000,
-        position: 'top-center'
+      toast.update(toastId, {
+        render: errorMessage,
+        type: 'error',
+        isLoading: false,
+        autoClose: 5000
       });
       
-      // If there's a validation error from the server, update the errors state
-      if (err.response?.data?.errors) {
-        setErrors(err.response.data.errors);
-      } else {
-        setError(errorMessage);
-      }
-      
-      // Re-throw the error to be caught by any parent error boundaries
-      throw err;
+      setError(errorMessage);
     } finally {
-      // Ensure loading state is always reset
       setLoading(false);
-      
-      // Dismiss any remaining toasts after a short delay
-      setTimeout(() => {
-        toast.dismiss();
-      }, 100);
     }
   };
   
@@ -390,55 +310,118 @@ const Account = () => {
     }
   };
 
-  // Handle file upload with preview
+  // Handle file upload with preview and Cloudinary upload
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
+    
+    // Reset file input value to allow selecting the same file again
+    e.target.value = '';
+    
     // Validate file type
     const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
     if (!validTypes.includes(file.type)) {
-      toast.error('Please upload a valid image (JPEG, PNG, GIF, or WebP)');
+      toast.error('Please select a valid image file (JPEG, PNG, GIF, or WebP)');
       return;
     }
-
-    // Check file size (max 5MB)
+    
+    // Validate file size (5MB max)
     const maxSize = 5 * 1024 * 1024; // 5MB
     if (file.size > maxSize) {
-      toast.error(`Image size should be less than ${maxSize / (1024 * 1024)}MB`);
+      toast.error('Image size should be less than 5MB');
       return;
     }
-
+    
+    const toastId = toast.loading('Uploading image...');
+    
     try {
-      // Create a new File object to ensure we have all the necessary properties
-      const fileToUpload = new File(
-        [file], 
-        file.name || 'profile.jpg', 
-        { 
-          type: file.type || 'image/jpeg',
-          lastModified: file.lastModified || Date.now()
-        }
-      );
-
-      // Create preview URL from the file
-      const previewUrl = URL.createObjectURL(fileToUpload);
+      // Create FormData and append the file with the correct field name
+      const formDataToSend = new FormData();
+      formDataToSend.append('profilePicture', file); // Must match the field name expected by multer
       
-      // Update form data with preview and the file for upload
+      // Add other form data if needed
+      const { profilePicture, profilePictureFile, ...otherFormData } = formData;
+      Object.entries(otherFormData).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          formDataToSend.append(key, value);
+        }
+      });
+      
+      // Send to our backend which will handle the Cloudinary upload
+      const response = await authService.updateUserProfile(user._id, formDataToSend, true);
+ 
+      // Handle the response
+      const updatedUser = response?.data?.user || response?.user || response;
+      const newProfilePicture = updatedUser?.profilePicture;
+      
+      if (!newProfilePicture) {
+        throw new Error('No profile picture URL in response');
+      }
+      
+      // Create a preview URL for the image
+      const previewUrl = URL.createObjectURL(file);
+      
+      // Update form data with the new profile picture URL and preview
       setFormData(prev => ({
         ...prev,
-        profilePicture: previewUrl,
-        profilePictureFile: fileToUpload
+        profilePicture: newProfilePicture,
+        profilePicturePreview: previewUrl
       }));
       
-      console.log('File prepared for upload:', {
-        name: fileToUpload.name,
-        type: fileToUpload.type,
-        size: fileToUpload.size,
-        lastModified: fileToUpload.lastModified
+      // Update user context with new profile picture
+      updateUser({
+        ...user,
+        profilePicture: newProfilePicture
       });
+      
+      // Clean up the preview URL when component unmounts or when a new image is selected
+      const cleanup = () => {
+        if (previewUrl) URL.revokeObjectURL(previewUrl);
+      };
+      
+      // Update toast to show success with close button
+      toast.dismiss(toastId); // Dismiss the loading toast
+      toast.success('Profile picture updated successfully!', {
+        autoClose: 3000,
+        position: 'top-center',
+        closeButton: true,  // Show close button
+        closeOnClick: true, // Allow closing by clicking on the toast
+        pauseOnHover: true, // Pause auto-close on hover
+        draggable: true,   // Allow dragging to dismiss
+        theme: 'colored'   // Use colored theme for better visibility
+      });
+      
+      // Set up cleanup for when component unmounts
+      return cleanup;
     } catch (error) {
-      console.error('Error processing image:', error);
-      toast.error('Error processing image. Please try another image.');
+      console.error('Error uploading profile picture:', error);
+      
+      // Determine the error message to show
+      let errorMessage = 'Failed to upload profile picture. ';
+      
+      if (error.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        const { status, data } = error.response;
+        errorMessage += `Server responded with status ${status}`;
+        
+        if (data?.message) {
+          errorMessage += `: ${data.message}`;
+        }
+      } else if (error.request) {
+        // The request was made but no response was received
+        errorMessage += 'No response from server. Please check your connection.';
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        errorMessage = error.message || 'An unexpected error occurred';
+      }
+      
+      toast.update(toastId, {
+        render: errorMessage,
+        type: 'error',
+        isLoading: false,
+        autoClose: 5000
+      });
     }
   };
 
