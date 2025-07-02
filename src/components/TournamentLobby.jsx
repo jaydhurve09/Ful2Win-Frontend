@@ -51,6 +51,13 @@ const useCountdown = ({targetDate,endTime,status},onStart,onComplete) => {
       }
      
       // F
+      
+  // console.log(distance);
+      if (distance < 0) {
+        setTimeLeft('Starting soon...');
+        return;
+      }
+
       const days = Math.floor(distance / (1000 * 60 * 60 * 24));
       const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
       const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
@@ -176,6 +183,7 @@ const [confirmModal, setConfirmModal] = useState({
     return false;
   }
 };
+
 const handleConfirmRegister = async () => {
   const tournament = confirmModal.tournament;
   if (!tournament) return;
@@ -306,173 +314,173 @@ const handleRegisterTournament = async (tournamentId) => {
 
 
   // Tournament card component
-  const TournamentCard = ({ id, name, entryFee, prizePool, participants, maxParticipants, startTime, status, tournamentType,endTime,currentPlayers=[] }) => {
-    const countdown = useCountdown({targetDate:startTime,endTime,status },async () => {
-  const success = await setTournamentStatus(id, 'live');
-  if (success) {
-    fetchGameAndTournaments();  // re-fetch to show updated status
-  }
-},
-async () => {
-    await setTournamentStatus(id, 'completed');
-    fetchGameAndTournaments();
-  });
+const TournamentCard = ({ id, name, entryFee, prizePool, participants, maxParticipants, startTime, status, tournamentType, endTime, currentPlayers = [] }) => {
+  const countdown = useCountdown(
+    { targetDate: startTime, endTime, status },
+    async () => {
+      const success = await setTournamentStatus(id, 'live');
+      if (success) {
+        fetchGameAndTournaments(); // re-fetch to show updated status
+      }
+    },
+    async () => {
+      await setTournamentStatus(id, 'completed');
+      fetchGameAndTournaments();
+    }
+  );
 
-    const tournament = tournaments.find(t => t._id === id || t.id === id);
+  const tournament = tournaments.find(t => t._id === id || t.id === id);
   const hasJoined = currentPlayers?.some(p =>
     typeof p === 'string' ? p === userId : p?.userId === userId
   );
 
-    
-    const handleCardClick = () => {
-      // Only navigate if the tournament is live
-      if (status === 'live') {
-        handleViewTournament(id);
-      }
-    };
-    
-    const renderActionButtons = () => {
-      if (status === 'completed' || status === 'cancelled') {
-        return (
-          <div className="flex gap-2 w-full text-sm sm:text-base">
-            <div className="flex-1 text-center py-2 rounded-lg bg-gray-700 text-gray-300 text-xs sm:text-sm flex items-center justify-center">
-              {status.charAt(0).toUpperCase() + status.slice(1)}
-            </div>
-            <button 
-               className="flex-1 bg-white/90 hover:bg-white text-gray-900 font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center"
-              onClick={(e) => {
-                e.stopPropagation();
-                console.log('Navigating to leaderboard for tournament:', id);
-                 goToLeaderboard({ gameName: game.name, tournamentId: id });
-              }}
-            
-            >
-              <FaTrophy className="mr-1 sm:mr-2" size={14} />
-              <span className="truncate">Leaderboard</span>
-            </button>
-          </div>
-        );
-      }
-      
-     if (status === 'live') {
+  const handleCardClick = () => {
+    // Only navigate if the tournament is live
+    if (status === 'live') {
+      handleViewTournament(id);
+    }
+  };
 
-  return (
-    <div className="flex gap-2 w-full">
-     <button 
-  className={`flex-1 ${hasJoined ? 'bg-green-500 hover:bg-green-400' : 'bg-yellow-500 hover:bg-yellow-400'} text-gray-900 font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center`}
-  onClick={(e) => {
-    e.stopPropagation();
-    if (!hasJoined) {
-    setConfirmModal({ visible: true, tournament: tournaments.find(t => t._id === id || t.id === id) });
-  } else {
-    handleViewTournament(id);
-  }
-  }}
->
-  <FaGamepad className="mr-2" />
-  {hasJoined ? 'Play' : 'Register'}
-</button>
-
-      <button 
-        className="flex-1 bg-white/90 hover:bg-white text-gray-900 font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center"
-        onClick={(e) => {
-          e.stopPropagation();
-          goToLeaderboard({ gameName: game.name, tournamentId: id });
-        }}
-      >
-        <FaTrophy className="mr-2" />
-        Leaderboard
-      </button>
-    </div>
-  );
-}
- 
-      // For upcoming tournaments
+  const renderActionButtons = () => {
+    if (status === 'completed' || status === 'cancelled') {
       return (
-        <div className="flex gap-2 w-full">
-          <button 
-            className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center"
+        <div className="flex gap-2 w-full text-sm sm:text-base">
+          <div className="flex-1 text-center py-2 rounded-lg bg-gray-700 text-gray-300 text-xs sm:text-sm flex items-center justify-center">
+            {status.charAt(0).toUpperCase() + status.slice(1)}
+          </div>
+          <button
+            className="flex-1 bg-white/90 hover:bg-white text-gray-900 font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center"
             onClick={(e) => {
               e.stopPropagation();
-              showPopup(`You will be notified before "${name}" starts.`);
-              // TODO: Implement notification logic
+              console.log('Navigating to leaderboard for tournament:', id);
+              goToLeaderboard({ gameName: game.name, tournamentId: id });
             }}
           >
-            <FaBell className="mr-2" />
-            Notify Me
-          </button>
-          <button 
-            className="flex-1 bg-yellow-500/50 text-gray-900 font-medium py-2 px-4 rounded-lg flex items-center justify-center cursor-not-allowed"
-            disabled
-            onClick={(e) => {
-              e.stopPropagation();
-            }}
-          >
-            <FaClock className="mr-2" />
-            {countdown || 'Starting soon...'}
+            <FaTrophy className="mr-1 sm:mr-2" size={14} />
+            <span className="truncate">Leaderboard</span>
           </button>
         </div>
       );
-    };
-    
-    return (
-      <div 
-        className="bg-white/10 border border-white/10 backdrop-blur-md rounded-xl p-2 sm:p-3 shadow-md hover:border-yellow-400/50 transition-all duration-200 cursor-pointer h-full flex flex-col overflow-hidden min-h-[180px] sm:min-h-[200px]"
-        onClick={handleCardClick}
-      >
-        <div className="flex justify-between items-center mb-1">
-          <h3 className="text-sm sm:text-base font-semibold line-clamp-1 pr-2">{name}</h3>
-          <span className={`text-[9px] sm:text-xs px-1.5 py-0.5 rounded font-medium whitespace-nowrap ${
-            status === 'live' ? 'bg-red-500' :
-            status === 'upcoming' ? 'bg-yellow-500' :
-            status === 'completed' ? 'bg-green-500' : 'bg-gray-500'
-          }`}>
-            {status}
-          </span>
-        </div>
-        
-        <div className="grid grid-cols-2 gap-1.5 sm:gap-2 mb-1 text-xs sm:text-sm flex-grow">
-          <div className="flex items-center truncate">
-            {tournamentType === 'coin' ? (
-              <FaCoins className="text-yellow-400 mr-1 flex-shrink-0" size={12} />
-            ) : (
-              <FaRupeeSign className="text-yellow-400 mr-1 flex-shrink-0" size={10} />
-            )}
-            <span className="truncate">
-              {tournamentType === 'coin' ? `${entryFee || 0} coins` : formatPrize(entryFee || 0, false)}
-            </span>
-          </div>
-          <div className="flex items-center truncate">
-            <FaTrophy className="text-yellow-400 mr-1 flex-shrink-0" size={12} />
-            <span className="truncate">
-              {tournamentType === 'coin' ? `${prizePool || 0} coins` : formatPrize(prizePool || 0, false)}
-            </span>
-          </div>
-          <div className="flex items-center truncate">
-            <FaUsers className="text-yellow-400 mr-1 flex-shrink-0" size={12} />
-            <span className="truncate">{formatPlayerCount(participants?.length || 0, maxParticipants)}</span>
-          </div>
-          <div className="flex items-center truncate">
-            <FaClock className="text-yellow-400 mr-1 flex-shrink-0" size={12} />
-            <span className="truncate text-[10px] sm:text-xs">
-              {status === 'upcoming' ? 'Starts:' : 'Started:'} {formatDateTime(startTime).split(',').pop().trim()}
-            </span>
-          </div>
-        </div>
-        
-        <div className="bg-gray-800/50 rounded-full h-1 sm:h-1.5 mb-2">
-          <div 
-            className="bg-yellow-500 h-full rounded-full" 
-            style={{ 
-              width: `${Math.min(100, ((participants?.length || 0) / (maxParticipants || 1)) * 100)}%` 
+    }
+
+    if (status === 'live') {
+      return (
+        <div className="flex gap-2 w-full">
+          <button
+            className={`flex-1 ${hasJoined ? 'bg-green-500 hover:bg-green-400' : 'bg-yellow-500 hover:bg-yellow-400'} text-gray-900 font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center`}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (!hasJoined) {
+                setConfirmModal({ visible: true, tournament: tournaments.find(t => t._id === id || t.id === id) });
+              } else {
+                handleViewTournament(id);
+              }
             }}
-          />
+          >
+            <FaGamepad className="mr-2" />
+            {hasJoined ? 'Play' : 'Register'}
+          </button>
+
+          <button
+            className="flex-1 bg-white/90 hover:bg-white text-gray-900 font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center"
+            onClick={(e) => {
+              e.stopPropagation();
+              goToLeaderboard({ gameName: game.name, tournamentId: id });
+            }}
+          >
+            <FaTrophy className="mr-2" />
+            Leaderboard
+          </button>
         </div>
-        
-        {renderActionButtons()}
+      );
+    }
+
+    // For upcoming tournaments
+    return (
+      <div className="flex gap-2 w-full">
+        <button
+          className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center"
+          onClick={(e) => {
+            e.stopPropagation();
+            showPopup(`You will be notified before "${name}" starts.`);
+            // TODO: Implement notification logic
+          }}
+        >
+          <FaBell className="mr-2" />
+          Notify Me
+        </button>
+        <button
+          className="flex-1 bg-yellow-500/50 text-gray-900 font-medium py-2 px-4 rounded-lg flex items-center justify-center cursor-not-allowed"
+          disabled
+          onClick={(e) => {
+            e.stopPropagation();
+          }}
+        >
+          <FaClock className="mr-2" />
+          {countdown || 'Starting soon...'}
+        </button>
       </div>
     );
   };
+
+  return (
+    <div
+      className="bg-white/10 border border-white/10 backdrop-blur-md rounded-xl p-2 sm:p-3 shadow-md hover:border-yellow-400/50 transition-all duration-200 cursor-pointer h-full flex flex-col overflow-hidden min-h-[180px] sm:min-h-[200px]"
+      onClick={handleCardClick}
+    >
+      <div className="flex justify-between items-center mb-1">
+        <h3 className="text-sm sm:text-base font-semibold line-clamp-1 pr-2">{name}</h3>
+        <span className={`text-[9px] sm:text-xs px-1.5 py-0.5 rounded font-medium whitespace-nowrap ${
+          status === 'live' ? 'bg-red-500' :
+            status === 'upcoming' ? 'bg-yellow-500' :
+              status === 'completed' ? 'bg-green-500' : 'bg-gray-500'
+          }`}>
+          {status}
+        </span>
+      </div>
+
+      <div className="grid grid-cols-2 gap-1.5 sm:gap-2 mb-1 text-xs sm:text-sm flex-grow">
+        <div className="flex items-center truncate">
+          {tournamentType === 'coin' ? (
+            <FaCoins className="text-yellow-400 mr-1 flex-shrink-0" size={12} />
+          ) : (
+            <FaRupeeSign className="text-yellow-400 mr-1 flex-shrink-0" size={10} />
+          )}
+          <span className="truncate">
+            {tournamentType === 'coin' ? `${entryFee || 0} coins` : formatPrize(entryFee || 0, false)}
+          </span>
+        </div>
+        <div className="flex items-center truncate">
+          <FaTrophy className="text-yellow-400 mr-1 flex-shrink-0" size={12} />
+          <span className="truncate">
+            {tournamentType === 'coin' ? `${prizePool || 0} coins` : formatPrize(prizePool || 0, false)}
+          </span>
+        </div>
+        <div className="flex items-center truncate">
+          <FaUsers className="text-yellow-400 mr-1 flex-shrink-0" size={12} />
+          <span className="truncate">{formatPlayerCount(participants?.length || 0, maxParticipants)}</span>
+        </div>
+        <div className="flex items-center truncate">
+          <FaClock className="text-yellow-400 mr-1 flex-shrink-0" size={12} />
+          <span className="truncate text-[10px] sm:text-xs">
+            {status === 'upcoming' ? 'Starts:' : 'Started:'} {formatDateTime(startTime).split(',').pop().trim()}
+          </span>
+        </div>
+      </div>
+
+      <div className="bg-gray-800/50 rounded-full h-1 sm:h-1.5 mb-2">
+        <div
+          className="bg-yellow-500 h-full rounded-full"
+          style={{
+            width: `${Math.min(100, ((participants?.length || 0) / (maxParticipants || 1)) * 100)}%`
+          }}
+        />
+      </div>
+
+      {renderActionButtons()}
+    </div>
+  );
+};
 
   // Fetch game and tournaments
   const fetchGameAndTournaments = useCallback(async () => {

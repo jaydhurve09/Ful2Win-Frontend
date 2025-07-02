@@ -367,29 +367,101 @@ async getUserProfile(userId) {
  */
 async updateUserProfile(userId, userData, isFormData = false) {
   try {
-    const config = {
-      headers: {
-        'Content-Type': isFormData ? 'multipart/form-data' : 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      }
+    // Get the token
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('No authentication token found. Please log in again.');
+    }
+
+    // Prepare headers
+    const headers = {
+      'Accept': 'application/json',
+      'Authorization': `Bearer ${token}`
     };
-    
-    const response = await api.put(`/users/profile/${userId}`, userData, config);
-    
-    if (response.data) {
-      // Only update local storage if we have user data
-      const userData = response.data.user || response.data.data || response.data;
-      if (userData) {
-        localStorage.setItem('user', JSON.stringify(userData));
+
+    // Don't set Content-Type for FormData - let the browser set it with the correct boundary
+    if (!isFormData) {
+      headers['Content-Type'] = 'application/json';
+    }
+
+    // Log request data (without logging file contents)
+    if (isFormData && userData instanceof FormData) {
+      const formDataObj = {};
+      for (let [key, value] of userData.entries()) {
+        formDataObj[key] = value instanceof File 
+          ? `[File: ${value.name}, ${value.size} bytes, ${value.type}]` 
+          : value;
       }
+      console.log('Sending FormData:', formDataObj);
+    } else {
+      console.log('Sending JSON data:', userData);
     }
-    return response.data;
+
+    // Make the API request
+    const response = await api.put(
+      `/users/profile/${userId}`,
+      isFormData ? userData : JSON.stringify(userData),
+      { headers }
+    );
+
+    // Update local storage with the new user data
+    if (response.data) {
+      const updatedUser = response.data.user || response.data.data || response.data;
+      if (updatedUser) {
+        // Merge with existing user data to preserve any client-side only fields
+        const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+        localStorage.setItem('user', JSON.stringify({ ...currentUser, ...updatedUser }));
+      }
+      return response.data;
+    }
+    
+    throw new Error('No data received from server');
+    
   } catch (error) {
-    console.error('Error updating user profile:', error);
-    if (error.response && error.response.status === 401) {
-      this.clearAuthData();
+    console.error('Error updating user profile:', {
+      message: error.message,
+      status: error.response?.status,
+      data: error.response?.data,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
+
+    // Handle specific error cases
+    if (error.response) {
+      // Unauthorized - clear auth data
+      if (error.response.status === 401) {
+        this.clearAuthData();
+        throw new Error('Your session has expired. Please log in again.');
+      }
+      
+      // Handle validation errors
+      if (error.response.status === 400 || error.response.status === 422) {
+        const errorMsg = error.response.data?.message || 'Validation failed';
+        throw new Error(errorMsg);
+      }
+      
+      // Handle file size errors
+      if (error.response.status === 413) {
+        throw new Error('File size is too large. Please upload a smaller file.');
+      }
+      
+      // Handle file type errors
+      if (error.response.status === 415) {
+        throw new Error('Unsupported file type. Please upload a valid image (JPEG, PNG, etc.).');
+      }
+      
+      // Handle server errors
+      if (error.response.status >= 500) {
+        throw new Error('Server error. Please try again later.');
+      }
+    } else if (error.request) {
+      // The request was made but no response was received
+      throw new Error('No response from server. Please check your connection.');
+    } else if (error.message === 'Network Error') {
+      throw new Error('Unable to connect to the server. Please check your internet connection.');
     }
-    throw error;
+    
+    // Default error
+    throw error.message || 'Failed to update profile. Please try again.';
   }
 },
 

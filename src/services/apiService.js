@@ -124,9 +124,18 @@ const authService = {
   },
 
   // Update user profile
-  updateUserProfile: async (userId, userData) => {
+  updateUserProfile: async (userId, userData, isFormData = false) => {
     try {
-      const response = await api.put(`/api/users/profile/${userId}`, userData);
+      const config = {};
+      
+      // If it's a FormData request, set the correct headers
+      if (isFormData) {
+        config.headers = {
+          'Content-Type': 'multipart/form-data'
+        };
+      }
+      
+      const response = await api.put(`/api/users/profile/${userId}`, userData, config);
       return response.data;
     } catch (error) {
       console.error('Update profile error:', error);
