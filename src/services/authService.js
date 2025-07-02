@@ -1,4 +1,5 @@
 import api from './api';
+import { processProfilePicture } from '../utils/imageUtils';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -50,8 +51,7 @@ const authService = {
         phoneNumber: credentials.phoneNumber,
         password: credentials.password
       });
-      
-      console.log('Login response:', response);
+
       toast.success(response.data.message || 'Login successful');
 
       // Format the response to match what AuthContext expects
@@ -292,15 +292,23 @@ async getCurrentUserProfile() {
       withCredentials: true
     });
     
-    if (response.data) {
-      const userData = response.data.data || response.data;
+    if (response.data && response.data.success && response.data.data) {
+      const userData = response.data.data;
+      
+      // Process the profile picture URL if it exists
+      if (userData.profilePicture) {
+        const processedUrl = processProfilePicture(userData.profilePicture);
+        userData.profilePicture = processedUrl;
+      } else {
+        userData.profilePicture = '';
+      }
+      
+      // Store the processed user data
       localStorage.setItem('user', JSON.stringify(userData));
       return userData;
     }
     throw new Error('Failed to fetch user profile');
   } catch (error) {
-    console.error('Error fetching user profile:', error);
-    // Clear invalid auth data
     if (error.response && error.response.status === 401) {
       this.clearAuthData();
     }
@@ -325,10 +333,7 @@ getWalletBalance: async () => {
     const balance = userData.balance || 0;
     return { balance, currency: 'INR' };
   } catch (error) {
-    // Only log non-401 errors
-    if (!error.response || error.response.status !== 401) {
-      console.error('Error fetching wallet balance:', error);
-    }
+
     // Clear auth data on 401
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
@@ -388,13 +393,15 @@ async updateUserProfile(userId, userData, isFormData = false) {
 
     // Prepare headers
     const headers = {
-      'Accept': 'application/json',
       'Authorization': `Bearer ${token}`
     };
 
+    let dataToSend = userData;
+    
     // Don't set Content-Type for FormData - let the browser set it with the correct boundary
     if (!isFormData) {
       headers['Content-Type'] = 'application/json';
+      dataToSend = JSON.stringify(userData);
     }
 
     // Log request data (without logging file contents)
@@ -405,16 +412,17 @@ async updateUserProfile(userId, userData, isFormData = false) {
           ? `[File: ${value.name}, ${value.size} bytes, ${value.type}]` 
           : value;
       }
-      console.log('Sending FormData:', formDataObj);
-    } else {
-      console.log('Sending JSON data:', userData);
-    }
-
+      
+    } 
     // Make the API request
     const response = await api.put(
       `/users/profile/${userId}`,
-      isFormData ? userData : JSON.stringify(userData),
-      { headers }
+      dataToSend,
+      { 
+        headers,
+        // Important: Let the browser set the Content-Type with boundary for FormData
+        transformRequest: isFormData ? [(data) => data] : undefined
+      }
     );
 
     // Update local storage with the new user data
@@ -429,7 +437,6 @@ async updateUserProfile(userId, userData, isFormData = false) {
     }
     
     throw new Error('No data received from server');
-    
   } catch (error) {
     console.error('Error updating user profile:', {
       message: error.message,

@@ -147,16 +147,6 @@ const authService = {
         throw new Error('No authentication token found');
       }
 
-      // Log FormData contents for debugging
-      console.log('=== Uploading Profile Picture ===');
-      for (let [key, value] of formData.entries()) {
-        if (value instanceof File) {
-          console.log(`${key}: File - ${value.name} (${value.type}, ${value.size} bytes)`);
-        } else {
-          console.log(`${key}:`, value);
-        }
-      }
-
       // Make the request to upload the profile picture
       const response = await fetch(`${API_BASE_URL}/api/users/profile/${userId}/picture`, {
         method: 'PUT',
@@ -200,10 +190,6 @@ const authService = {
         throw new Error('No authentication token found');
       }
 
-      // Log the request details
-      console.log('Sending request to:', `${API_BASE_URL}/api/users/profile/${userId}`);
-      console.log('Request method: PUT');
-      
       // Initialize request options
       let requestOptions = {
         method: 'PUT',
@@ -217,20 +203,12 @@ const authService = {
       // Handle FormData (for file uploads)
       if (userData instanceof FormData) {
         // Don't set Content-Type header - let the browser set it with the correct boundary
+        // Removing Content-Type header to let the browser set it with the correct boundary
+        const { 'Content-Type': _, ...headersWithoutContentType } = requestOptions.headers;
+        requestOptions.headers = headersWithoutContentType;
+        
         requestOptions.body = userData;
-        
-        // Log FormData contents
-        console.log('=== FormData Contents ===');
-        for (let [key, value] of userData.entries()) {
-          if (value instanceof File || value instanceof Blob) {
-            console.log(`${key}: File - ${value.name} (${value.type}, ${value.size} bytes)`);
-          } else {
-            console.log(`${key}: ${value}`);
-          }
-        }
-        
-        requestOptions.headers['Content-Type'] = 'multipart/form-data';
-      } 
+      }
       // Handle plain objects (for regular form data)
       else if (typeof userData === 'object') {
         // Filter out empty strings and undefined values
@@ -240,15 +218,10 @@ const authService = {
         
         requestOptions.headers['Content-Type'] = 'application/json';
         requestOptions.body = JSON.stringify(cleanData);
-        
-        // Log JSON data
-        console.log('=== JSON Payload ===');
-        console.log(JSON.stringify(cleanData, null, 2));
       }
       
       // Make the API request
       const response = await fetch(`${API_BASE_URL}/api/users/profile/${userId}`, requestOptions);
-      console.log(`Received response status: ${response.status}`);
       
       // Parse the response data
       const data = await response.json();
@@ -258,7 +231,6 @@ const authService = {
         
         // If we have a 400 error but the picture was actually updated
         if (response.status === 400 && data.code === 'UPLOAD_ERROR' && data.user) {
-          console.log('Profile picture was updated, but the server returned a 400 status');
           return {
             success: true,
             message: 'Profile updated successfully',
@@ -268,7 +240,6 @@ const authService = {
         
         // Handle Cloudinary API key error specifically
         if (data.error && data.error.includes('Cloudinary') && data.error.includes('api_key')) {
-          console.warn('Cloudinary API key is missing or invalid');
           // Return a success response with the original data to continue the profile update
           return { 
             success: true, 
@@ -279,7 +250,6 @@ const authService = {
         
         // For other errors, check if we still have user data
         if (data.user) {
-          console.log('Returning success with user data despite error');
           return {
             success: true,
             message: data.message || 'Profile updated with warnings',
@@ -292,7 +262,6 @@ const authService = {
       
       // If we're updating the profile with a picture, make sure to update the user data
       if (userData instanceof FormData) {
-        console.log('[Profile] Updating local storage with user data');
         const token = localStorage.getItem('token');
         const user = JSON.parse(localStorage.getItem('user') || '{}');
         
@@ -301,13 +270,10 @@ const authService = {
         
         // Update local storage
         localStorage.setItem('user', JSON.stringify(updatedUser));
-        console.log('Local storage updated with profile picture:', updatedUser.profilePicture ? 'Yes' : 'No');
       }
       
       return data;
     } catch (error) {
-      console.error('Error in updateUserProfile:', error);
-      
       // Handle specific error cases
       if (error.response) {
         if (error.response.status === 401) {

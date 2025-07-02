@@ -23,6 +23,7 @@ import Account from "../components/Account";
 import { useAuth } from "../contexts/AuthContext";
 import { toast } from "react-toastify";
 import authService from "../services/authService";
+import { revokeBlobUrl } from '../utils/profilePicture';
 
 const ProfileScreen = () => {
   const navigate = useNavigate();
@@ -32,6 +33,8 @@ const ProfileScreen = () => {
   const [activeSection, setActiveSection] = useState("profile");
   const [activeProfileAction, setActiveProfileAction] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
+  const [profilePictureUrl, setProfilePictureUrl] = useState('');
+  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
   const [userStats, setUserStats] = useState({
     balance: 0,
     coins: 0,
@@ -39,10 +42,123 @@ const ProfileScreen = () => {
     wins: 0,
     matches: 0
   });
+
+  // Process profile picture URL
+  useEffect(() => {
+    if (!currentUser?._id) {
+      setProfilePictureUrl('');
+      return;
+    }
+
+    // Helper function to extract URL from potential object
+    const getProfilePictureUrl = (profilePic) => {
+      // If no profile picture, return empty string
+      if (!profilePic) return '';
+      
+      // If it's already a valid URL, use it directly
+      if (typeof profilePic === 'string') {
+        // Handle case where it might be a base64 string
+        if (profilePic.startsWith('data:image/')) {
+          return profilePic;
+        }
+        // Handle Cloudinary URLs
+        if (profilePic.includes('cloudinary.com')) {
+          // Ensure we're using HTTPS for Cloudinary
+          return profilePic.replace('http://', 'https://');
+        }
+        // Handle relative URLs
+        if (profilePic.startsWith('/')) {
+          return `${window.location.origin}${profilePic}`;
+        }
+        return profilePic;
+      }
+      
+      // If it's an object, try to extract URL from common properties
+      if (typeof profilePic === 'object') {
+        return (
+          profilePic.secure_url || // Cloudinary secure URL
+          profilePic.url ||        // Cloudinary URL
+          profilePic.publicUrl ||  // Other common property
+          (Array.isArray(profilePic) && profilePic[0]?.url) ||
+          ''
+        );
+      }
+      
+      return '';
+    };
+
+    const picUrl = getProfilePictureUrl(currentUser.profilePicture);
+    console.log('Profile picture URL:', { 
+      original: currentUser.profilePicture,
+      processed: picUrl,
+      isCloudinary: picUrl?.includes('cloudinary.com')
+    });
+
+    if (!picUrl) {
+      setProfilePictureUrl('');
+      return;
+    }
+
+    // Set the profile picture URL directly
+    setProfilePictureUrl(picUrl);
+  }, [currentUser?._id, currentUser?.profilePicture]);
+
+  // Helper function to convert blob to base64
+  const blobToBase64 = (blob) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  };
+
+  // Function to fetch fresh user data from server
+  const refreshUserData = useCallback(async () => {
+    if (!currentUser?._id) return;
+    
+    try {
+      const response = await authService.getCurrentUserProfile();
+      if (response) {
+        // Update local storage with fresh data
+        localStorage.setItem('user', JSON.stringify(response));
+        
+        // Update current user state
+        setCurrentUser(prev => ({
+          ...prev,
+          ...response,
+          // Preserve existing profile picture if not in response
+          profilePicture: response.profilePicture || prev?.profilePicture
+        }));
+        
+        // Update stats
+        setUserStats({
+          balance: response.balance || response.Balance || 0,
+          coins: response.coins || 0,
+          followers: response.stats?.followerCount || 0,
+          wins: response.stats?.wins || 0,
+          matches: response.stats?.matches || 0
+        });
+        
+        console.log('User data refreshed from server:', response);
+        return true;
+      }
+    } catch (error) {
+      console.error('Error refreshing user data:', error);
+      if (error.response?.status === 401) {
+        // Handle unauthorized
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        navigate('/login', { replace: true });
+        toast.error('Session expired. Please log in again.');
+      }
+    }
+    return false;
+  }, [currentUser?._id, navigate]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [userPosts, setUserPosts] = useState([]);
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false); // ✅ New state
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false); // New state
 
   const { userId } = useParams();
 
@@ -68,56 +184,41 @@ const ProfileScreen = () => {
         throw new Error('No authentication token found');
       }
       
-      // First try to get fresh data from API
-      try {
-        const response = await authService.getCurrentUserProfile();
-        if (response) {
-          const userData = response;
-          localStorage.setItem('user', JSON.stringify(userData));
-
-          const stats = {
-            balance: userData.balance || userData.Balance || 0,
-            coins: userData.coins || 0,
-            followers: userData.stats?.followerCount || 0,
-            wins: userData.stats?.wins || 0,
-            matches: userData.stats?.matches || 0
-          };
-
-          setUserStats(stats);
-          setCurrentUser(userData);
-
-          if (userData._id) {
-            await fetchUserPosts(userData._id);
+      // Try to refresh user data from the server
+      const refreshSuccess = await refreshUserData();
+      
+      // If refresh failed, try to use cached data
+      if (!refreshSuccess) {
+        const localUser = JSON.parse(localStorage.getItem('user') || '{}');
+        if (localUser?._id) {
+          console.log('Using cached user data');
+          setUserStats({
+            balance: localUser.balance || localUser.Balance || 0,
+            coins: localUser.coins || 0,
+            followers: localUser.stats?.followerCount || 0,
+            wins: localUser.stats?.wins || 0,
+            matches: localUser.stats?.matches || 0
+          });
+          setCurrentUser(localUser);
+          await fetchUserPosts(localUser._id);
+          
+          // Show warning about using cached data
+          if (navigator.onLine) {
+            toast.warning('Using cached data. Some information might be outdated.');
+          } else {
+            toast.warning('No internet connection. Using cached data.');
           }
-          return;
+        } else {
+          throw new Error('No user data available');
         }
-      } catch (apiError) {
-        // Only log non-401 errors
-        if (!apiError.message.includes('No authentication token')) {
-          console.warn('API fetch warning:', apiError);
-        }
-        // Continue to fallback to local storage if API fails
-      }
-
-      // Fallback to local storage if API fails
-      const localUser = JSON.parse(localStorage.getItem('user') || '{}');
-      if (localUser?._id) {
-        setUserStats(prev => ({
-          ...prev,
-          balance: localUser.balance || localUser.Balance || 0,
-          coins: localUser.coins || 0,
-          followers: localUser.stats?.followerCount || 0,
-          wins: localUser.stats?.wins || 0,
-          matches: localUser.stats?.matches || 0
-        }));
-        setCurrentUser(localUser);
-        await fetchUserPosts(localUser._id);
       } else {
-        // If no local user data, redirect to login
-        toast.error('Session expired. Please log in again.');
-        navigate('/login', { replace: true });
-        return;
+        // If refresh was successful, fetch posts for the user
+        const localUser = JSON.parse(localStorage.getItem('user') || '{}');
+        if (localUser?._id) {
+          await fetchUserPosts(localUser._id);
+        }
       }
+      
     } catch (error) {
       console.error('Error in fetchUserData:', error);
       if (error.message === 'No authentication token found' || 
@@ -143,10 +244,36 @@ const ProfileScreen = () => {
     fetchUserData();
   }, [fetchUserData]);
 
-  const handleRefresh = useCallback(() => {
+  const handleRefresh = useCallback(async () => {
+    if (refreshing) return; // Prevent multiple simultaneous refreshes
+    
     setRefreshing(true);
-    fetchUserData();
-  }, [fetchUserData]);
+    const toastId = toast.loading('Refreshing profile...');
+    
+    try {
+      const success = await refreshUserData();
+      if (success) {
+        toast.update(toastId, {
+          render: 'Profile refreshed successfully',
+          type: 'success',
+          isLoading: false,
+          autoClose: 2000
+        });
+      } else {
+        throw new Error('Failed to refresh profile');
+      }
+    } catch (error) {
+      console.error('Refresh error:', error);
+      toast.update(toastId, {
+        render: 'Failed to refresh profile. Please try again.',
+        type: 'error',
+        isLoading: false,
+        autoClose: 3000
+      });
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refreshing, refreshUserData]);
 
   const stats = [
     {
@@ -222,15 +349,24 @@ const ProfileScreen = () => {
         navigate("/supports");
         break;
       case "logout":
-        setShowLogoutConfirm(true); // ✅ Open custom modal instead of window.confirm
+        setShowLogoutConfirm(true); // Open custom modal instead of window.confirm
         break;
       default:
         break;
     }
   };
 
+  // Log current user data for debugging
+  console.log('Current user in render:', {
+    hasUser: !!currentUser,
+    hasProfilePicture: currentUser?.profilePicture ? true : false,
+    profilePictureType: typeof currentUser?.profilePicture,
+    profilePictureValue: currentUser?.profilePicture || '(none)'
+  });
+  
   return (
-    <div className="min-h-screen w-full text-white overflow-x-hidden relative px-4 py-8"
+    <>
+      <div className="min-h-screen w-full text-white overflow-x-hidden relative px-4 py-8"
       style={{
         background: "linear-gradient(to bottom, #0A2472 0%, #0D47A1 45%, #1565C0 100%)",
         paddingBottom: '100px'
@@ -241,18 +377,33 @@ const ProfileScreen = () => {
           <div className="flex items-center space-x-4">
             <div className="relative group w-20 h-20">
               <div className="w-full h-full rounded-full overflow-hidden border-2 border-dullBlue bg-gray-100 flex items-center justify-center">
-                {currentUser?.profilePicture ? (
-                  <img
-                    src={currentUser.profilePicture}
-                    alt="Profile"
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src = defaultProfile;
-                    }}
-                  />
+                {profilePictureUrl ? (
+                  <div className="w-full h-full relative">
+                    <img
+                      key={`${currentUser?._id || 'default'}-profile`}
+                      src={profilePictureUrl}
+                      alt="Profile"
+                      className="w-full h-full object-cover"
+                      onLoad={(e) => {
+                        console.log('Profile image loaded successfully');
+                      }}
+                      onError={(e) => {
+                        console.error('Failed to load profile image, using default');
+                        e.target.onerror = null;
+                        setProfilePictureUrl('');
+                      }}
+                    />
+                    {process.env.NODE_ENV === 'development' && (
+                      <div className="absolute bottom-0 right-0 bg-blue-500 text-white text-xs px-1 rounded-tl">
+                        {profilePictureUrl.includes('cloudinary.com') ? 'cdn' : 
+                         profilePictureUrl.startsWith('data:image/') ? 'data' : 'url'}
+                      </div>
+                    )}
+                  </div>
                 ) : (
-                  <FiUser className="text-dullBlue text-3xl" />
+                  <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                    <FiUser className="text-dullBlue text-3xl" />
+                  </div>
                 )}
               </div>
             </div>
@@ -406,7 +557,8 @@ const ProfileScreen = () => {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 };
 
