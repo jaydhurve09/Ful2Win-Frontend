@@ -34,7 +34,9 @@ const Header = () => {
   };
 
   const fetchWalletBalance = useCallback(async () => {
-    if (!isAuthenticated) {
+    // Check for token first
+    const token = localStorage.getItem('token');
+    if (!token || !isAuthenticated) {
       setBalance(0);
       return 0;
     }
@@ -46,7 +48,10 @@ const Header = () => {
       setBalance(balance);
       return balance;
     } catch (error) {
-      console.error('Error in fetchWalletBalance:', error);
+      // Only log non-401 errors
+      if (!error.response || error.response.status !== 401) {
+        console.error('Error in fetchWalletBalance:', error);
+      }
       setBalance(0);
       return 0;
     } finally {
@@ -56,10 +61,11 @@ const Header = () => {
 
   // Function to refresh balance
   const refreshBalance = useCallback(() => {
-    if (isAuthenticated) {
+    const token = localStorage.getItem('token');
+    if (isAuthenticated && token) {
       return fetchWalletBalance();
     } else {
-      // If not authenticated, reset balance to 0
+      // If not authenticated or no token, reset balance to 0
       setBalance(0);
       return Promise.resolve(0);
     }
@@ -84,22 +90,32 @@ const Header = () => {
     };
   }, [refreshBalance]);
 
-  // Fetch user profile data
+  // Fetch user profile data only when authenticated
   useEffect(() => {
     const fetchUserProfile = async () => {
-      if (isAuthenticated) {
-        try {
-          const userData = await authService.getCurrentUserProfile();
-          if (userData.profilePicture) {
-            setProfilePicture(userData.profilePicture);
-          }
-        } catch (error) {
+      // Only proceed if user is authenticated
+      const token = localStorage.getItem('token');
+      if (!token) {
+        return; // Exit if no token is found
+      }
+      
+      try {
+        const userData = await authService.getCurrentUserProfile();
+        if (userData?.profilePicture) {
+          setProfilePicture(userData.profilePicture);
+        }
+      } catch (error) {
+        // Only log errors that aren't related to missing authentication
+        if (!error.message.includes('No authentication token')) {
           console.error('Error fetching user profile:', error);
         }
       }
     };
 
-    fetchUserProfile();
+    // Only fetch if we have a token
+    if (isAuthenticated) {
+      fetchUserProfile();
+    }
   }, [isAuthenticated]);
   return (
     <>

@@ -62,6 +62,12 @@ const ProfileScreen = () => {
     setRefreshing(true);
     
     try {
+      // Check for token first
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+      
       // First try to get fresh data from API
       try {
         const response = await authService.getCurrentUserProfile();
@@ -86,7 +92,10 @@ const ProfileScreen = () => {
           return;
         }
       } catch (apiError) {
-        console.warn('API fetch warning:', apiError);
+        // Only log non-401 errors
+        if (!apiError.message.includes('No authentication token')) {
+          console.warn('API fetch warning:', apiError);
+        }
         // Continue to fallback to local storage if API fails
       }
 
@@ -111,7 +120,15 @@ const ProfileScreen = () => {
       }
     } catch (error) {
       console.error('Error in fetchUserData:', error);
-      if (!navigator.onLine) {
+      if (error.message === 'No authentication token found' || 
+          (error.response && error.response.status === 401)) {
+        // Clear any stale auth data
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        // Redirect to login page
+        navigate('/login', { replace: true });
+        toast.error('Please log in to continue');
+      } else if (!navigator.onLine) {
         toast.error('No internet connection. Using cached data.');
       } else {
         toast.error('Failed to load profile data. Please try again.');
