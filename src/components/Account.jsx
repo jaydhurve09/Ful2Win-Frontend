@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useContext, useCallback } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import { 
   FiUser, FiMail, FiLock, FiEye, FiEyeOff, FiCamera, 
   FiCalendar, FiGlobe, FiEdit2, FiSave, FiX 
@@ -44,9 +45,12 @@ const Account = () => {
   
   const [isEditing, setIsEditing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [countryOptions, setCountryOptions] = useState([]);
   const fileInputRef = useRef(null);
   const [originalData, setOriginalData] = useState(null);
@@ -160,179 +164,135 @@ const Account = () => {
   
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setError('');
+    setSuccess('');
     
-    // Clear previous errors and set loading state
-    setErrors({});
-    setIsSubmitting(true);
-    
-    // Create FormData for the request
-    const formDataToSend = new FormData();
+    const toastId = toast.loading('Updating profile...');
     
     try {
-      // Validate form
-      const validationErrors = {};
+      // Prepare the data to send
+      const dataToSend = { ...formData };
       
-      // Only validate username if it's being changed
-      if (formData.username !== user?.username) {
-        if (!formData.username) {
-          validationErrors.username = 'Username is required';
-        } else if (!/^[a-z0-9._-]+$/.test(formData.username)) {
-          validationErrors.username = 'Username can only contain lowercase letters, numbers, dots, underscores, and hyphens';
-        } else {
-          try {
-            const { available, error } = await checkUsernameAvailability(formData.username);
-            if (error) {
-              validationErrors.username = error;
-            } else if (!available) {
-              validationErrors.username = 'Username is already taken';
-            }
-          } catch (err) {
-            console.error('Error checking username:', err);
-            validationErrors.username = 'Error checking username availability';
-          }
-        }
-      }
-    
-      // Validate required fields
-      if (!formData.fullName) {
-        validationErrors.fullName = 'Full name is required';
-      }
-      
-      if (!formData.email) {
-        validationErrors.email = 'Email is required';
-      } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-        validationErrors.email = 'Email is invalid';
-      }
-      
-      if (!formData.phoneNumber) {
-        validationErrors.phoneNumber = 'Phone number is required';
-      } else if (!/^\d{10}$/.test(formData.phoneNumber)) {
-        validationErrors.phoneNumber = 'Please enter a valid 10-digit phone number';
-      }
-      
-      // Only validate password if it's being changed
-      if (formData.password) {
-        if (formData.password.length < 6) {
-          validationErrors.password = 'Password must be at least 6 characters';
-        } else if (formData.password !== formData.confirmPassword) {
-          validationErrors.confirmPassword = 'Passwords do not match';
-        }
-      }
-      
-      // Validate profile picture if it's being changed
+      // Check if we have a file to process
       if (formData.profilePictureFile) {
         const file = formData.profilePictureFile;
-        const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-        const maxSize = 5 * 1024 * 1024; // 5MB
         
-        if (!validTypes.includes(file.type)) {
-          validationErrors.profilePicture = 'Please upload a valid image (JPEG, PNG, GIF, or WebP)';
-        } else if (file.size > maxSize) {
-          validationErrors.profilePicture = 'Image size should be less than 5MB';
+        // Skip if it's a string (URL) or has a URL property (already uploaded)
+        if (typeof file === 'string' || (file && file.uri && file.uri.startsWith('http'))) {
+          console.log('Skipping URL/Cloudinary image, not a new file upload');
+          delete dataToSend.profilePicture;
+          delete dataToSend.profilePictureFile;
         }
-      }
-      
-      // If there are validation errors, show them and stop submission
-      if (Object.keys(validationErrors).length > 0) {
-        setErrors(validationErrors);
-        toast.error('Please fix the form errors before submitting');
-        return;
-      }
-    
-      // Add profile picture file if it exists and is a new file
-      if (formData.profilePictureFile) {
-        // Compress image before upload if it's an image
-        if (formData.profilePictureFile.type.startsWith('image/')) {
-          try {
-            // Show loading state for image processing
-            toast.info('Processing image, please wait...');
+        // Handle File objects (standard web file upload)
+        else if (file instanceof File) {
+          if (file.size > 0 && file.type.startsWith('image/')) {
+            const timestamp = Date.now();
+            const fileExtension = file.name.split('.').pop() || 'jpg';
+            const uniqueName = `profile_${timestamp}.${fileExtension}`;
             
-            // Create a compressed version of the image
-            const compressedFile = await compressImage(formData.profilePictureFile, {
-              maxSizeMB: 1,          // Max size 1MB
-              maxWidthOrHeight: 1024, // Max dimension 1024px
-              useWebWorker: true     // Use web worker for better performance
+            // Create a new File object with the correct name and type
+            const fileToUpload = new File(
+              [file],
+              uniqueName,
+              {
+                type: file.type || 'image/jpeg',
+                lastModified: timestamp
+              }
+            );
+            
+            // Add the file to the data
+            dataToSend.profilePicture = fileToUpload;
+            
+            console.log('File prepared for upload:', {
+              name: fileToUpload.name,
+              type: fileToUpload.type,
+              size: fileToUpload.size,
+              isFile: fileToUpload instanceof File
             });
-            
-            // Add the compressed file to form data
-            formDataToSend.append('profilePicture', compressedFile, formData.profilePictureFile.name);
-            console.log('Added compressed image to form data');
-          } catch (compressError) {
-            console.error('Error compressing image, using original:', compressError);
-            // Fallback to original file if compression fails
-            formDataToSend.append('profilePicture', formData.profilePictureFile);
+          } else {
+            console.warn('Invalid file, skipping upload:', file);
+            delete dataToSend.profilePicture;
+            delete dataToSend.profilePictureFile;
           }
-        } else {
-          // For non-image files, add as is
-          formDataToSend.append('profilePicture', formData.profilePictureFile);
         }
-      } else if (formData.profilePicture && !formData.profilePicture.startsWith('blob:')) {
-        // If it's not a blob URL, it's a regular URL that should be sent as a string
-        formDataToSend.append('profilePicture', formData.profilePicture);
+        // Handle React Native file objects
+        else if (file.uri) {
+          const timestamp = Date.now();
+          const fileName = file.fileName || `profile_${timestamp}.jpg`;
+          const fileToUpload = {
+            uri: file.uri,
+            type: file.type || 'image/jpeg',
+            name: fileName
+          };
+          
+          dataToSend.profilePicture = fileToUpload;
+          console.log('File prepared for upload (React Native):', fileToUpload);
+        }
+        // Clean up if the file is not in a supported format
+        else {
+          console.warn('Unsupported file format, skipping upload:', file);
+          delete dataToSend.profilePicture;
+          delete dataToSend.profilePictureFile;
+        }
       }
+      
+      // Call the API to update the user profile
+      const response = await authService.updateUserProfile(user._id, dataToSend);
+      
+      if (response.success) {
+        toast.update(toastId, {
+          render: 'Profile updated successfully!',
+          type: 'success',
+          isLoading: false,
+          autoClose: 3000
+        });
         
-        // Prepare non-file form data as a JSON string
-      const formFields = {
-        username: formData.username,
-        fullName: formData.fullName,
-        email: formData.email,
-        phoneNumber: formData.phoneNumber,
-        bio: formData.bio || '',
-        dateOfBirth: formData.dateOfBirth || '',
-        gender: formData.gender || '',
-        country: formData.country || ''
-      };
-      
-      // Only add password if it's being changed
-      if (formData.password) {
-        formFields.password = formData.password;
+        // Update success message
+        setSuccess('Profile updated successfully!');
+        
+        // Update form data with the new user data
+        setFormData(prev => ({
+          ...prev,
+          username: response.user.username,
+          fullName: response.user.fullName,
+          email: response.user.email,
+          phoneNumber: response.user.phoneNumber,
+          bio: response.user.bio || '',
+          dateOfBirth: response.user.dateOfBirth ? new Date(response.user.dateOfBirth).toISOString().split('T')[0] : '',
+          gender: response.user.gender || '',
+          country: response.user.country || '',
+          // Reset password fields
+          password: '',
+          confirmPassword: ''
+        }));
+        
+        // Update the user context - this will also update the user state
+        updateUser(response.user);
+        
+        // Exit edit mode
+        setIsEditing(false);
+      } else {
+        throw new Error(response.message || 'Failed to update profile');
       }
+    } catch (err) {
+      console.error('Error updating profile:', err);
       
-      // Add the form fields as a JSON string in the 'data' field
-      formDataToSend.append('data', JSON.stringify(formFields));
-      
-      console.log('Sending form data with files:', {
-        hasFile: !!formData.profilePictureFile,
-        formFields: formFields
+      toast.update(toastId, {
+        render: err.message || 'Failed to update profile',
+        type: 'error',
+        isLoading: false,
+        autoClose: 3000
       });
       
-      // Show loading state
-      const toastId = toast.loading('Updating profile...');
-      
-      try {
-        // Update user profile using the API service
-        const response = await authService.updateUserProfile(user._id, formDataToSend, true);
-        
-        if (response) {
-          // Update local user data with the returned user object
-          const updatedUser = response.user || response.data;
-          if (updatedUser) {
-            await updateUser(updatedUser);
-            // Exit edit mode and show success message
-            setIsEditing(false);
-            toast.dismiss(toastId);
-            toast.success(response.message || 'Profile updated successfully!');
-            // Refresh user data
-            await checkAuthState();
-            return;
-          }
-        }
-        
-        throw new Error(response?.message || 'Failed to update profile');
-        
-      } catch (error) {
-        console.error('Error updating profile:', error);
-        toast.dismiss(toastId);
-        toast.error(error.message || 'An error occurred while updating your profile');
-        throw error; // Re-throw to be caught by the outer catch
-      } finally {
-        setIsSubmitting(false);
+      // If there's a validation error from the server, update the errors state
+      if (err.response && err.response.data && err.response.data.errors) {
+        setErrors(err.response.data.errors);
+      } else {
+        setError(err.message || 'An error occurred while updating your profile');
       }
-    } catch (error) {
-      console.error('Error in form submission:', error);
-      // Error is already shown by the inner catch
     } finally {
-      setIsSubmitting(false);
+      setLoading(false);
     }
   };
   
@@ -406,15 +366,37 @@ const Account = () => {
       return;
     }
 
-    // Create preview URL
-    const previewUrl = URL.createObjectURL(file);
-    
-    // Update form data with preview and file
-    setFormData(prev => ({
-      ...prev,
-      profilePicture: previewUrl,
-      profilePictureFile: file
-    }));
+    try {
+      // Create a new File object to ensure we have all the necessary properties
+      const fileToUpload = new File(
+        [file], 
+        file.name || 'profile.jpg', 
+        { 
+          type: file.type || 'image/jpeg',
+          lastModified: file.lastModified || Date.now()
+        }
+      );
+
+      // Create preview URL from the file
+      const previewUrl = URL.createObjectURL(fileToUpload);
+      
+      // Update form data with preview and the file for upload
+      setFormData(prev => ({
+        ...prev,
+        profilePicture: previewUrl,
+        profilePictureFile: fileToUpload
+      }));
+      
+      console.log('File prepared for upload:', {
+        name: fileToUpload.name,
+        type: fileToUpload.type,
+        size: fileToUpload.size,
+        lastModified: fileToUpload.lastModified
+      });
+    } catch (error) {
+      console.error('Error processing image:', error);
+      toast.error('Error processing image. Please try another image.');
+    }
   };
 
   const toggleEdit = (e) => {
@@ -447,7 +429,7 @@ const Account = () => {
         <div className="pt-20 px-3 max-w-4xl mx-auto">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-bold">My Profile</h1>
-            {!isEditing && (
+            {!isEditing && !isLoading && (
               <button
                 type="button"
                 onClick={toggleEdit}

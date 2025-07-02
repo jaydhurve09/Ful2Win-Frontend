@@ -19,7 +19,7 @@ import { useNavigate, useLocation, useParams } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import defaultProfile from "../assets/default-profile.jpg";
 import BackgroundBubbles from "../components/BackgroundBubbles";
-import Account from "../components/Account.old";
+import Account from "../components/Account";
 import { useAuth } from "../contexts/AuthContext";
 import { toast } from "react-toastify";
 import authService from "../services/authService";
