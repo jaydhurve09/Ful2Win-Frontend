@@ -65,11 +65,8 @@ export const AuthProvider = ({ children }) => {
       if (!token) {
         updateAuthState(null, false);
         return false;
-      }
-      else{
-        // Set the token in the auth service
-        
-        updateAuthState(storedUser, true);
+      }else {
+        updateAuthState(user, true);
         return true;
       }
 

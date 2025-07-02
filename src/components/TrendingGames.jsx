@@ -83,7 +83,7 @@ const TrendingGames = () => {
         {games.map((game) => (
           <div 
             key={game.id}
-            onClick={() => handleGameClick(game.path)}
+            onClick={() => navigate('/games')}
             className={`${game.className} rounded-lg overflow-hidden shadow-lg hover:shadow-pink-500/20 transition-all duration-300 hover:-translate-y-1 cursor-pointer`}
           >
             <img 
