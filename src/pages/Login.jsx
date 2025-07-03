@@ -7,6 +7,7 @@ import logo from '../assets/logo.png';
 import { useAuth } from '../contexts/AuthContext';
 import BackgroundBubbles from '../components/BackgroundBubbles';
 import StartScreen from '../components/StartScreen';
+// changes
 
 const Login = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
