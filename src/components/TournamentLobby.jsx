@@ -193,7 +193,7 @@ const handleConfirmRegister = async () => {
   await handleRegisterTournament(tournamentId);
   setConfirmModal({ visible: false, tournament: null });
 
-  navigate(`/gameOn/${gameId}/${tournamentId}`);
+  //navigate(`/gameOn/${gameId}/${tournamentId}`);
 };
 
 const handleCancelRegister = () => {
@@ -275,12 +275,18 @@ const handleRegisterTournament = async (tournamentId) => {
       handleViewTournament(tournamentId);
     } else {
       toast.error(response.data.message || 'Registration failed');
+      return;
     }
   } catch (error) {
     console.error('Registration error:', error);
+    
     toast.error(
       error.response?.data?.message || 'Failed to register for tournament'
+      
     );
+    fetchGameAndTournaments();
+    return;
+    
   }
 };
 
@@ -307,7 +313,7 @@ const handleRegisterTournament = async (tournamentId) => {
     // if (isConfirmed) {
     //   console.log('Tournament confirmed:', { userId, gameId, tournamentId });
       
-     navigate(`/gameOn/${gameId}/${tournamentId}`);
+    navigate(`/gameOn/${gameId}/${tournamentId}`);
    // }
   };
   //console.log(tournaments.currentPlayers);
@@ -325,7 +331,9 @@ const TournamentCard = ({ id, name, entryFee, prizePool, participants, maxPartic
     },
     async () => {
       await setTournamentStatus(id, 'completed');
+      if(success) {
       fetchGameAndTournaments();
+      }
     }
   );
 
@@ -334,12 +342,12 @@ const TournamentCard = ({ id, name, entryFee, prizePool, participants, maxPartic
     typeof p === 'string' ? p === userId : p?.userId === userId
   );
 
-  const handleCardClick = () => {
-    // Only navigate if the tournament is live
-    if (status === 'live') {
-      handleViewTournament(id);
-    }
-  };
+  // const handleCardClick = () => {
+  //   // Only navigate if the tournament is live
+  //   if (status === 'live') {
+  //     handleViewTournament(id);
+  //   }
+  // };
 
   const renderActionButtons = () => {
     if (status === 'completed' || status === 'cancelled') {
@@ -426,7 +434,7 @@ const TournamentCard = ({ id, name, entryFee, prizePool, participants, maxPartic
   return (
     <div
       className="bg-white/10 border border-white/10 backdrop-blur-md rounded-xl p-2 sm:p-3 shadow-md hover:border-yellow-400/50 transition-all duration-200 cursor-pointer h-full flex flex-col overflow-hidden min-h-[180px] sm:min-h-[200px]"
-      onClick={handleCardClick}
+    
     >
       <div className="flex justify-between items-center mb-1">
         <h3 className="text-sm sm:text-base font-semibold line-clamp-1 pr-2">{name}</h3>
