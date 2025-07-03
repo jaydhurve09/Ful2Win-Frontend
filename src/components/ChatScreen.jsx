@@ -47,23 +47,36 @@ const ChatScreen = ({ selectedFriend, setSelectedFriend }) => {
   }, [messages, selectedFriend]);
 
   return (
-    <div className="relative w-full h-screen overflow-hidden text-white">
+    <div className="relative w-full bg-blueGradient h-screen overflow-hidden text-white">
       <BackgroundBubbles />
 
       {selectedFriend ? (
         <div className="w-full h-full">
 
           {/* Fixed Header */}
-          <div className="fixed top-0 left-0 right-0 h-[60px] bg-blue-800 bg-opacity-70 backdrop-blur-md z-20 flex items-center px-4">
+          <div className="fixed top-0 left-0 right-0 h-[60px] bg-blueGradient bg-opacity-100 backdrop-blur-md z-20 flex items-center px-4">
             <button onClick={() => setSelectedFriend(null)} className="mr-4 bg-white bg-opacity-20 p-2 rounded-full hover:bg-opacity-30">
               <FiArrowLeft size={20} />
             </button>
-            <img src={selectedFriend.avatar} alt={selectedFriend.name} className="w-10 h-10 rounded-full mr-3" />
+            <img
+              src={
+                selectedFriend.profilePicture ||
+                selectedFriend.avatar ||
+                `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedFriend.name || selectedFriend.username || 'U')}&background=0b3fae&color=fff`
+              }
+              alt={selectedFriend.name || selectedFriend.username || 'User'}
+              className="w-10 h-10 rounded-full mr-3"
+            />
             <div>
-              <h3 className="font-semibold">{selectedFriend.name}</h3>
-              <p className={`text-sm ${selectedFriend.online ? 'text-green-300' : 'text-gray-300'}`}>
-                {selectedFriend.online ? 'Online' : 'Offline'}
-              </p>
+              <h3 className="font-semibold">{selectedFriend.name || selectedFriend.username || 'User'}</h3>
+              {/* Optionally show online status if available, or always show 'Online' */}
+              {typeof selectedFriend.online !== 'undefined' ? (
+                <p className={`text-sm ${selectedFriend.online ? 'text-green-300' : 'text-gray-300'}`}>
+                  {selectedFriend.online ? 'Online' : 'Offline'}
+                </p>
+              ) : (
+                <p className="text-sm text-green-300">Online</p>
+              )}
             </div>
           </div>
 
@@ -83,7 +96,7 @@ const ChatScreen = ({ selectedFriend, setSelectedFriend }) => {
           </div>
 
           {/* Fixed Footer */}
-          <div className="fixed bottom-0 left-0 right-0 h-[72px] bg-blue-800 bg-opacity-70 backdrop-blur-md z-20 px-4 flex items-center">
+          <div className="fixed bottom-0 left-0 right-0 h-[72px] bg-blueGradient bg-opacity-70 backdrop-blur-md z-20 px-4 flex items-center">
             <div className="flex items-center bg-white rounded-full p-2 shadow-md w-full max-w-3xl mx-auto">
               <input
                 type="text"
@@ -95,7 +108,7 @@ const ChatScreen = ({ selectedFriend, setSelectedFriend }) => {
               />
               <button
                 onClick={sendMessage}
-                className="ml-2 p-2 bg-blue-600 rounded-full hover:bg-blue-700 transition text-white"
+                className="ml-2 p-2 bg-blueGradient rounded-full hover:bg-blueGradient transition text-white"
               >
                 <FiSend size={20} />
               </button>
