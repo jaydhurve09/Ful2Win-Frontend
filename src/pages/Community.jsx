@@ -78,11 +78,36 @@ const Community = () => {
         return;
       }
       
-      const postsData = await postService.getPosts(filters);
-      setPosts(postsData);
+      const postsData = await postService.getPosts({
+        ...filters,
+        sort: '-createdAt',
+        limit: 20
+      });
+      
+      // Process posts to ensure consistent structure
+      const processedPosts = postsData.map(post => ({
+        ...post,
+        // Ensure we have a user object with all required fields
+        user: post.user || post.author || post.createdBy || {
+          _id: post.userId || 'unknown',
+          username: 'user',
+          fullName: 'Unknown User',
+          profilePicture: null
+        },
+        // Ensure we have required post fields
+        likes: Array.isArray(post.likes) ? post.likes : [],
+        comments: Array.isArray(post.comments) ? post.comments : [],
+        likeCount: post.likeCount || post.likes?.length || 0,
+        commentCount: post.commentCount || post.comments?.length || 0,
+        createdAt: post.createdAt || new Date().toISOString(),
+        content: post.content || ''
+      }));
+      
+      setPosts(processedPosts);
     } catch (error) {
       console.error('Error fetching posts:', error);
       toast.error('Failed to load posts. Please try again.');
+      setPosts([]); // Ensure we have an empty array on error
     } finally {
       setIsLoading(false);
     }
