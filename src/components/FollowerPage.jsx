@@ -173,11 +173,11 @@ function FollowerPage() {
                           @{user.username}
                         </p>
                       )}
-                      {user.bio && (
+                      {/* {user.bio && (
                         <p className="text-sm text-white/70 mt-1 line-clamp-2">
                           {user.bio}
                         </p>
-                      )}
+                      )} */}
                     </div>
                     <button
                       onClick={(e) => {
