@@ -11,7 +11,6 @@ import SpinWheelScreen from '../components/SpinWheelScreen';
 import BackgroundBubbles from '../components/BackgroundBubbles';
 import BackgroundCircles from '../components/BackgroundCircles';
 import SpinIcon from '../assets/SpinIcon.png';
-import StartScreen from '../components/StartScreen';
 
 
 const Home = () => {
@@ -19,13 +18,6 @@ const Home = () => {
   const { isAuthenticated } = useAuth();
   const [showSpinWheel, setShowSpinWheel] = useState(false);
   
-  useEffect(() => {
-    // Show main content after a short delay to allow splash screen to show
-    const timer = setTimeout(() => {
-      setShowMainContent(true);
-    }, 3000); // Adjust the delay as needed
-    return () => clearTimeout(timer);
-  }, []);
   // Redirect to login if not authenticated
   if (!isAuthenticated) {
     
@@ -49,9 +41,6 @@ const Home = () => {
   const handleCloseSpin = () => {
     setShowSpinWheel(false);
   };
-  if (!showMainContent) {
-    return <StartScreen />;
-  }
 
   return (
     <div className="relative min-h-screen pb-24 overflow-hidden text-white bg-blueGradient">

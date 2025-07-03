@@ -157,8 +157,8 @@ const Signup = () => {
         password: formData.password,
         referralCode: formData.referralCode
       };
-     // const result = { success: true, message: 'OTP sent successfully' };
-     const result = await authService.register(userData);
+     
+      const result = await authService.register(userData);
       
       if (result && result.success) {
         // Registration successful, handle success
@@ -166,7 +166,7 @@ const Signup = () => {
         localStorage.setItem('user', JSON.stringify(result.user));
         localStorage.setItem('token', result.token);
         console.log('Registration successful:', result);
-        toast.success(result.message || 'Registration successful! Please login.');
+        toast.success(result.message || 'Registration successful! You are now logged in.');
         // Clear form
         setFormData({
           fullName: '',
@@ -176,21 +176,11 @@ const Signup = () => {
           confirmPassword: '',
           agree: false
         });
-        // Redirect to login page
+        // Redirect to home page
         navigate('/');
       } else {
         throw new Error(result?.message || 'Registration failed');
       }
-      // if (result && result.success) {
-      //   navigate('/verify-phone', {
-      //     state: {
-      //       formData: userData,
-      //       message: result.message
-      //     }
-      //   });
-      // } else {
-      //   throw new Error(result?.message || 'Registration failed');
-      // }
     } catch (error) {
       const message = error.response?.data?.message || 'Registration failed. Please try again.';
       toast.error(message);

@@ -28,8 +28,6 @@ import TournamentHistory from './components/TournamentHistory';
 import FlappyBall from './games/FlappyBall';
 import Login from './pages/Login';
 import SignUp from './pages/SignUp';
-import PhoneVerification from './pages/PhoneVerification';
-import ForgotPassword from './pages/ForgotPassword';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import ColorSmash from './games/ColorSmash';
@@ -77,8 +75,6 @@ function App() {
             {/* Public routes */}
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<SignUp />} />
-            <Route path="/verify-phone" element={<PhoneVerification />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
             
             {/* Protected routes */}
             <Route element={<ProtectedRoute />}>
