@@ -64,16 +64,22 @@ export const AuthProvider = ({ children }) => {
       
       if (!token) {
         updateAuthState(null, false);
+        setIsLoading(false);
         return false;
-      }else {
-        updateAuthState(user, true);
+      }
+      if (storedUser) {
+        updateAuthState(storedUser, true);
+        setIsLoading(false);
         return true;
       }
-
+      // If no user in localStorage, validate token with backend
       try {
         const response = await authService.getCurrentUserProfile();
-        if (response && response.data) {
-          updateAuthState(response.data, true);
+        if (response && (response.data || response._id)) {
+          // Support both {data: user} and direct user object
+          const userObj = response.data || response;
+          updateAuthState(userObj, true);
+          setIsLoading(false);
           return true;
         }
         throw new Error('Failed to fetch user profile');
@@ -81,6 +87,7 @@ export const AuthProvider = ({ children }) => {
         console.error('Token validation failed:', error);
         authService.clearAuthData();
         updateAuthState(null, false);
+        setIsLoading(false);
         return false;
       }
     } catch (error) {

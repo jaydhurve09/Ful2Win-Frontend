@@ -398,10 +398,15 @@ async updateUserProfile(userId, userData, isFormData = false) {
 
     let dataToSend = userData;
     
-    // Don't set Content-Type for FormData - let the browser set it with the correct boundary
+    // Only set Content-Type for JSON, never for FormData
     if (!isFormData) {
       headers['Content-Type'] = 'application/json';
       dataToSend = JSON.stringify(userData);
+    } else {
+      // Defensive: ensure Content-Type is not present for FormData
+      if ('Content-Type' in headers) {
+        delete headers['Content-Type'];
+      }
     }
 
     // Log request data (without logging file contents)
@@ -415,14 +420,13 @@ async updateUserProfile(userId, userData, isFormData = false) {
       
     } 
     // Make the API request
+    // For FormData, force Axios to not transform the request body
+    const axiosConfig = { headers };
+    // Do not override transformRequest; let Axios/browser set multipart boundaries automatically
     const response = await api.put(
       `/users/profile/${userId}`,
       dataToSend,
-      { 
-        headers,
-        // Important: Let the browser set the Content-Type with boundary for FormData
-        transformRequest: isFormData ? [(data) => data] : undefined
-      }
+      axiosConfig
     );
 
     // Update local storage with the new user data
