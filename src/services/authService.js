@@ -26,7 +26,7 @@ const authService = {
    */
   async register(userData) {
     try {
-      const response = await api.post('/auth/register', userData);
+      const response = await api.post('/users/register', userData);
       return response.data;
     } catch (error) {
       console.error('Registration error:', error);
