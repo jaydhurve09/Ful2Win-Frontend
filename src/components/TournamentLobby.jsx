@@ -546,19 +546,39 @@ const TournamentCard = ({ id, name, entryFee, prizePool, participants, maxPartic
   }, [fetchGameAndTournaments]);
 
   // Filter and separate tournaments by type
-  const filteredTournaments = tournaments.reduce((acc, tournament) => {
-    const matchesFilter = activeFilter === 'all' || tournament.status === activeFilter;
-    const matchesSearch = tournament.name.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    if (matchesFilter && matchesSearch) {
-      if (tournament.tournamentType === 'coin') {
-        acc.coins.push(tournament);
-      } else {
-        acc.cash.push(tournament);
-      }
+ const groupAndLimitTournaments = (list) => {
+  const filtered = list.filter(t =>
+    (activeFilter === 'all' || t.status === activeFilter) &&
+    t.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const statusOrder = ['live', 'upcoming', 'completed'];
+
+  const grouped = {
+    live: [],
+    upcoming: [],
+    completed: [],
+    cancelled: [],
+  };
+
+  for (const t of filtered) {
+    if (grouped[t.status]) {
+      grouped[t.status].push(t);
     }
-    return acc;
-  }, { coins: [], cash: [] });
+  }
+
+  // Limit completed to 5
+  grouped.completed = grouped.completed.slice(0, 3);
+
+  // Merge in order: live → upcoming → completed
+  return statusOrder.flatMap(status => grouped[status] || []);
+};
+
+// Apply to both coin and cash
+const filteredTournaments = {
+  coins: groupAndLimitTournaments(tournaments.filter(t => t.tournamentType === 'coin')),
+  cash: groupAndLimitTournaments(tournaments.filter(t => t.tournamentType !== 'coin')),
+};
 
   if (loading) {
     return (
