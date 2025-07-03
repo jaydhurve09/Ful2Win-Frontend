@@ -174,44 +174,28 @@ const ProfileScreen = () => {
   const fetchUserData = useCallback(async () => {
     setLoading(true);
     setRefreshing(true);
-    
     try {
-      // Check for token first
       const token = localStorage.getItem('token');
-      if (!token) {
-        throw new Error('No authentication token found');
+      if (!token) throw new Error('No authentication token found');
+
+      let profileData = null;
+      if (userId) {
+        // Fetch another user's profile
+        profileData = await authService.getUserProfile(userId);
+      } else {
+        // Fetch current user's profile
+        profileData = await authService.getCurrentUserProfile();
       }
-      
-      // Try to refresh user data from the server
-      try {
-        await refreshUserData();
-        // If refresh was successful, fetch posts for the user
-        const localUser = JSON.parse(localStorage.getItem('user') || '{}');
-        if (localUser?._id) {
-          await fetchUserPosts(localUser._id);
-        }
-      } catch (refreshError) {
-        // Only show toast if we're online and it's not a network error
-        if (navigator.onLine && !refreshError.message.includes('Network Error')) {
-          toast.warning('User data loaded.');
-        }
-        
-        const localUser = JSON.parse(localStorage.getItem('user') || '{}');
-        if (localUser?._id) {
-          setUserStats({
-            balance: localUser.balance || localUser.Balance || 0,
-            coins: localUser.coins || 0,
-            followers: localUser.stats?.followerCount || 0,
-            wins: localUser.stats?.wins || 0,
-            matches: localUser.stats?.matches || 0
-          });
-          setCurrentUser(localUser);
-          await fetchUserPosts(localUser._id);
-        } else {
-          throw new Error('No user data available');
-        }
-      }
-      
+      if (!profileData || !profileData._id) throw new Error('No user data available');
+      setCurrentUser(profileData);
+      setUserStats({
+        balance: profileData.balance || profileData.Balance || 0,
+        coins: profileData.coins || 0,
+        followers: profileData.stats?.followerCount || 0,
+        wins: profileData.stats?.wins || 0,
+        matches: profileData.stats?.matches || 0
+      });
+      await fetchUserPosts(profileData._id);
     } catch (error) {
       console.error('Error in fetchUserData:', error);
       if (error.message === 'No authentication token found' || 
@@ -221,7 +205,6 @@ const ProfileScreen = () => {
         navigate('/login', { replace: true });
         toast.error('Please log in to continue');
       } else if (!navigator.onLine) {
-        // Only show offline toast if we haven't already shown it
         if (!toast.isActive('offline-toast')) {
           toast.warning('No internet connection. Using cached data.', { toastId: 'offline-toast' });
         }

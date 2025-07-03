@@ -10,13 +10,35 @@ const postService = {
     try {
       const token = localStorage.getItem('token');
       const response = await api.get('/posts', {
-        params: filters,
+        params: {
+          ...filters,
+          populate: 'user,author,createdBy'  // Ensure we get user data populated
+        },
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
-      return response.data;
+      
+      // Process the response to ensure consistent post structure
+      const posts = Array.isArray(response.data) ? response.data : [];
+      return posts.map(post => ({
+        ...post,
+        // Ensure we have a user object with all required fields
+        user: post.user || post.author || post.createdBy || {
+          _id: post.userId || 'unknown',
+          username: 'user',
+          fullName: 'Unknown User',
+          profilePicture: null
+        },
+        // Ensure we have required post fields
+        likes: Array.isArray(post.likes) ? post.likes : [],
+        comments: Array.isArray(post.comments) ? post.comments : [],
+        likeCount: post.likeCount || post.likes?.length || 0,
+        commentCount: post.commentCount || post.comments?.length || 0,
+        createdAt: post.createdAt || new Date().toISOString(),
+        content: post.content || ''
+      }));
     } catch (error) {
       console.error('Error fetching posts:', error);
       throw error;
