@@ -362,12 +362,7 @@ const ProfileScreen = () => {
                         setProfilePictureUrl('');
                       }}
                     />
-                    {process.env.NODE_ENV === 'development' && (
-                      <div className="absolute bottom-0 right-0 bg-blue-500 text-white text-xs px-1 rounded-tl">
-                        {profilePictureUrl.includes('cloudinary.com') ? 'cdn' : 
-                         profilePictureUrl.startsWith('data:image/') ? 'data' : 'url'}
-                      </div>
-                    )}
+                    
                   </div>
                 ) : (
                   <div className="w-full h-full bg-gray-200 flex items-center justify-center">
