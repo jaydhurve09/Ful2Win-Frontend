@@ -9,7 +9,6 @@ const api = axios.create({
   timeout: 30000, // 30 seconds
   withCredentials: true,
   headers: {
-    'Content-Type': 'application/json',
     'Accept': 'application/json',
     'Cache-Control': 'no-cache, no-store, must-revalidate',
     'Pragma': 'no-cache',
@@ -24,29 +23,24 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
-    
-    // Don't override headers if they're already set
-    if (!config.headers) {
-      config.headers = {};
-    }
-    
-    // Only set Authorization header if token exists and it's not explicitly set
+    if (!config.headers) config.headers = {};
     if (token && !config.headers.Authorization) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    
     // For FormData uploads, let the browser set the Content-Type with boundary
     if (config.data instanceof FormData) {
+      // Remove any Content-Type headers so browser can set multipart boundary automatically
       delete config.headers['Content-Type'];
+      if (config.headers.common) delete config.headers.common['Content-Type'];
+      if (config.headers.post) delete config.headers.post['Content-Type'];
+      if (config.headers.put) delete config.headers.put['Content-Type'];
+      if (config.headers.patch) delete config.headers.patch['Content-Type'];
     } else if (!config.headers['Content-Type']) {
       config.headers['Content-Type'] = 'application/json';
     }
-    
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
 // Response interceptor for error handling
