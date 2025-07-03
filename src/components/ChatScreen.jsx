@@ -1,50 +1,80 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { FiArrowLeft, FiSend, FiMessageSquare } from 'react-icons/fi';
 import BackgroundBubbles from './BackgroundBubbles';
+import axios from 'axios';
+// Use Vite env for prod, fallback to localhost for dev
+axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+axios.defaults.withCredentials = true; // If backend uses cookies/JWT
 
-const friendsList = [
-  { id: 1, name: 'Alex Johnson', avatar: 'https://randomuser.me/api/portraits/men/32.jpg', online: true },
-  { id: 2, name: 'Sarah Williams', avatar: 'https://randomuser.me/api/portraits/women/44.jpg', online: true },
-  { id: 3, name: 'Michael Chen', avatar: 'https://randomuser.me/api/portraits/men/75.jpg', online: false },
-  { id: 4, name: 'Emma Davis', avatar: 'https://randomuser.me/api/portraits/women/68.jpg', online: false },
-  { id: 5, name: 'David Smith', avatar: 'https://randomuser.me/api/portraits/men/21.jpg', online: true },
-  { id: 6, name: 'Olivia Brown', avatar: 'https://randomuser.me/api/portraits/women/45.jpg', online: true },
-  { id: 7, name: 'Chris Evans', avatar: 'https://randomuser.me/api/portraits/men/12.jpg', online: false },
-  { id: 8, name: 'Sophia Wilson', avatar: 'https://randomuser.me/api/portraits/women/30.jpg', online: false },
-  { id: 9, name: 'Daniel Garcia', avatar: 'https://randomuser.me/api/portraits/men/43.jpg', online: true },
-  { id: 10, name: 'Emily Martinez', avatar: 'https://randomuser.me/api/portraits/women/55.jpg', online: true },
-];
+// Attach JWT token from localStorage to all axios requests (if present)
+axios.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token'); // Update key if your token is stored under a different name
+  if (token) {
+    config.headers['Authorization'] = `Bearer ${token}`;
+  }
+  return config;
+});
 
 const ChatScreen = ({ selectedFriend, setSelectedFriend }) => {
-  const [messages, setMessages] = useState({});
+  const [messages, setMessages] = useState([]);
   const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [sending, setSending] = useState(false);
   const messagesEndRef = useRef(null);
 
-  const handleFriendClick = (friend) => {
-    setSelectedFriend(friend);
-    if (!messages[friend.id]) {
-      setMessages((prev) => ({ ...prev, [friend.id]: [] }));
-    }
-  };
+  // Fetch messages when selectedFriend changes
+  useEffect(() => {
+    if (!selectedFriend || !selectedFriend._id) return;
+    setLoading(true);
+    axios.get(`/api/messages/${selectedFriend._id}`)
+      .then(res => {
+        setMessages(res.data || []);
+        setLoading(false);
+      })
+      .catch(err => {
+        setMessages([]);
+        setLoading(false);
+        // Enhanced error logging for debugging
+        if (err.response) {
+          console.error('Chat fetch error:', err.response.status, err.response.data);
+        } else {
+          console.error('Chat fetch error:', err.message);
+        }
+      });
+  }, [selectedFriend]);
 
-  const sendMessage = () => {
-    if (message.trim() === '' || !selectedFriend) return;
-    setMessages((prev) => ({
-      ...prev,
-      [selectedFriend.id]: [...(prev[selectedFriend.id] || []), { id: Date.now(), text: message, sender: 'me' }],
-    }));
-    setMessage('');
+  // Scroll to bottom on messages update
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages]);
+
+  const sendMessage = async () => {
+    if (!message.trim() || !selectedFriend || !selectedFriend._id) return;
+    setSending(true);
+    try {
+      const res = await axios.post('/api/messages', {
+        recipient: selectedFriend._id,
+        content: message.trim(),
+      });
+      setMessages(prev => [...prev, res.data]);
+      setMessage('');
+    } catch (err) {
+      // Enhanced error logging for debugging
+      if (err.response) {
+        console.error('Send message error:', err.response.status, err.response.data);
+      } else {
+        console.error('Send message error:', err.message);
+      }
+    }
+    setSending(false);
   };
 
   const handleKeyPress = (e) => {
     if (e.key === 'Enter') sendMessage();
   };
 
-  useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [messages, selectedFriend]);
 
   return (
     <div className="relative w-full bg-blueGradient h-screen overflow-hidden text-white">
@@ -85,13 +115,24 @@ const ChatScreen = ({ selectedFriend, setSelectedFriend }) => {
             className="absolute left-0 right-0 overflow-y-auto px-4 py-2"
             style={{ top: '60px', bottom: '72px' }}
           >
-            {(messages[selectedFriend.id] || []).map((msg) => (
-              <div key={msg.id} className={`flex ${msg.sender === 'me' ? 'justify-end' : 'justify-start'} mb-2`}>
-                <div className={`max-w-xs px-4 py-2 rounded-2xl ${msg.sender === 'me' ? 'bg-blue-600 text-white' : 'bg-white text-gray-800'}`}>
-                  {msg.text}
-                </div>
-              </div>
-            ))}
+            {loading ? (
+              <div className="text-center text-gray-300 mt-8">Loading messages...</div>
+            ) : messages.length === 0 ? (
+              <div className="text-center text-gray-400 mt-8">No messages yet. Say hi!</div>
+            ) : (
+              messages.map((msg) => {
+                const isMe = msg.sender === undefined || msg.sender === null
+                  ? false
+                  : (msg.sender._id || msg.sender) === (window?.currentUser?._id || localStorage.getItem('userId'));
+                return (
+                  <div key={msg._id || msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'} mb-2`}>
+                    <div className={`max-w-xs px-4 py-2 rounded-2xl ${isMe ? 'bg-blue-600 text-white' : 'bg-white text-gray-800'}`}>
+                      {msg.content}
+                    </div>
+                  </div>
+                );
+              })
+            )}
             <div ref={messagesEndRef} />
           </div>
 
