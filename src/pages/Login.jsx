@@ -6,6 +6,8 @@ import 'react-toastify/dist/ReactToastify.css';
 import logo from '../assets/logo.png';
 import { useAuth } from '../contexts/AuthContext';
 import BackgroundBubbles from '../components/BackgroundBubbles';
+import StartScreen from '../components/StartScreen';
+// changes
 
 const Login = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -15,14 +17,20 @@ const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { login, isAuthenticated } = useAuth();
-
+  const [showMainContent, setShowMainContent] = useState(false);
+  
+ 
   useEffect(() => {
+    const timer1 = setTimeout(() => {
     if (isAuthenticated) {
+      
       toast.info('You are  logged in');
       const from = location.state?.from?.pathname || '/';
       navigate(from, { replace: true });
     }
+  }, 3000);
   }, [isAuthenticated, navigate, location.state]);
+
 
   const validatePhoneNumber = (phone) => {
     const digitsOnly = phone.replace(/\D/g, '');
@@ -51,9 +59,17 @@ const Login = () => {
       setIsLoading(true);
       const result = await login({ phoneNumber: formattedPhone, password });
       if (result.success) {
+        setShowMainContent(true);
+
+        // Show main content after a short delay to allow splash screen to show
+      const timer = setTimeout(() => {
+        setShowMainContent(false);
         toast.success('Login successful!');
-        // Navigate to home with state indicating we came from auth
         navigate('/', { state: { from: 'auth' } });
+        
+      }, 3000); // Adjust the delay as needed
+
+       
       } else {
         toast.error('Invalid phone number or password');
       }
@@ -62,11 +78,14 @@ const Login = () => {
     } finally {
       setIsLoading(false);
     }
+
   };
 
   return (
     <div className="min-h-screen bg-blueGradient flex flex-col justify-end relative">
       <BackgroundBubbles />
+      {showMainContent ? (<StartScreen />) : (
+        <>
       <div className="absolute top-20 left-1/2 transform -translate-x-1/2 flex flex-col items-center">
         <img src={logo} alt="Ful2Win Logo" className="w-45 md:w-44 mb-4" />
         <p className="text-red-500 text-sm font-semibold text-center">
@@ -106,14 +125,7 @@ const Login = () => {
             />
           </div>
 
-          {/* Forgot password link */}
-          <div className="text-right text-sm mb-4">
-            <Link to="/forgot-password" className="text-blue-600 hover:underline">
-              Forgot Password?
-            </Link>
-          </div>
-
-          {/* Terms agreement */}
+{/* Terms agreement */}
           <div className="flex items-center mb-4 text-sm">
             <input
               type="checkbox"
@@ -148,7 +160,9 @@ const Login = () => {
           </Link>
         </p>
       </div>
-    </div>
+      </>
+      )};
+    </div>   
   );
 };
 
