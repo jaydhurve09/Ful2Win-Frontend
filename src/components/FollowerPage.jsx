@@ -1,42 +1,38 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import authService from '../services/authService';
-import api from '../services/api';
+import Header from '../components/Header';
+import Navbar from '../components/Navbar';
+import BackgroundBubbles from '../components/BackgroundBubbles';
 import { toast } from 'react-toastify';
-import Header from './Header';
-import Navbar from './Navbar';
-import BackgroundBubbles from './BackgroundBubbles';
+import api from '../services/api';
+import authService from '../services/authService';
 
-const FollowerPage = () => {
+function FollowerPage() {
   const [search, setSearch] = useState('');
   const [users, setUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { user: authUser } = useAuth();
   const navigate = useNavigate();
 
   const fetchUsers = useCallback(async () => {
     try {
       setLoading(true);
-      
-      // Fetch current user's profile first to ensure we're authenticated
       const currentUser = await authService.getCurrentUserProfile();
-      if (!currentUser) {
-        throw new Error('Not authenticated');
-      }
-      
-      // Fetch all users from the backend
-      const response = await api.get('/users');
-      
-      // Filter out the current user
-      const allUsers = response.data.filter(user => user._id !== currentUser._id);
-      
-      setUsers(allUsers);
-      setFilteredUsers(allUsers);
-    } catch (error) {
-      console.error('Error fetching users:', error);
-      toast.error('Failed to load users. Please try again later.');
+      if (!currentUser) throw new Error('Not authenticated');
+
+      const res = await api.get('/users/community');
+      const list = Array.isArray(res.data)
+        ? res.data
+        : Array.isArray(res.data?.users)
+        ? res.data.users
+        : [];
+
+      const others = list.filter((u) => u._id !== currentUser._id);
+      setUsers(others);
+      setFilteredUsers(others);
+    } catch (err) {
+      console.error(err);
+      toast.error('Unable to load community members');
       setUsers([]);
       setFilteredUsers([]);
     } finally {
@@ -48,46 +44,27 @@ const FollowerPage = () => {
     fetchUsers();
   }, [fetchUsers]);
 
-  // Apply search filter
   useEffect(() => {
-    if (!search) {
+    const term = search.toLowerCase();
+    if (!term) {
       setFilteredUsers(users);
       return;
     }
-
-    const searchTerm = search.toLowerCase();
-    const filtered = users.filter(user => 
-      user.name?.toLowerCase().includes(searchTerm) ||
-      user.email?.toLowerCase().includes(searchTerm) ||
-      user.username?.toLowerCase().includes(searchTerm)
+    setFilteredUsers(
+      users.filter(
+        (u) =>
+          (u.name || '').toLowerCase().includes(term) ||
+          (u.username || '').toLowerCase().includes(term) ||
+          (u.email || '').toLowerCase().includes(term)
+      )
     );
-    setFilteredUsers(filtered);
   }, [search, users]);
-
-  // Filter users based on search query
-  useEffect(() => {
-    if (!search) {
-      setFilteredUsers(users);
-      return;
-    }
-
-    const searchTerm = search.toLowerCase();
-    const filtered = users.filter(user => 
-      (user.name?.toLowerCase().includes(searchTerm) ||
-      user.email?.toLowerCase().includes(searchTerm) ||
-      user.username?.toLowerCase().includes(searchTerm))
-    );
-    setFilteredUsers(filtered);
-  }, [search, users]);
-
-  const displayUsers = filteredUsers;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#0b3fae] via-[#1555d1] to-[#2583ff] text-white pb-24 overflow-hidden">
       <BackgroundBubbles />
       <div className="relative z-10">
         <Header />
-
         <div className="pt-20 px-4 max-w-4xl mx-auto">
           {/* Back button + Heading */}
           <div className="flex items-center justify-center gap-3 mb-6 relative">
@@ -107,9 +84,9 @@ const FollowerPage = () => {
             <div className="relative w-full max-w-md">
               <input
                 type="text"
-                placeholder="Search by name, username, or email..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search by name, username, or email..."
                 className="w-full px-4 py-3 pl-10 rounded-lg bg-white/10 text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-blue-400"
               />
               <svg
@@ -129,12 +106,12 @@ const FollowerPage = () => {
             </div>
           </div>
 
-          {/* User Cards */}
+          {/* Users List */}
           {loading ? (
             <div className="flex justify-center items-center py-12">
               <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-400"></div>
             </div>
-          ) : displayUsers.length === 0 ? (
+          ) : filteredUsers.length === 0 ? (
             <div className="text-center py-12">
               <div className="bg-white/5 rounded-xl p-6 max-w-md mx-auto">
                 <div className="text-5xl mb-4">👥</div>
@@ -142,10 +119,10 @@ const FollowerPage = () => {
                   {search ? 'No users found' : 'No active users'}
                 </h3>
                 <p className="text-white/70 mb-4">
-                  {search 
+                  {search
                     ? 'Try a different search term'
-                    : 'There are no other active users at the moment.'}
-                  </p>
+                    : 'There are no other active users right now.'}
+                </p>
                 {search && (
                   <button
                     onClick={() => setSearch('')}
@@ -158,30 +135,38 @@ const FollowerPage = () => {
             </div>
           ) : (
             <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-              {displayUsers.map((user) => (
+              {filteredUsers.map((user) => (
                 <div
                   key={user._id}
                   onClick={() => navigate(`/profile/${user._id}`)}
                   className="bg-white/10 backdrop-blur-lg rounded-xl p-4 flex items-center space-x-4 hover:bg-white/20 cursor-pointer transition-colors duration-200"
                 >
                   <img
-                    src={user.profilePicture || user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || user.username || 'U')}&background=0b3fae&color=fff`}
+                    src={
+                      user.profilePicture ||
+                      user.avatar ||
+                      `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                        user.name || user.username || 'U'
+                      )}&background=0b3fae&color=fff`
+                    }
                     alt={user.name || user.username || 'User'}
                     className="w-12 h-12 rounded-full border-2 border-blue-400 object-cover flex-shrink-0"
                     onError={(e) => {
                       e.target.onerror = null;
-                      e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || user.username || 'U')}&background=0b3fae&color=fff`;
+                      e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                        user.name || user.username || 'U'
+                      )}&background=0b3fae&color=fff`;
                     }}
                   />
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-semibold text-white truncate">
-                        {user.name || user.username || 'User'}
-                      </h3>
-                    </div>
-                    <p className="text-sm text-white/60 truncate">
-                      {user.username && `@${user.username}`}
-                    </p>
+                    <h3 className="text-lg font-semibold text-white truncate">
+                      {user.name || user.username || 'User'}
+                    </h3>
+                    {user.username && (
+                      <p className="text-sm text-white/60 truncate">
+                        @{user.username}
+                      </p>
+                    )}
                     {user.bio && (
                       <p className="text-sm text-white/70 mt-1 line-clamp-2">
                         {user.bio}
@@ -197,6 +182,6 @@ const FollowerPage = () => {
       <Navbar />
     </div>
   );
-};
+}
 
 export default FollowerPage;
