@@ -1,5 +1,5 @@
 import axios from 'axios';
-
+const API_BASE_URL = 'https://api.fulboost.fun';
 // Environment configuration
 const api = axios.create({
   baseURL: 'https://api.fulboost.fun',
@@ -142,7 +142,11 @@ const authService = {
       const response = await fetch(`${API_BASE_URL}/api/users/profile/${userId}/picture`, {
         method: 'PUT',
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
           // Let the browser set the Content-Type with boundary for FormData
         },
         body: formData,
