@@ -1,4 +1,6 @@
-  import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import authService from '../services/authService';
+import { toast } from 'react-toastify';
 
 const COLORS = [
   '#800080', '#FF1493', '#FFB6C1', '#FF0000',
@@ -70,7 +72,7 @@ const SpinWheelScreen = ({ onClose, isVisible, initialSpins = 5 }) => {
     localStorage.setItem(LAST_TIMESTAMP_KEY, lastTimestamp.toString());
   }, [lastTimestamp]);
 
-  const spin = () => {
+  const spin = async () => {
     if (isSpinning || spinsLeft === 0) return;
 
     const randomOffset = Math.random() * 360;
@@ -81,17 +83,28 @@ const SpinWheelScreen = ({ onClose, isVisible, initialSpins = 5 }) => {
     setRotation(finalRotation);
     setIsSpinning(true);
 
-    setTimeout(() => {
+    setTimeout(async () => {
       const finalAngle = finalRotation % 360;
       const pointerAngle = (360 - finalAngle + SEGMENT_DEGREE / 2) % 360;
       const index = Math.floor(pointerAngle / SEGMENT_DEGREE) % SEGMENT_COUNT;
       const correctedIndex = (index - 4 + SEGMENT_COUNT) % SEGMENT_COUNT;
+      const coinsWon = parseInt(LABELS[correctedIndex], 10);
 
-      setIsSpinning(false);
-      setSpinsLeft((s) => Math.max(0, s - 1));
-      setCurrentReward(`${LABELS[correctedIndex]} Coins`);
-      setShowReward(true);
-      setLastTimestamp(Date.now());
+      try {
+        // Register coin win in backend
+        await authService.spinWheelWin(coinsWon);
+        // Refresh user profile (wallet, history, etc.)
+        await authService.getCurrentUserProfile();
+        setIsSpinning(false);
+        setSpinsLeft((s) => Math.max(0, s - 1));
+        setCurrentReward(`${LABELS[correctedIndex]} Coins`);
+        setShowReward(true);
+        setLastTimestamp(Date.now());
+        toast.success(`You won ${coinsWon} coins!`);
+      } catch (error) {
+        setIsSpinning(false);
+        toast.error('Failed to register coin win. Please try again.');
+      }
     }, 3500);
   };
 
