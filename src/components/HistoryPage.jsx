@@ -32,6 +32,7 @@ const HistoryPage = () => {
     balance: 0, 
     coins: 0, 
     transactions: [],
+    coinHistory: [],
     profilePicture: ''
   });
   const [loading, setLoading] = useState(true);
@@ -44,7 +45,7 @@ const HistoryPage = () => {
       const userData = await authService.getCurrentUserProfile();
       
       if (userData) {
-        // Transform transactions from the user data to match our format
+        // Cash transactions from wallet.transactions
         const transactions = userData.transactions || [];
         const formattedTxns = transactions.map(txn => ({
           id: txn._id || Date.now().toString(),
@@ -53,14 +54,27 @@ const HistoryPage = () => {
           date: new Date(txn.createdAt || Date.now()).toLocaleString(),
           amount: txn.amount || 0,
           isPositive: txn.transactionType === 'credit',
-          category: txn.currency === 'coins' ? 'coins' : 'cash',
+          category: 'cash',
           status: txn.status || 'completed'
+        }));
+
+        // Coin transactions from user.coinHistory
+        const coinHistory = (userData.coinHistory || []).map(txn => ({
+          id: txn._id || txn.reference || Date.now().toString(),
+          type: txn.type || 'Spin Wheel',
+          title: txn.description || 'Spin Wheel Reward',
+          date: new Date(txn.date || Date.now()).toLocaleString(),
+          amount: txn.amount || 0,
+          isPositive: true,
+          category: 'coins',
+          status: 'completed'
         }));
 
         setWallet({
           balance: userData.balance || userData.Balance || 0,
           coins: userData.coins || 0,
           transactions: formattedTxns,
+          coinHistory: coinHistory,
           profilePicture: userData.profilePicture || userData.avatar || ''
         });
       }
@@ -97,8 +111,7 @@ const HistoryPage = () => {
     .filter(t => t.category === 'cash')
     .sort((a, b) => new Date(b.date) - new Date(a.date));
     
-  const coinTxns = wallet.transactions
-    .filter(t => t.category === 'coins')
+  const coinTxns = (wallet.coinHistory || [])
     .sort((a, b) => new Date(b.date) - new Date(a.date));
 
   const renderTransactions = (txns) => (

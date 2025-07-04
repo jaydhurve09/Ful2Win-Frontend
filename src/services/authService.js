@@ -216,6 +216,30 @@ const authService = {
   },
 
   /**
+   * Register coins won from Spin Wheel in backend
+   * @param {number} coins - Number of coins won
+   * @returns {Promise<Object>} Backend response
+   */
+  async spinWheelWin(coins) {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+      const response = await api.post('/wallet/spin-reward', { amount: coins }, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error registering spin wheel win:', error);
+      throw error;
+    }
+  },
+
+  /**
         if (userData) {
           localStorage.setItem('user', JSON.stringify(userData));
           
