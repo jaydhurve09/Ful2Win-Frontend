@@ -26,7 +26,7 @@ const LeaderboardPage = () => {
         }
 
         const response = await axios.get(
-          `${import.meta.env.VITE_API_BASE_URL}/api/tournaments/${tournamentId}/leaderboard`,
+          `${process.env.REACT_APP_API_URL}/api/tournaments/${tournamentId}/leaderboard`,
           {
             headers: {
               'Authorization': `Bearer ${token}`

@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import axios from "axios";
 import ScoreCard from "./ScoreCard"; // Make sure this component exists
 
-const API_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
   
 const GameOn = () => {
   const { gameId, tournamentId } = useParams(); // ✅ fetch route params

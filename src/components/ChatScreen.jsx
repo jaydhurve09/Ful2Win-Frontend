@@ -5,7 +5,7 @@ import axios from 'axios';
 import { io } from 'socket.io-client';
 
 // Use Vite env for prod, fallback to localhost for dev
-axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+axios.defaults.baseURL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 axios.defaults.withCredentials = true;
 
 axios.interceptors.request.use((config) => {
@@ -33,7 +33,7 @@ const ChatScreen = ({ selectedFriend, setSelectedFriend }) => {
 
   useEffect(() => {
     if (!currentUserId) return;
-    const socket = io(import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000', {
+    const socket = io(process.env.REACT_APP_API_URL || 'http://localhost:5000', {
       withCredentials: true,
     });
     socket.emit('join', currentUserId);
