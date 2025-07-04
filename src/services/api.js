@@ -1,11 +1,8 @@
 import axios from 'axios';
 
 // Environment configuration
-const API_BASE_URL = 'https://api.fulboost.fun';
-
-// Create axios instance with base configuration
 const api = axios.create({
-  baseURL: `${API_BASE_URL}`,
+  baseURL: 'https://api.fulboost.fun',
   timeout: 30000, // 30 seconds
   withCredentials: true,
   headers: {
