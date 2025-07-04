@@ -34,7 +34,7 @@ const ProfileScreen = () => {
   const [activeProfileAction, setActiveProfileAction] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
   const [profilePictureUrl, setProfilePictureUrl] = useState('');
-  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+  const apiUrl = process.env.REACT_APP_API_URL || 'https://api.fulboost.fun/api';
   const [userStats, setUserStats] = useState({
     balance: 0,
     coins: 0,
