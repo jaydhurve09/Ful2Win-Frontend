@@ -47,7 +47,7 @@ const authService = {
       }
 
       // Make the login request with the correct endpoint path
-      const response = await api.post('/users/login', {
+      const response = await api.post('/login', {
         phoneNumber: credentials.phoneNumber,
         password: credentials.password
       });
