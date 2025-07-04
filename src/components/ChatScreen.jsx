@@ -1,11 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { FiArrowLeft, FiSend, FiMessageSquare } from 'react-icons/fi';
+import { FiArrowLeft, FiSend } from 'react-icons/fi';
 import BackgroundBubbles from './BackgroundBubbles';
 import axios from 'axios';
 import { io } from 'socket.io-client';
 
-// Use Vite env for prod, fallback to localhost for dev
-axios.defaults.baseURL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 axios.defaults.withCredentials = true;
 
 axios.interceptors.request.use((config) => {
@@ -25,15 +24,29 @@ const ChatScreen = ({ selectedFriend, setSelectedFriend }) => {
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
-    const updateUserId = () => setCurrentUserId(localStorage.getItem('userId'));
-    updateUserId();
-    window.addEventListener('storage', updateUserId);
-    return () => window.removeEventListener('storage', updateUserId);
-  }, [selectedFriend]);
+    function getUserIdFromStorage() {
+      let userId = localStorage.getItem('userId');
+      if (!userId) {
+        try {
+          const user = JSON.parse(localStorage.getItem('user'));
+          if (user && user._id) userId = user._id;
+        } catch (e) {}
+      }
+      return userId ? String(userId) : null;
+    }
+    setCurrentUserId(getUserIdFromStorage());
+    function handleStorage() {
+      setCurrentUserId(getUserIdFromStorage());
+    }
+    window.addEventListener('storage', handleStorage);
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+    };
+  }, []);
 
   useEffect(() => {
-    if (!currentUserId) return;
-    const socket = io(process.env.REACT_APP_API_URL || 'http://localhost:5000', {
+    if (!currentUserId || !selectedFriend || !selectedFriend._id) return;
+    const socket = io(import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000', {
       withCredentials: true,
     });
     socket.emit('join', currentUserId);
@@ -55,19 +68,27 @@ const ChatScreen = ({ selectedFriend, setSelectedFriend }) => {
   }, [currentUserId, selectedFriend]);
 
   useEffect(() => {
-    if (!selectedFriend || !selectedFriend._id) return;
+    if (!selectedFriend || !selectedFriend._id || !currentUserId) return;
     setLoading(true);
-    axios.get(`/api/messages/${selectedFriend._id}`)
+    axios.get(`/api/messages/conversation?user1=${currentUserId}&user2=${selectedFriend._id}`)
       .then(res => {
-        setMessages(res.data || []);
+        const sorted = (res.data || []).sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+        setMessages(sorted);
         setLoading(false);
       })
-      .catch(err => {
-        setMessages([]);
-        setLoading(false);
-        console.error('Chat fetch error:', err.response?.data || err.message);
+      .catch(() => {
+        axios.get(`/api/messages/${selectedFriend._id}`)
+          .then(res2 => {
+            const sorted2 = (res2.data || []).sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+            setMessages(sorted2);
+            setLoading(false);
+          })
+          .catch(() => {
+            setMessages([]);
+            setLoading(false);
+          });
       });
-  }, [selectedFriend]);
+  }, [selectedFriend, currentUserId]);
 
   useEffect(() => {
     if (messagesEndRef.current) {
@@ -86,7 +107,7 @@ const ChatScreen = ({ selectedFriend, setSelectedFriend }) => {
       setMessages(prev => [...prev, res.data]);
       setMessage('');
     } catch (err) {
-      console.error('Send message error:', err.response?.data || err.message);
+      console.error('Send message error:', err);
     }
     setSending(false);
   };
@@ -95,12 +116,28 @@ const ChatScreen = ({ selectedFriend, setSelectedFriend }) => {
     if (e.key === 'Enter') sendMessage();
   };
 
+  console.log('ChatScreen render', {
+    messages,
+    currentUserId,
+    selectedFriend,
+    filtered: messages.filter((msg) => {
+      const sender = msg.sender?._id || msg.sender || '';
+      const recipient = msg.recipient?._id || msg.recipient || '';
+      const userId = String(currentUserId).trim();
+      const friendId = String(selectedFriend?._id).trim();
+      return (
+        (String(sender) === userId && String(recipient) === friendId) ||
+        (String(sender) === friendId && String(recipient) === userId)
+      );
+    }),
+  });
+
   return (
     <div className="relative w-full bg-blueGradient h-screen overflow-hidden text-white">
       <BackgroundBubbles />
 
       {selectedFriend ? (
-        <div className="w-full h-full">
+        <div className="w-full h-full relative">
           {/* Header */}
           <div className="fixed top-0 left-0 right-0 h-[60px] bg-blueGradient bg-opacity-100 backdrop-blur-md z-20 flex items-center px-4">
             <button onClick={() => setSelectedFriend(null)} className="mr-4 bg-white bg-opacity-20 p-2 rounded-full hover:bg-opacity-30">
@@ -124,25 +161,27 @@ const ChatScreen = ({ selectedFriend, setSelectedFriend }) => {
           </div>
 
           {/* Messages */}
-          <div className="absolute left-0 right-0 overflow-y-auto px-4 py-2" style={{ top: '60px', bottom: '72px' }}>
-            <div className="chat-messages">
+          <div className="absolute left-0 right-0 overflow-y-auto px-4 py-2" style={{ top: '60px', bottom: '72px', background: 'rgba(0,0,0,0.2)', zIndex: 10, minHeight: 200 }}>
+            <div className="chat-messages border border-red-500 min-h-[200px]" style={{ background: '#fff', color: '#000' }}>
               {loading ? (
                 <div className="loading">Loading...</div>
               ) : messages.length === 0 ? (
                 <div className="no-messages">No messages yet.</div>
               ) : (
                 messages
-                  .filter(msg => {
-                    const senderId = typeof msg.sender === 'object' ? msg.sender._id : msg.sender;
-                    const recipientId = typeof msg.recipient === 'object' ? msg.recipient._id : msg.recipient;
+                  .filter((msg) => {
+                    const sender = msg.sender?._id || msg.sender || '';
+                    const recipient = msg.recipient?._id || msg.recipient || '';
+                    const userId = String(currentUserId).trim();
+                    const friendId = String(selectedFriend._id).trim();
                     return (
-                      String(senderId) === String(currentUserId) ||
-                      String(recipientId) === String(currentUserId)
+                      (String(sender) === userId && String(recipient) === friendId) ||
+                      (String(sender) === friendId && String(recipient) === userId)
                     );
                   })
                   .map((msg) => {
-                    const senderId = typeof msg.sender === 'object' ? msg.sender._id : msg.sender;
-                    const isSent = String(senderId) === String(currentUserId);
+                    const senderId = msg.sender?._id || msg.sender || '';
+                    const isSent = String(senderId).trim() === String(currentUserId).trim();
                     return (
                       <div key={msg._id} className="my-2 flex" style={{ justifyContent: isSent ? 'flex-end' : 'flex-start' }}>
                         <div
@@ -208,10 +247,9 @@ const ChatScreen = ({ selectedFriend, setSelectedFriend }) => {
           </div>
         </div>
       ) : (
-        <div className="flex flex-col w-full h-full overflow-y-auto px-4 pt-4 pb-20">
+        <div className="flex flex-col w-full h-full overflow-y-auto px-4 pt-4 pb-20" style={{ background: '#fff', color: '#000' }}>
           <div className="mt-4 space-y-4 w-full max-w-3xl mx-auto">
-            {/* Friend list can go here if needed */}
-            <p className="text-center text-white/70">No friend selected.</p>
+            <p className="text-center text-black/70">No friend selected.</p>
           </div>
         </div>
       )}
