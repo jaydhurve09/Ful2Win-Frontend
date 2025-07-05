@@ -141,7 +141,7 @@ const authService = {
         throw new Error('No authentication token found');
       }
 
-      const response = await api.get(`/${userId}`, {
+      const response = await api.get(`/profile/${userId}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -168,7 +168,7 @@ const authService = {
       if (!token) {
         throw new Error('No authentication token found');
       }
-      const response = await api.post('/wallet/spin-reward', { amount: coins }, {
+      const response = await api.post( `${BACKEND_URL}/api/wallet/spin-reward` || 'http://localhost:5000/api/wallet/spin-reward', { amount: coins }, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
