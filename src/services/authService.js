@@ -30,7 +30,13 @@ const authService = {
         throw new Error('Phone number and password are required');
       }
 
-      const response = await api.post('/api/users/login', credentials);
+      // Patch: send only { phone, password } to backend
+const loginPayload = credentials.phoneNumber
+  ? { phone: Number(credentials.phoneNumber), password: credentials.password }
+  : { phone: Number(credentials.phone), password: credentials.password };
+const response = await api.post('/login', loginPayload, {
+  headers: { 'Content-Type': 'application/json' }
+});
       toast.success(response.data.message || 'Login successful');
 
       if (response.data) {
