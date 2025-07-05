@@ -59,8 +59,7 @@ const authService = {
     try {
       console.log('Sending login request to /api/users/login');
       const response = await api.post('/api/users/login', {
-        phoneNumber: userData.phoneNumber,
-        email: userData.email,
+        phone: userData.phoneNumber,
         password: userData.password
       });
 
