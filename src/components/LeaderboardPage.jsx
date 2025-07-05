@@ -25,8 +25,13 @@ const LeaderboardPage = () => {
           return;
         }
 
+        const apiUrl = 
+          (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL) 
+          || (typeof process !== 'undefined' && process.env && process.env.REACT_APP_API_URL) 
+          || 'http://localhost:5000';
+
         const response = await axios.get(
-          `${process.env.REACT_APP_API_URL}/api/tournaments/${tournamentId}/leaderboard`,
+          `${apiUrl}/api/tournaments/${tournamentId}/leaderboard`,
           {
             headers: {
               'Authorization': `Bearer ${token}`

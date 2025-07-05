@@ -181,7 +181,11 @@ const TournamentLobby = () => {
         return game.assets.thumbnail;
       }
       // Handle relative paths
-      return `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/games/${game.id}/assets/${game.assets.thumbnail}`;
+      return `${(typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL)
+  ? import.meta.env.VITE_API_URL
+  : (typeof process !== 'undefined' && process.env && process.env.REACT_APP_API_URL)
+    ? process.env.REACT_APP_API_URL
+    : 'http://localhost:5000'}/api/games/${game.id}/assets/${game.assets.thumbnail}`;
     }
     
     // Fallback to tournament image if available
@@ -189,7 +193,11 @@ const TournamentLobby = () => {
       if (tournament.image.startsWith('http')) {
         return tournament.image;
       }
-      return `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/games/${tournament.gameId}/assets/${tournament.image}`;
+      return `${(typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL)
+  ? import.meta.env.VITE_API_URL
+  : (typeof process !== 'undefined' && process.env && process.env.REACT_APP_API_URL)
+    ? process.env.REACT_APP_API_URL
+    : 'http://localhost:5000'}/api/games/${tournament.gameId}/assets/${tournament.image}`;
     }
     
     // Default fallback
