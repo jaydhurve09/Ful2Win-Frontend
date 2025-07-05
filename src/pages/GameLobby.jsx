@@ -5,7 +5,7 @@ import GameLobby from '../components/GameLobby';
 import { useNavigate, useLocation } from 'react-router-dom';
 import snakeAndLadderImage from '../assets/snake-and-ladder.png';
 import { useParams } from 'react-router-dom';
-const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 import { useEffect, useState } from 'react';
 const GameLobbyPage = () => {
   const navigate = useNavigate();
