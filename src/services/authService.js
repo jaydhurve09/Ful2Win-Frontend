@@ -47,10 +47,7 @@ const authService = {
       }
 
       // Make the login request with the correct endpoint path
-      const response = await api.post('/login', {
-        phoneNumber: credentials.phoneNumber,
-        password: credentials.password
-      });
+      const response = await api.post('/api/users/login', credentials);
 
       toast.success(response.data.message || 'Login successful');
 

@@ -4,7 +4,7 @@ import axios from 'axios';
 const ENV = {
   isProduction: import.meta.env.PROD,
   isDevelopment: import.meta.env.DEV,
-  apiBaseUrl: import.meta.env.VITE_API_BASE_URL || '',
+  apiBaseUrl: process.env.REACT_APP_API_URL || '',
   apiUrl: import.meta.env.VITE_API_URL || ''
 };
 

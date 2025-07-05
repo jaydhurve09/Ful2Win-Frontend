@@ -22,7 +22,7 @@ const ColorSmash = () => {
         console.log("🎯 Final Score from Game:", score);
         // Send the score to the backend
        // axios
-       //   .post("http://localhost:5000/score/submit-score", {
+       //   .post('https://api.fulboost.fun/score/submit-score', {
         //    userId: "12345", // Replace with actual user ID
         //    score: score,
          //   roomId: "67890", // Replace with actual room ID

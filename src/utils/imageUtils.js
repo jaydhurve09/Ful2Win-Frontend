@@ -18,7 +18,7 @@ export const processProfilePicture = (url) => {
   
   // If it's a relative path, make it absolute using the API URL
   if (url.startsWith('/')) {
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+    const apiUrl = 'https://api.fulboost.fun';
     return `${apiUrl}${url}`;
   }
   
@@ -32,7 +32,7 @@ export const processProfilePicture = (url) => {
   } catch (e) {
     // If it's not a valid URL but contains a path, try to make it absolute
     if (url && !url.match(/^[a-zA-Z]+:/)) {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const apiUrl = 'https://api.fulboost.fun';
       return `${apiUrl}/${url.startsWith('/') ? url.substring(1) : url}`;
     }
     return '';
