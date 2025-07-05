@@ -5,6 +5,8 @@ import axios from 'axios';
 import Header from '../components/Header';
 import Navbar from '../components/Navbar';
 import BackgroundBubbles from '../components/BackgroundBubbles';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const API_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
@@ -29,8 +31,9 @@ const Leaderboard = () => {
         console.error("Invalid leaderboard data format", response.data);
       }
     } catch (error) {
+      
+      toast.error(error.response?.data?.message || "An error occurred while fetching leaderboard data.");
       navigate(-1);
-      alert(error.response?.data?.message || "An error occurred while fetching leaderboard data.");
       console.error("Error fetching leaderboard data:", error);
     }
   };
@@ -68,7 +71,7 @@ const Leaderboard = () => {
         <div className="text-xs text-white/70 font-semibold px-2 mb-2 flex justify-between">
           <div className="w-1/12">#</div>
           <div className="w-5/12">Player</div>
-          <div className="w-3/12 text-right">Balance</div>
+          <div className="w-3/12 text-right">Score</div>
           <div className="w-3/12 text-right">Prize Won</div>
         </div>
 
