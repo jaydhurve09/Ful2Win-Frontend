@@ -60,6 +60,7 @@ const Login = () => {
     try {
       setIsLoading(true);
       const result = await login({ phoneNumber: formattedPhone, password });
+      console.log('Login API result:', result); // Debug: See what the frontend receives
       // Robustly handle backend response
       if (result && typeof result === 'object' && result.success) {
         setShowMainContent(true);
