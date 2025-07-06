@@ -57,7 +57,7 @@ const Login = () => {
 
     try {
       setIsLoading(true);
-      const result = await login({ phoneNumber: formattedPhone, password });
+      const result = await login({ phone: formattedPhone, password });
       if (result.success) {
         setShowMainContent(true);
 
