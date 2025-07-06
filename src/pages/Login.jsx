@@ -58,20 +58,20 @@ const Login = () => {
     try {
       setIsLoading(true);
       const result = await login({ phoneNumber: formattedPhone, password });
-      if (result.success) {
+      // Robustly handle backend response
+      if (result && typeof result === 'object' && result.success) {
         setShowMainContent(true);
 
         // Show main content after a short delay to allow splash screen to show
-      const timer = setTimeout(() => {
-        setShowMainContent(false);
-        toast.success('Login successful!');
-        navigate('/', { state: { from: 'auth' } });
-        
-      }, 3000); // Adjust the delay as needed
-
-       
+        const timer = setTimeout(() => {
+          setShowMainContent(false);
+          toast.success('Login successful!');
+          navigate('/', { state: { from: 'auth' } });
+        }, 3000); // Adjust the delay as needed
+      } else if (result && typeof result === 'object' && result.message) {
+        toast.error(result.message);
       } else {
-        toast.error('Invalid phone number or password');
+        toast.error('Login failed: Unexpected server response.');
       }
     } catch (error) {
       toast.error(error.message || 'Login failed. Please try again.');
