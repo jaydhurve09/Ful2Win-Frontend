@@ -1,7 +1,15 @@
-import api from './api';
-import { processProfilePicture } from '../utils/imageUtils';
+import axios from 'axios';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { processProfilePicture } from '../utils/imageUtils';
+
+const api = axios.create({
+  baseURL: 'https://api.fulboost.fun/api',
+  withCredentials: true,
+  headers: {
+    'Content-Type': 'application/json'
+  }
+});
 
 const authService = {
   async checkUsername(username) {
@@ -30,41 +38,29 @@ const authService = {
         throw new Error('Phone number and password are required');
       }
 
-      // Patch: send only { phone, password } to backend
-const loginPayload = credentials.phoneNumber
-  ? { phone: Number(credentials.phoneNumber), password: credentials.password }
-  : { phone: Number(credentials.phone), password: credentials.password };
-const response = await api.post('/login', loginPayload, {
-  headers: { 'Content-Type': 'application/json' }
-});
+      const loginPayload = {
+        phone: Number(credentials.phoneNumber),
+        password: credentials.password
+      };
+
+      const response = await api.post('/login', loginPayload);
       toast.success(response.data.message || 'Login successful');
 
-      if (response.data) {
-        let userData = response.data;
-        let token = response.data.token;
+      const { data } = response;
+      if (data && data.token && data.data) {
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(data.data));
 
-        if (response.data.data) {
-          userData = response.data.data;
-          token = response.data.token || response.data.data.token;
-        }
-
-        if (token) {
-          localStorage.setItem('token', token);
-
-          if (userData) {
-            localStorage.setItem('user', JSON.stringify(userData));
-            return {
-              data: {
-                success: true,
-                token,
-                data: userData
-              }
-            };
+        return {
+          data: {
+            success: true,
+            token: data.token,
+            data: data.data
           }
-        }
+        };
       }
 
-      console.error('Unexpected login response format:', response.data);
+      console.error('Unexpected login response format:', data);
       throw new Error('Invalid response format from server');
 
     } catch (error) {
@@ -101,39 +97,31 @@ const response = await api.post('/login', loginPayload, {
   async getCurrentUserProfile() {
     try {
       const token = localStorage.getItem('token');
-      if (!token) {
-        throw new Error('No authentication token found');
-      }
+      if (!token) throw new Error('No authentication token found');
 
       const response = await api.get('/me', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        withCredentials: true
+        headers: { 'Authorization': `Bearer ${token}` }
       });
 
-      if (response.data) {
-        const userData = response.data.data || response.data;
-        localStorage.setItem('user', JSON.stringify(userData));
-        return userData;
-      }
-      throw new Error('Failed to fetch user profile');
+      const userData = response.data.data || response.data;
+      localStorage.setItem('user', JSON.stringify(userData));
+      return userData;
     } catch (error) {
       console.error('Error fetching user profile:', error);
-      if (error.response && error.response.status === 401) {
+      if (error.response?.status === 401) {
         this.clearAuthData();
       }
       throw error;
     }
   },
 
-  getWalletBalance: async () => {
+  async getWalletBalance() {
     try {
-      const response = await api.get('/me');
+      const response = await api.get('/me', {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      });
       const userData = response.data.data || response.data;
-      const balance = userData.balance || 0;
-      return { balance, currency: 'INR' };
+      return { balance: userData.balance || 0, currency: 'INR' };
     } catch (error) {
       console.error('Error fetching wallet balance:', error);
       return { balance: 0, currency: 'INR' };
@@ -142,26 +130,13 @@ const response = await api.post('/login', loginPayload, {
 
   async getUserProfile(userId) {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        throw new Error('No authentication token found');
-      }
-
       const response = await api.get(`/profile/${userId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        withCredentials: true
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
       });
-
-      if (response.data) {
-        return response.data.data || response.data;
-      }
-      throw new Error('Failed to fetch user profile');
+      return response.data.data || response.data;
     } catch (error) {
       console.error('Error fetching user profile:', error);
-      if (error.response && error.response.status === 401) {
+      if (error.response?.status === 401) {
         this.clearAuthData();
       }
       throw error;
@@ -170,16 +145,10 @@ const response = await api.post('/login', loginPayload, {
 
   async spinWheelWin(coins) {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        throw new Error('No authentication token found');
-      }
-      const response = await api.post( `${BACKEND_URL}/api/wallet/spin-reward` || 'http://localhost:5000/api/wallet/spin-reward', { amount: coins }, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      const response = await api.post('/wallet/spin-reward', 
+        { amount: coins },
+        { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }
+      );
       return response.data;
     } catch (error) {
       console.error('Error registering spin wheel win:', error);
@@ -189,31 +158,19 @@ const response = await api.post('/login', loginPayload, {
 
   async updateUserProfile(userId, userData, isFormData = false) {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        throw new Error('No authentication token found. Please log in again.');
-      }
+      const headers = {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      };
+      if (!isFormData) headers['Content-Type'] = 'application/json';
 
-      const headers = { 'Authorization': `Bearer ${token}` };
-      let dataToSend = userData;
+      const dataToSend = isFormData ? userData : JSON.stringify(userData);
 
-      if (!isFormData) {
-        headers['Content-Type'] = 'application/json';
-        dataToSend = JSON.stringify(userData);
-      }
-
-      const response = await api.put(
-        `/users/profile/${userId}`,
-        dataToSend,
-        { headers }
-      );
+      const response = await api.put(`/users/profile/${userId}`, dataToSend, { headers });
 
       if (response.data) {
         const updatedUser = response.data.user || response.data.data || response.data;
-        if (updatedUser) {
-          const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-          localStorage.setItem('user', JSON.stringify({ ...currentUser, ...updatedUser }));
-        }
+        const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+        localStorage.setItem('user', JSON.stringify({ ...currentUser, ...updatedUser }));
         return response.data;
       }
 
@@ -222,44 +179,22 @@ const response = await api.post('/login', loginPayload, {
       console.error('Error updating user profile:', {
         message: error.message,
         status: error.response?.status,
-        data: error.response?.data,
-        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        data: error.response?.data
       });
 
-      if (error.response) {
-        if (error.response.status === 401) {
-          this.clearAuthData();
-          throw new Error('Your session has expired. Please log in again.');
-        }
-        if (error.response.status === 400 || error.response.status === 422) {
-          throw new Error(error.response.data?.message || 'Validation failed');
-        }
-        if (error.response.status === 413) {
-          throw new Error('File size is too large. Please upload a smaller file.');
-        }
-        if (error.response.status === 415) {
-          throw new Error('Unsupported file type. Please upload a valid image (JPEG, PNG, etc.).');
-        }
-        if (error.response.status >= 500) {
-          throw new Error('Server error. Please try again later.');
-        }
-      } else if (error.request) {
-        throw new Error('No response from server. Please check your connection.');
-      } else if (error.message === 'Network Error') {
-        throw new Error('Unable to connect to the server. Please check your internet connection.');
+      if (error.response?.status === 401) {
+        this.clearAuthData();
+        throw new Error('Session expired. Please log in again.');
       }
 
-      throw error.message || 'Failed to update profile. Please try again.';
+      throw new Error(error.response?.data?.message || error.message || 'Failed to update profile');
     }
   },
 
   async updatePost(postId, postData) {
     try {
       const response = await api.put(`/posts/${postId}`, postData, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json'
-        }
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
       });
       return response.data;
     } catch (error) {
@@ -271,9 +206,7 @@ const response = await api.post('/login', loginPayload, {
   async deletePost(postId) {
     try {
       const response = await api.delete(`/posts/${postId}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
       });
       return response.data;
     } catch (error) {
