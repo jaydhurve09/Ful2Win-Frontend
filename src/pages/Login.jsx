@@ -21,15 +21,17 @@ const Login = () => {
   
  
   useEffect(() => {
-    const timer1 = setTimeout(() => {
     if (isAuthenticated) {
-      
-      toast.info('You are  logged in');
-      const from = location.state?.from?.pathname || '/';
-      navigate(from, { replace: true });
+      setShowMainContent(true);
+      // Show splash for 2 seconds, then go home
+      const timer = setTimeout(() => {
+        toast.info('You are logged in');
+        setShowMainContent(false);
+        navigate('/', { replace: true });
+      }, 2000);
+      return () => clearTimeout(timer);
     }
-  }, 3000);
-  }, [isAuthenticated, navigate, location.state]);
+  }, [isAuthenticated, navigate]);
 
 
   const validatePhoneNumber = (phone) => {
@@ -61,13 +63,12 @@ const Login = () => {
       // Robustly handle backend response
       if (result && typeof result === 'object' && result.success) {
         setShowMainContent(true);
-
-        // Show main content after a short delay to allow splash screen to show
-        const timer = setTimeout(() => {
+        // Show splash, then redirect home
+        setTimeout(() => {
           setShowMainContent(false);
           toast.success('Login successful!');
-          navigate('/', { state: { from: 'auth' } });
-        }, 3000); // Adjust the delay as needed
+          navigate('/', { replace: true });
+        }, 2000);
       } else if (result && typeof result === 'object' && result.message) {
         toast.error(result.message);
       } else {
