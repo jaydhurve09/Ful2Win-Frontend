@@ -4,7 +4,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { processProfilePicture } from '../utils/imageUtils';
 
 const api = axios.create({
-  baseURL: 'https://api.fulboost.fun/api' || 'http://localhost:5000/api' || process.env.BACKEND_URL ,
+  baseURL: 'http://localhost:5000/api' || `${process.env.BACKEND_URL}/api` ,
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json'
@@ -43,7 +43,7 @@ const authService = {
         password: credentials.password
       };
 
-      const response = await api.post('/login', loginPayload);
+      const response = await api.post('/users/login', loginPayload);
       toast.success(response.data.message || 'Login successful');
 
       const { data } = response;
@@ -129,12 +129,21 @@ const authService = {
   },
 
   async getUserProfile(userId) {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      // No token, user is not logged in
+      return { error: 'You must be logged in to view this profile.' };
+    }
     try {
-      const response = await api.get(`/profile/${userId}`, {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      const response = await api.get(`/users/profile/${userId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
       });
       return response.data.data || response.data;
     } catch (error) {
+      if (error.response && error.response.status === 403) {
+        // Forbidden: user does not have permission
+        return { error: 'You do not have permission to view this profile.' };
+      }
       console.error('Error fetching user profile:', error);
       if (error.response?.status === 401) {
         this.clearAuthData();

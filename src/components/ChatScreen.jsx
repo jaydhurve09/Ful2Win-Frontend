@@ -16,6 +16,7 @@ axios.interceptors.request.use((config) => {
 });
 
 const ChatScreen = ({ selectedFriend, setSelectedFriend }) => {
+  const [socketError, setSocketError] = useState(false);
   const [messages, setMessages] = useState([]);
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
@@ -46,8 +47,14 @@ const ChatScreen = ({ selectedFriend, setSelectedFriend }) => {
 
   useEffect(() => {
     if (!currentUserId || !selectedFriend || !selectedFriend._id) return;
-    const socket = io(import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000', {
+    const SOCKET_URL = import.meta.env.BACKEND_URL || import.meta.env.VITE_SOCKET_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+    const socket = io(SOCKET_URL, {
       withCredentials: true,
+      transports: ['polling'],
+    });
+    socket.on('connect_error', (err) => {
+      setSocketError(true);
+      console.error('Socket connection error:', err);
     });
     socket.emit('join', currentUserId);
     socket.on('newMessage', (msg) => {
@@ -120,16 +127,6 @@ const ChatScreen = ({ selectedFriend, setSelectedFriend }) => {
     messages,
     currentUserId,
     selectedFriend,
-    filtered: messages.filter((msg) => {
-      const sender = msg.sender?._id || msg.sender || '';
-      const recipient = msg.recipient?._id || msg.recipient || '';
-      const userId = String(currentUserId).trim();
-      const friendId = String(selectedFriend?._id).trim();
-      return (
-        (String(sender) === userId && String(recipient) === friendId) ||
-        (String(sender) === friendId && String(recipient) === userId)
-      );
-    }),
   });
 
   return (

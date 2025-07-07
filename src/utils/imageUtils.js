@@ -18,7 +18,7 @@ export const processProfilePicture = (url) => {
   
   // If it's a relative path, make it absolute using the API URL
   if (url.startsWith('/')) {
-    const apiUrl = 'https://api.fulboost.fun';
+    const apiUrl = process.env.BACKEND_URL;
     return `${apiUrl}${url}`;
   }
   
