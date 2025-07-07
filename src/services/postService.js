@@ -6,6 +6,65 @@ import api from './api';
 
 const postService = {
   /**
+   * Create a new post
+   * @param {FormData} formData - Form data containing post content and optional media
+   * @returns {Promise<Object>} Created post data
+   */
+  async createPost(postData, file = null) {
+    try {
+      // Get the authentication token from localStorage
+      const token = localStorage.getItem('token');
+      
+      let response;
+      
+      if (file) {
+        // If there's a file, use FormData
+        const formData = new FormData();
+        formData.append('media', file);
+        formData.append('content', postData.content);
+        
+        response = await api.post('http://localhost:5000/api/posts', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            'Authorization': `Bearer ${token}`
+          },
+          withCredentials: true
+        });
+      } else {
+        // For text-only posts, send as JSON
+        response = await api.post('http://localhost:5000/api/posts', postData, {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          withCredentials: true
+        });
+      }
+      
+      return response.data;
+    } catch (error) {
+      console.error('Error creating post:', error);
+      if (error.response) {
+        console.error('Response data:', error.response.data);
+        console.error('Response status:', error.response.status);
+        console.error('Response headers:', error.response.headers);
+        
+        // If there's a validation error, show the specific error message
+        if (error.response.data && error.response.data.message) {
+          throw new Error(error.response.data.message);
+        }
+      } else if (error.request) {
+        console.error('No response received:', error.request);
+        throw new Error('No response received from server. Please check your connection.');
+      } else {
+        console.error('Error message:', error.message);
+        throw error;
+      }
+      
+      throw new Error('Failed to create post. Please try again.');
+    }
+  },
+  /**
    * Get all posts
    * @param {Object} [filters] - Optional filters for posts
    * @returns {Promise<Array>} Array of posts

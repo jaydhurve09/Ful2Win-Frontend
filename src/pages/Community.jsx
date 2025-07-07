@@ -755,7 +755,7 @@ const Community = () => {
       console.log('Starting post creation...');
       setIsCreatingPost(true);
       
-      // Create FormData
+      // Create FormData for file upload
       const formData = new FormData();
       
       // Add file if selected
@@ -770,29 +770,32 @@ const Community = () => {
         console.log('No file selected for upload');
       }
       
-      // Add post content
-      console.log('Adding post content:', newPostContent);
-      formData.append('content', newPostContent);
-      
-      // Add any additional data needed by your API
+      // Prepare post data
       const postData = {
-        type: 'post',
-        timestamp: new Date().toISOString()
+        content: newPostContent,
+        tags: '' // Add tags if needed
       };
-      formData.append('data', JSON.stringify(postData));
       
-      // Log FormData contents
-      console.log('FormData contents:');
-      for (let [key, value] of formData.entries()) {
-        if (value instanceof File) {
-          console.log(`${key}: File - ${value.name} (${value.type}, ${value.size} bytes)`);
-        } else {
-          console.log(`${key}:`, value);
-        }
+      // Add post data to formData for file upload
+      if (selectedFile) {
+        Object.entries(postData).forEach(([key, value]) => {
+          formData.append(key, value);
+        });
+      }
+      
+      // Log request data
+      console.log('Request data:', postData);
+      if (selectedFile) {
+        console.log('File to upload:', {
+          name: selectedFile.name,
+          type: selectedFile.type,
+          size: selectedFile.size
+        });
       }
       
       console.log('Sending request to create post...');
-      const response = await authService.createPost(formData);
+      // Call postService with the post data and file (if any)
+      const response = await postService.createPost(postData, selectedFile || null);
       
       if (!response) {
         const errorMsg = 'No response from server';
