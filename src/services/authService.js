@@ -4,7 +4,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { processProfilePicture } from '../utils/imageUtils';
 
 const api = axios.create({
-  baseURL: 'https://api.fulboost.fun/api' || 'http://localhost:5000/api' || process.env.BACKEND_URL ,
+  baseURL: 'http://localhost:5000/api' || `${process.env.BACKEND_URL}/api` ,
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json'
@@ -130,7 +130,7 @@ const authService = {
 
   async getUserProfile(userId) {
     try {
-      const response = await api.get(`/profile/${userId}`, {
+      const response = await api.get(`/users/${userId}`, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
       });
       return response.data.data || response.data;
