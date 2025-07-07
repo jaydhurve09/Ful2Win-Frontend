@@ -1,7 +1,6 @@
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { processProfilePicture } from '../utils/imageUtils';
 
 const api = axios.create({
   baseURL: `${import.meta.process.env.BACKEND_URL}/api`||'http://localhost:5000/api' ,
