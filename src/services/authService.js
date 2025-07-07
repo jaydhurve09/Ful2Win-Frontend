@@ -129,12 +129,21 @@ const authService = {
   },
 
   async getUserProfile(userId) {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      // No token, user is not logged in
+      return { error: 'You must be logged in to view this profile.' };
+    }
     try {
-      const response = await api.get(`/users/${userId}`, {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      const response = await api.get(`/users/profile/${userId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
       });
       return response.data.data || response.data;
     } catch (error) {
+      if (error.response && error.response.status === 403) {
+        // Forbidden: user does not have permission
+        return { error: 'You do not have permission to view this profile.' };
+      }
       console.error('Error fetching user profile:', error);
       if (error.response?.status === 401) {
         this.clearAuthData();

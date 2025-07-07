@@ -88,11 +88,6 @@ const ProfileScreen = () => {
     };
 
     const picUrl = getProfilePictureUrl(currentUser.profilePicture);
-    console.log('Profile picture URL:', { 
-      original: currentUser.profilePicture,
-      processed: picUrl,
-      isCloudinary: picUrl?.includes('cloudinary.com')
-    });
 
     if (!picUrl) {
       setProfilePictureUrl('');
@@ -353,14 +348,14 @@ const ProfileScreen = () => {
                       src={profilePictureUrl}
                       alt="Profile"
                       className="w-full h-full object-cover"
-                      onLoad={(e) => {
-                        console.log('Profile image loaded successfully');
-                      }}
-                      onError={(e) => {
-                        console.error('Failed to load profile image, using default');
-                        e.target.onerror = null;
-                        setProfilePictureUrl('');
-                      }}
+                      // onLoad={(e) => {
+                      //   console.log('Profile image loaded successfully');
+                      // }}
+                      // onError={(e) => {
+                      //   console.error('Failed to load profile image, using default');
+                      //   e.target.onerror = null;
+                      //   setProfilePictureUrl('');
+                      // }}
                     />
                     
                   </div>
