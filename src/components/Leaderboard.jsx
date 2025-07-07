@@ -8,13 +8,7 @@ import BackgroundBubbles from '../components/BackgroundBubbles';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-const API_URL =
-  (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL)
-    ? import.meta.env.VITE_API_URL
-    : (typeof process !== 'undefined' && process.env && process.env.REACT_APP_API_URL)
-      ? process.env.REACT_APP_API_URL
-      : "http://localhost:5000";
-
+const API_URL = import.meta.env.VITE_API_BACKEND_URL || 'http://localhost:5000'; // Use the environment variable for API URL
 const Leaderboard = () => {
   const navigate = useNavigate();
   const { gameName, tournamentId } = useParams(); // ✅ Get from URL

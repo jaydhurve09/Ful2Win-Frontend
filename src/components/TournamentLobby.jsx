@@ -20,14 +20,9 @@ import Navbar from './Navbar';
 
 
 // Base URL for API requests
-const API_BASE_URL =
-  (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL)
-    ? import.meta.env.VITE_API_URL
-    : (typeof process !== 'undefined' && process.env && process.env.REACT_APP_API_URL)
-      ? process.env.REACT_APP_API_URL
-      : 'http://localhost:5000';
-const API_URL = `${API_BASE_URL}/api`;
- 
+
+const API_URL = `${import.meta.env.VITE_API_BACKEND_URL}/api`;
+
 // Countdown timer hook
 const useCountdown = ({targetDate,endTime,status},onStart,onComplete) => {
   const [timeLeft, setTimeLeft] = useState('');
@@ -330,15 +325,15 @@ const TournamentCard = ({ id, name, entryFee, prizePool, participants, maxPartic
     { targetDate: startTime, endTime, status },
     async () => {
       const success = await setTournamentStatus(id, 'live');
-      if (success) {
+      
         fetchGameAndTournaments(); // re-fetch to show updated status
-      }
+      
     },
     async () => {
       await setTournamentStatus(id, 'completed');
-      if(success) {
+    
       fetchGameAndTournaments();
-      }
+      
     }
   );
 

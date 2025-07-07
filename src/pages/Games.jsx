@@ -6,7 +6,8 @@ import api from '../services/api';
 import Header from '../components/Header';
 import Navbar from '../components/Navbar';
 import BackgroundBubbles from '../components/BackgroundBubbles';
-
+import axios from 'axios';
+import { a } from 'framer-motion/client';
 // Default game images (fallback)
 // Using a placeholder image URL instead of local file
 const defaultGameImage = 'https://via.placeholder.com/300x200/1a1a2e/ffffff?text=Game+Image'; // Make sure to add a default game image
@@ -21,7 +22,6 @@ const GAME_CATEGORIES = [
   { id: 'action', name: 'Action' },
   { id: 'adventure', name: 'Adventure' },
 ];
-
 const Games = () => {
   const navigate = useNavigate();
   const [activeCategory, setActiveCategory] = useState('all');
@@ -48,25 +48,19 @@ const Games = () => {
         setError(null);
         
         // Use relative URL for API requests
-       const apiUrl = '/api/games';
-        
+       
+//console.log(apiUrl);
        // console.log('Fetching games from:', apiUrl);
-        
-        // Make the API request with relative URL
-        const response = await fetch(apiUrl, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include' // Include cookies for authenticated requests
-        });
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const responseData = await response.json();
-        
+       const response = await axios.get(`${import.meta.env.VITE_API_BACKEND_URL}/api/games`, {
+  headers: {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+  },
+  withCredentials: true, // Add if needed
+});
+
+const responseData = response.data;
+ 
         // Handle different response formats
         let gamesData = [];
         if (Array.isArray(responseData)) {
