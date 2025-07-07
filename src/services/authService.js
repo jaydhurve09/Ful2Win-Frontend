@@ -2,12 +2,10 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-const apiBaseUrl = import.meta.env.VITE_API_BACKEND_URL
-  ? `${import.meta.env.VITE_API_BACKEND_URL}/api`
-  : 'http://localhost:5000/api';
+const apiBaseUrl = import.meta.env.VITE_API_BACKEND_URL;
 
 const api = axios.create({
-  baseURL: apiBaseUrl,
+  baseURL: 'http://localhost:5000/api' || apiBaseUrl,
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json'
