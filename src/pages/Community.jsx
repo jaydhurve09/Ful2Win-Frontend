@@ -30,7 +30,8 @@ import { IoMdSend } from 'react-icons/io';
 import { formatTimeAgo } from '../utils/timeUtils';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import api, { authService } from '../services/api';
+import api from '../services/api';
+import authService from '../services/authService';
 import postService from '../services/postService';
 import ReportModal from '../components/ReportModal';
 
@@ -43,6 +44,19 @@ const Community = () => {
   const [selectedFriend, setSelectedFriend] = useState(null);
   const [isCreatingPost, setIsCreatingPost] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
+
+  // Fetch current user profile on mount
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const profile = await authService.getCurrentUserProfile();
+        setCurrentUser(profile);
+      } catch (error) {
+        // Optionally handle error (e.g., show toast)
+      }
+    };
+    fetchProfile();
+  }, []);
   const [posts, setPosts] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState('');
@@ -1552,7 +1566,7 @@ const Community = () => {
 
                 <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 mb-6 border border-white/10">
                   <h3 className="text-lg font-semibold mb-4">Create Post</h3>
-                  <div className="flex items-start">
+                  <div className="create-post-card flex flex-row">
                     {currentUser?.profilePicture ? (
                       <div className="w-10 h-10 rounded-full border-2 border-dullBlue p-0.5 mr-3 flex-shrink-0">
                         <img 
