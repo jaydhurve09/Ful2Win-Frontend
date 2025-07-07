@@ -23,6 +23,7 @@ const ChatScreen = ({ selectedFriend, setSelectedFriend }) => {
   const [sending, setSending] = useState(false);
   const [currentUserId, setCurrentUserId] = useState(null);
   const messagesEndRef = useRef(null);
+  const socketRef = useRef(null);
 
   useEffect(() => {
     function getUserIdFromStorage() {
@@ -46,32 +47,48 @@ const ChatScreen = ({ selectedFriend, setSelectedFriend }) => {
   }, []);
 
   useEffect(() => {
+    setMessages([]);
     if (!currentUserId || !selectedFriend || !selectedFriend._id) return;
     const SOCKET_URL = import.meta.env.BACKEND_URL || import.meta.env.VITE_SOCKET_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
-    const socket = io(SOCKET_URL, {
-      withCredentials: true,
-      transports: ['polling'],
-    });
+
+    if (!socketRef.current) {
+      socketRef.current = io(SOCKET_URL, {
+        withCredentials: true,
+        transports: ['polling'],
+      });
+    }
+
+    const socket = socketRef.current;
+
     socket.on('connect_error', (err) => {
       setSocketError(true);
       console.error('Socket connection error:', err);
     });
-    socket.emit('join', currentUserId);
-    socket.on('newMessage', (msg) => {
+
+    socket.emit('join_user_room', currentUserId);
+    socket.off('new_message');
+    socket.on('new_message', (msg) => {
       const senderId = typeof msg.sender === 'object' ? msg.sender._id : msg.sender;
       const recipientId = typeof msg.recipient === 'object' ? msg.recipient._id : msg.recipient;
-
       if (
-        (String(senderId) === String(currentUserId) && String(recipientId) === String(selectedFriend._id)) ||
-        (String(senderId) === String(selectedFriend._id) && String(recipientId) === String(currentUserId))
+        ((String(senderId) === String(currentUserId) && String(recipientId) === String(selectedFriend._id)) ||
+          (String(senderId) === String(selectedFriend._id) && String(recipientId) === String(currentUserId))) &&
+        !messages.some(m => m._id === msg._id)
       ) {
-        setMessages(prev => {
-          if (prev.some(m => m._id === msg._id)) return prev;
-          return [...prev, msg];
-        });
+        setMessages(prev => [...prev, msg]);
       }
     });
-    return () => socket.disconnect();
+
+    return () => {
+      socket.off('new_message');
+      if (selectedFriend && selectedFriend._id) {
+        socket.emit('leave_user_room', currentUserId);
+      }
+      if (!selectedFriend || !selectedFriend._id) {
+        socket.disconnect();
+        socketRef.current = null;
+      }
+    };
   }, [currentUserId, selectedFriend]);
 
   useEffect(() => {
@@ -82,6 +99,7 @@ const ChatScreen = ({ selectedFriend, setSelectedFriend }) => {
         const sorted = (res.data || []).sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
         setMessages(sorted);
         setLoading(false);
+        console.log('Fetched messages:', sorted);
       })
       .catch(() => {
         axios.get(`/api/messages/${selectedFriend._id}`)
@@ -95,6 +113,7 @@ const ChatScreen = ({ selectedFriend, setSelectedFriend }) => {
             setLoading(false);
           });
       });
+    return () => setMessages([]);
   }, [selectedFriend, currentUserId]);
 
   useEffect(() => {
@@ -107,11 +126,10 @@ const ChatScreen = ({ selectedFriend, setSelectedFriend }) => {
     if (!message.trim() || !selectedFriend?._id) return;
     setSending(true);
     try {
-      const res = await axios.post('/api/messages', {
+      await axios.post('/api/messages', {
         recipient: selectedFriend._id,
         content: message.trim(),
       });
-      setMessages(prev => [...prev, res.data]);
       setMessage('');
     } catch (err) {
       console.error('Send message error:', err);
@@ -132,7 +150,6 @@ const ChatScreen = ({ selectedFriend, setSelectedFriend }) => {
   return (
     <div className="relative w-full bg-blueGradient h-screen overflow-hidden text-white">
       <BackgroundBubbles />
-
       {selectedFriend ? (
         <div className="w-full h-full relative">
           {/* Header */}

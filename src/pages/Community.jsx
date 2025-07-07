@@ -10,6 +10,7 @@ import CommunityProfile from '../components/CommunityProfile';
 import ChatScreen from '../components/ChatScreen';
 import Challenges from '../components/Challenges';
 import LeaderboardPage from '../components/LeaderboardPage';
+import FollowerPage from '../components/FollowerPage';
 
 import {
   FiHome,
@@ -1678,7 +1679,8 @@ const Community = () => {
             )}
 
             {activeTab === 'followers' && (
-              <ChatScreen selectedFriend={selectedFriend} setSelectedFriend={setSelectedFriend} />
+              // <ChatScreen selectedFriend={selectedFriend} setSelectedFriend={setSelectedFriend} />
+              <FollowerPage />
             )}
             {activeTab === 'leaderboard' && <LeaderboardPage />}
           </div>

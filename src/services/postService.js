@@ -1,3 +1,7 @@
+// IMPORTANT: All post-related API calls must use '/posts' (not '/users/posts').
+// Authorization and Content-Type headers are managed globally by the axios instance in api.js.
+// Do NOT set these headers manually in this file.
+console.info('postService.js loaded - version 2025-07-07T15:01:42+05:30');
 import api from './api';
 
 const postService = {
@@ -6,17 +10,19 @@ const postService = {
    * @param {Object} [filters] - Optional filters for posts
    * @returns {Promise<Array>} Array of posts
    */
+  /**
+   * Only uses '/posts' endpoint. Never call '/users/posts' or construct endpoint dynamically.
+   */
   async getPosts(filters = {}) {
     try {
-      const token = localStorage.getItem('token');
-      const response = await api.get('/posts', {
+      console.log('[postService.js:getPosts] Requesting /api/posts with params:', {
+        ...filters,
+        populate: 'user,author,createdBy'
+      });
+      const response = await api.get('http://localhost:5000/api/posts' || `${process.env.BACKEND_URL}api/posts`, {
         params: {
           ...filters,
           populate: 'user,author,createdBy'  // Ensure we get user data populated
-        },
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
         }
       });
       
@@ -52,12 +58,7 @@ const postService = {
    */
   async updatePost(postId, postData) {
     try {
-      const response = await api.put(`/posts/${postId}`, postData, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      const response = await api.put(`http://localhost:5000/api/posts/${postId}`, postData);
       return response.data;
     } catch (error) {
       console.error('Error updating post:', error);
@@ -72,13 +73,7 @@ const postService = {
    */
   async deletePost(postId) {
     try {
-      const token = localStorage.getItem('token');
-      const response = await api.delete(`/posts/${postId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      const response = await api.delete(`http://localhost:5000/api/posts/{postId}`);
       return response.data;
     } catch (error) {
       console.error('Error deleting post:', error);
@@ -96,16 +91,9 @@ const postService = {
    */
   async reportPost(postId, reportData) {
     try {
-      const token = localStorage.getItem('token');
       const response = await api.post(
         `/api/posts/${postId}/report`,
-        reportData,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        }
+        reportData
       );
       return response.data;
     } catch (error) {

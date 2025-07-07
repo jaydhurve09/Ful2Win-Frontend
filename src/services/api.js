@@ -115,7 +115,7 @@ const authService = {
    */
   async getCurrentUserProfile() {
     try {
-      const response = await api.get('/users/me');
+      const response = await api.get('/me');
       return response.data;
     } catch (error) {
       console.error('Error fetching user profile:', error);
