@@ -76,6 +76,32 @@ const tournamentService = {
       throw error;
     }
   },
+  /**
+   * Get tournaments the current user has participated in
+   * @returns {Promise<Array>} Array of tournament history objects
+   */
+  async getMyTournamentHistory() {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) throw new Error('No authentication token found');
+      const response = await api.get('/tournaments/my', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        withCredentials: true
+      });
+      return response.data.data || [];
+    } catch (error) {
+      console.error('Error fetching user tournament history:', error);
+      if (error.response && error.response.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+      }
+      throw error;
+    }
+  },
+
 };
 
 export default tournamentService;

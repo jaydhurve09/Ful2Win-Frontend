@@ -23,7 +23,7 @@ function FollowerPage() {
       const currentUser = await authService.getCurrentUserProfile();
       if (!currentUser) throw new Error('Not authenticated');
 
-      const res = await api.get('/users/community');
+      const res = await api.get('/community');
       const list = Array.isArray(res.data)
         ? res.data
         : Array.isArray(res.data?.users)

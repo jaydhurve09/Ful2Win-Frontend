@@ -16,7 +16,12 @@ import Header from './Header';
 import BackgroundBubbles from './BackgroundBubbles';
 
 // Base URL for API requests
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+const API_BASE_URL =
+  (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL)
+    ? import.meta.env.VITE_API_URL
+    : (typeof window !== 'undefined' && window._env_ && window._env_.REACT_APP_API_URL)
+      ? window._env_.REACT_APP_API_URL
+      : 'http://localhost:5000';
 const API_URL = `${API_BASE_URL}/api`;
 
 // Countdown timer hook
