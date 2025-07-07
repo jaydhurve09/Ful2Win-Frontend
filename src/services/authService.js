@@ -43,7 +43,7 @@ const authService = {
         password: credentials.password
       };
 
-      const response = await api.post('/login', loginPayload);
+      const response = await api.post('/users/login', loginPayload);
       toast.success(response.data.message || 'Login successful');
 
       const { data } = response;
