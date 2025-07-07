@@ -4,7 +4,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { processProfilePicture } from '../utils/imageUtils';
 
 const api = axios.create({
-  baseURL: 'https://api.fulboost.fun/api',
+  baseURL: 'https://api.fulboost.fun/api' || 'http://localhost:5000/api' || process.env.BACKEND_URL ,
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json'
@@ -99,7 +99,7 @@ const authService = {
       const token = localStorage.getItem('token');
       if (!token) throw new Error('No authentication token found');
 
-      const response = await api.get('/me', {
+      const response = await api.get('/users/me', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -117,7 +117,7 @@ const authService = {
 
   async getWalletBalance() {
     try {
-      const response = await api.get('/me', {
+      const response = await api.get('/users/me', {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
       });
       const userData = response.data.data || response.data;
