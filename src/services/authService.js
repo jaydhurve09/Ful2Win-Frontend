@@ -4,7 +4,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { processProfilePicture } from '../utils/imageUtils';
 
 const api = axios.create({
-  baseURL: 'http://localhost:5000/api' || `${process.env.BACKEND_URL}/api` ,
+  baseURL: `${import.meta.process.env.BACKEND_URL}/api`||'http://localhost:5000/api' ,
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json'
