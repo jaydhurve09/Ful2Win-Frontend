@@ -3,7 +3,7 @@ import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 const api = axios.create({
-  baseURL: `${import.meta.process.env.BACKEND_URL}/api`||'http://localhost:5000/api' ,
+  baseURL: `${import.meta.env.VITE_API_BACKEND_URL}/api`||'http://localhost:5000/api' ,
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json'
