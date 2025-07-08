@@ -1,13 +1,5 @@
 import api from './api';
 
-// Environment configuration
-const ENV = {
-  isProduction: import.meta.env.PROD,
-  isDevelopment: import.meta.env.DEV,
-  apiBaseUrl: process.env.REACT_APP_API_URL || '',
-  apiUrl: import.meta.env.VITE_API_URL || ''
-};
-
 // Auth Service
 const authService = {
   // Login user
