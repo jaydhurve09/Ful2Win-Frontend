@@ -12,16 +12,10 @@ import {
   FaCoins
 } from 'react-icons/fa';
 import { toast } from 'react-toastify';
-import axios from 'axios';
+import api from '../services/api';
 import Header from './Header';
 import BackgroundBubbles from './BackgroundBubbles';
 import Navbar from './Navbar';
-
-
-
-// Base URL for API requests
-
-const API_URL = `${import.meta.env.VITE_API_BACKEND_URL}/api`;
 
 // Countdown timer hook
 const useCountdown = ({targetDate,endTime,status},onStart,onComplete) => {

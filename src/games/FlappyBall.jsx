@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import axios from "axios";
+import api from "../services/api";
 import ScoreCard from "../components/ScoreCard.jsx";
 const scoreData = {
   userId: "12345", // Replace with actual user ID
@@ -20,14 +20,13 @@ const FlappyBall = () => {
 
       if (type === "GAME_OVER") {
         console.log("🎯 Final Score from Game:", score);
-        // Send the score to the backend
-       // axios
-       //   .post('https://api.fulboost.fun/score/submit-score', {
-        //    userId: "12345", // Replace with actual user ID
-        //    score: score,
-         //   roomId: "67890", // Replace with actual room ID
-          //  gameName: "Flappy Bird",
-         // });
+        // Send the score to the backend using the centralized api instance
+        api.post('/score/submit-score', {
+          userId: "12345", // Replace with actual user ID
+          score: score,
+          roomId: "67890", // Replace with actual room ID
+          gameName: "Flappy Bird",
+        });
           
         setGameOn(true);
         scoreData.score = score; // Update the score data

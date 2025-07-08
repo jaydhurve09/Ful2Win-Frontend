@@ -1,7 +1,9 @@
 import axios from 'axios';
 
-// The proxy will handle the /api prefix in development
-const API_BASE_URL = ('http://localhost:5000' || import.meta.env.VITE_API_BACKEND_URL).replace(/\/api$/, '');
+// Get the base URL from environment variables or use localhost as fallback
+const envUrl = import.meta.env.VITE_API_BACKEND_URL || 'http://localhost:5000';
+// Remove any trailing /api to prevent double /api in URLs
+const API_BASE_URL = envUrl.replace(/\/api$/, '');
 
 // Environment configuration
 const api = axios.create({

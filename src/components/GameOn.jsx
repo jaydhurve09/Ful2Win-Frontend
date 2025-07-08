@@ -59,9 +59,9 @@ const getUserInfo = async() => {
         try {
        
 
-          await axios.post(`${API_URL}/api/score/submit-score`, {
-            userId,        
-             userName,
+          await api.post('/score/submit-score', {
+            userId,
+            userName,
             score,
             roomId: tournamentId,
             gameName: game?.name || "Game",

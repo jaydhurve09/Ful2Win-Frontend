@@ -11,18 +11,9 @@ import {
   FaArrowLeft
 } from 'react-icons/fa';
 import { toast } from 'react-toastify';
-import axios from 'axios';
+import api from '../../services/api';
 import Header from './Header';
 import BackgroundBubbles from './BackgroundBubbles';
-
-// Base URL for API requests
-const API_BASE_URL =
-  (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL)
-    ? import.meta.env.VITE_API_URL
-    : (typeof window !== 'undefined' && window._env_ && window._env_.REACT_APP_API_URL)
-      ? window._env_.REACT_APP_API_URL
-      : 'http://localhost:5000';
-const API_URL = `${API_BASE_URL}/api`;
 
 // Countdown timer hook
 const useCountdown = (targetDate) => {
@@ -127,11 +118,11 @@ const TournamentLobby = () => {
       }
 
       const [gameResponse, tournamentsResponse] = await Promise.all([
-        axios.get(`${API_URL}/games/${gameId}`, {
+        api.get(`/games/${gameId}`, {
           headers: { Authorization: `Bearer ${token}` },
           validateStatus: (status) => status < 500
         }),
-        axios.get(`${API_URL}/tournaments?gameId=${gameId}`, {
+        api.get(`/tournaments?gameId=${gameId}`, {
           headers: { Authorization: `Bearer ${token}` },
           validateStatus: (status) => status < 500
         })

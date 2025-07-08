@@ -1,19 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { FiArrowLeft, FiSend } from 'react-icons/fi';
 import BackgroundBubbles from './BackgroundBubbles';
-import axios from 'axios';
 import { io } from 'socket.io-client';
-
-axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
-axios.defaults.withCredentials = true;
-
-axios.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers['Authorization'] = `Bearer ${token}`;
-  }
-  return config;
-});
+import api from '../services/api';
 
 const ChatScreen = ({ selectedFriend, setSelectedFriend }) => {
   const [socketError, setSocketError] = useState(false);
@@ -49,7 +38,10 @@ const ChatScreen = ({ selectedFriend, setSelectedFriend }) => {
   useEffect(() => {
     setMessages([]);
     if (!currentUserId || !selectedFriend || !selectedFriend._id) return;
-    const SOCKET_URL = import.meta.env.BACKEND_URL || import.meta.env.VITE_SOCKET_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+    // Use the same base URL as the API but without the /api suffix
+    // Use the baseURL from the api instance for the socket connection
+    const SOCKET_URL = new URL(api.defaults.baseURL).origin;
+    console.log('Connecting to socket at:', SOCKET_URL);
 
     if (!socketRef.current) {
       socketRef.current = io(SOCKET_URL, {
@@ -94,7 +86,7 @@ const ChatScreen = ({ selectedFriend, setSelectedFriend }) => {
   useEffect(() => {
     if (!selectedFriend || !selectedFriend._id || !currentUserId) return;
     setLoading(true);
-    axios.get(`/api/messages/conversation?user1=${currentUserId}&user2=${selectedFriend._id}`)
+    api.get(`/messages/conversation?user1=${currentUserId}&user2=${selectedFriend._id}`)
       .then(res => {
         const sorted = (res.data || []).sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
         setMessages(sorted);
@@ -102,7 +94,7 @@ const ChatScreen = ({ selectedFriend, setSelectedFriend }) => {
         console.log('Fetched messages:', sorted);
       })
       .catch(() => {
-        axios.get(`/api/messages/${selectedFriend._id}`)
+        api.get(`/messages/${selectedFriend._id}`)
           .then(res2 => {
             const sorted2 = (res2.data || []).sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
             setMessages(sorted2);
@@ -126,7 +118,7 @@ const ChatScreen = ({ selectedFriend, setSelectedFriend }) => {
     if (!message.trim() || !selectedFriend?._id) return;
     setSending(true);
     try {
-      await axios.post('/api/messages', {
+      await api.post('/messages', {
         recipient: selectedFriend._id,
         content: message.trim(),
       });

@@ -1,8 +1,4 @@
-import axios from 'axios';
 import api from './api';
-
-
-const baseURL =  import.meta.env.MODE === 'development' ? 'http://localhost:5000' : import.meta.env.VITE_API_BACKEND_URL;
 
 const postService = {
   /**
@@ -108,8 +104,8 @@ const postService = {
         populate: 'user,author,createdBy'
       });
       
-      // Use the full path to the posts endpoint with /api prefix
-      const response = await api.get('/api/posts', {
+      // Get posts using the api instance (baseURL is already set)
+      const response = await api.get('/posts', {
         params: {
           ...filters,
           sort: filters.sort || '-createdAt',

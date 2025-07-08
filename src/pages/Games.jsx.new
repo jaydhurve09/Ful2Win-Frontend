@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaSearch, FaFire, FaStar, FaArrowRight, FaGamepad } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
-import axios from 'axios';
+import api from '../services/api';
 import Header from '../components/Header';
 import Navbar from '../components/Navbar';
 import BackgroundBubbles from '../components/BackgroundBubbles';
@@ -43,7 +43,7 @@ const Games = () => {
         setLoading(true);
         setError(null);
         
-        const response = await axios.get('http://localhost:5000/api/games', {
+        const response = await api.get('/games', {
           timeout: 5000
         });
         

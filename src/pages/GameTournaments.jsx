@@ -14,15 +14,6 @@ import Navbar from '../components/Navbar';
 import BackgroundBubbles from '../components/BackgroundBubbles';
 import api from '../services/api';
 
-// Base URL for API requests
-const API_BASE_URL =
-  (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL)
-    ? import.meta.env.VITE_API_URL
-    : (typeof process !== 'undefined' && process.env && process.env.REACT_APP_API_URL)
-      ? process.env.REACT_APP_API_URL
-      : 'http://localhost:5000';
-const API_URL = `${API_BASE_URL}/api`;
-
 // Format date and time
 const formatDateTime = (dateString) => {
   if (!dateString) return 'TBD';
