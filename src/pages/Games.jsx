@@ -6,6 +6,7 @@ import { gameService } from '../services/apiService';
 import Header from '../components/Header';
 import Navbar from '../components/Navbar';
 import BackgroundBubbles from '../components/BackgroundBubbles';
+import api from '../services/api';
 // Default game images (fallback)
 // Using a placeholder image URL instead of local file
 const defaultGameImage = 'https://via.placeholder.com/300x200/1a1a2e/ffffff?text=Game+Image'; // Make sure to add a default game image
