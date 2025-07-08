@@ -1,8 +1,6 @@
 import axios from 'axios';
-// Development: Use local backend
-// Use environment variable if set, otherwise default to localhost for development
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000' || 'https://api.fulboost.fun';
-// For production, set VITE_API_URL to 'https://api.fulboost.fun' in your .env file
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000' || import.meta.env.VITE_API_BACKEND_URL;
+
 
 // Environment configuration
 const api = axios.create({

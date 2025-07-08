@@ -5,6 +5,8 @@ console.info('postService.js loaded - version 2025-07-07T15:01:42+05:30');
 import axios from 'axios';
 import api from './api';
 
+const apiBaseUrl = import.meta.env.VITE_API_BACKEND_URL
+
 const postService = {
   /**
    * Create a new post
@@ -59,7 +61,7 @@ const postService = {
       };
       
       // Use axios for the request
-      const response = await axios.post('http://localhost:5000/api/posts', formData, config);
+      const response = await axios.post(apiBaseUrl ? `${apiBaseUrl}/api/posts` : 'http://localhost:5000/api/posts', formData, config);
       
       return response;
     } catch (error) {
