@@ -1,12 +1,17 @@
 import axios from 'axios';
 import api from './api';
 
+
+const baseURL =  import.meta.env.MODE === 'development' ? 'http://localhost:5000' : import.meta.env.VITE_API_BACKEND_URL;
+
 const postService = {
   /**
    * Create a new post
    * @param {FormData} formData - Form data containing post content and optional media
    * @returns {Promise<Object>} Created post data
    */
+
+
   async createPost(postData, file = null) {
     try {
       // Create a new FormData instance
@@ -53,7 +58,7 @@ const postService = {
 
       // Make the request with fetch API for better control
       console.log('Sending POST request to /api/posts');
-      const response = await fetch(`${import.meta.env.VITE_API_BACKEND_URL || 'http://localhost:5000'}/api/posts`, {
+      const response = await fetch(`${baseURL}/api/posts`, {
         method: 'POST',
         body: formData,
         headers: {
