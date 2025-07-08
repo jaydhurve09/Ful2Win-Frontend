@@ -23,7 +23,7 @@ const Leaderboard = () => {
         },
         body: JSON.stringify({
           roomId: tournamentId,
-          gameName: game?.name || "Game",
+          gameName: gameName,
         }),
       });
 
