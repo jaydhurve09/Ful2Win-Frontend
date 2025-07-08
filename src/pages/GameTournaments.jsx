@@ -9,10 +9,10 @@ import {
   FaSearch
 } from 'react-icons/fa';
 import { toast } from 'react-toastify';
-import axios from 'axios';
 import Header from '../components/Header';
 import Navbar from '../components/Navbar';
 import BackgroundBubbles from '../components/BackgroundBubbles';
+import api from '../services/api';
 
 // Base URL for API requests
 const API_BASE_URL =
@@ -134,14 +134,8 @@ const GameTournaments = () => {
       
       // Fetch game details and tournaments in parallel
       const [gameResponse, tournamentsResponse] = await Promise.all([
-        axios.get(`${API_URL}/games/${gameId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-          validateStatus: (status) => status < 500
-        }),
-        axios.get(`${API_URL}/tournaments?gameId=${gameId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-          validateStatus: (status) => status < 500
-        })
+        api.get(`/games/${gameId}`),
+        api.get(`/tournaments?gameId=${gameId}`)
       ]);
 
       if (gameResponse.data.success) {

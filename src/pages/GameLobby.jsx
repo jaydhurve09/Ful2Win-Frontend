@@ -1,12 +1,10 @@
 import React from 'react';
-import axios from 'axios';
 import { toast } from 'react-toastify';
 import GameLobby from '../components/GameLobby';
 import { useNavigate, useLocation } from 'react-router-dom';
-import snakeAndLadderImage from '../assets/snake-and-ladder.png';
 import { useParams } from 'react-router-dom';
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 import { useEffect, useState } from 'react';
+import api from '../services/api';
 const GameLobbyPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -23,13 +21,7 @@ const GameLobbyPage = () => {
     useEffect(() => {
       const fetchGameById = async () => {
         try {
-          const token = localStorage.getItem("token");
-          const response = await axios.get(`${API_URL}/api/games`, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
-  
+          const response = await api.get('/games');
           const allGames = response.data?.data || [];
           const foundGame = allGames.find((g) => g._id === gameId);
   

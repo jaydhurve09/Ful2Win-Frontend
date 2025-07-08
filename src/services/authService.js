@@ -1,16 +1,6 @@
-import axios from 'axios';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-
-const apiBaseUrl = import.meta.env.VITE_API_BACKEND_URL;
-
-const api = axios.create({
-  baseURL: apiBaseUrl ? `${apiBaseUrl}/api` : 'http://localhost:5000/api',
-  withCredentials: true,
-  headers: {
-    'Content-Type': 'application/json'
-  }
-});
+import api from './api';
 
 const authService = {
   async checkUsername(username) {
