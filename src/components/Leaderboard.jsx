@@ -22,9 +22,6 @@ const Leaderboard = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          userId,
-          userName,
-          score,
           roomId: tournamentId,
           gameName: game?.name || "Game",
         }),

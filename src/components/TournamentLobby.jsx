@@ -254,10 +254,12 @@ const handleRegisterTournament = async (tournamentId) => {
       return;
     }
 
-    const response = await api.post(
+    const response = await fetch(
       `/api/tournaments/${tournamentId}/register`,
       { playerId: user._id },
+      
       {
+        method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
         },
