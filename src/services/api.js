@@ -1,9 +1,10 @@
 import axios from 'axios';
 
-// Get the base URL from environment variables or use localhost as fallback
+// Get the base URL from environment variables or use the production URL as fallback
 const envUrl = import.meta.env.VITE_API_BACKEND_URL || 'https://api.fulboost.fun';
-// Ensure we don't have double slashes in the URL
-const API_BASE_URL = envUrl.endsWith('/') ? envUrl.slice(0, -1) : envUrl;
+// Ensure we don't have double slashes in the URL and add /api suffix
+const baseUrl = envUrl.endsWith('/') ? envUrl.slice(0, -1) : envUrl;
+const API_BASE_URL = `${baseUrl}/api`;
 
 // Environment configuration
 const api = axios.create({
