@@ -1,11 +1,5 @@
-// IMPORTANT: All post-related API calls must use '/posts' (not '/users/posts').
-// Authorization and Content-Type headers are managed globally by the axios instance in api.js.
-// Do NOT set these headers manually in this file.
-console.info('postService.js loaded - version 2025-07-07T15:01:42+05:30');
 import axios from 'axios';
 import api from './api';
-
-const apiBaseUrl = import.meta.env.VITE_API_BACKEND_URL
 
 const postService = {
   /**
@@ -15,61 +9,80 @@ const postService = {
    */
   async createPost(postData, file = null) {
     try {
-      // Get the authentication token from localStorage
-      const token = localStorage.getItem('token');
-      
       // Create a new FormData instance
       const formData = new FormData();
       
-      // Add post data to formData
+      // Add content and tags to formData
       formData.append('content', postData.content || '');
       if (postData.tags) {
         formData.append('tags', postData.tags);
       }
       
-      // If there's a file, add it to formData
+      // Handle file upload if present
       if (file) {
-        // Create a new file object to ensure all properties are set
-        const fileObj = new File([file], file.name, { type: file.type });
-        formData.append('media', fileObj);
-        
-        console.log('File to be uploaded:', {
-          name: fileObj.name,
-          type: fileObj.type,
-          size: fileObj.size,
-          lastModified: fileObj.lastModified
-        });
+        try {
+          // Ensure we have a proper File object
+          if (!(file instanceof File)) {
+            file = new File([file], file.name || 'file', {
+              type: file.type || 'application/octet-stream',
+            });
+          }
+          formData.append('media', file);
+          console.log('File prepared for upload:', {
+            name: file.name,
+            type: file.type,
+            size: file.size
+          });
+        } catch (fileError) {
+          console.error('Error preparing file:', fileError);
+          throw new Error('Failed to prepare file for upload');
+        }
       }
-      
-      // Log formData contents for debugging
-      console.log('FormData contents:');
+
+      // Log formData entries for debugging
+      console.log('Form data entries:');
       for (let [key, value] of formData.entries()) {
-        console.log(key, value instanceof File ? 
-          `[File] ${value.name} (${value.size} bytes, ${value.type})` : 
-          value
-        );
+        console.log(`${key}:`, value instanceof File ? `[File] ${value.name}` : value);
       }
-      
-      // Create axios config with headers
-      const config = {
+
+      // Get the token for manual header
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      // Make the request with fetch API for better control
+      console.log('Sending POST request to /api/posts');
+      const response = await fetch(`${import.meta.env.VITE_API_BACKEND_URL || 'http://localhost:5000'}/api/posts`, {
+        method: 'POST',
+        body: formData,
         headers: {
-          'Content-Type': 'multipart/form-data',
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          // Let the browser set the Content-Type with boundary
         },
-        withCredentials: true,
-        timeout: 60000 // 60 seconds timeout
-      };
-      
-      // Use axios for the request
-<<<<<<< HEAD
-      const response = await axios.post(apiBaseUrl ? `${apiBaseUrl}/api/posts` : 'http://localhost:5000/api/posts', formData, config);
-=======
-      const response = await api.post('/posts', formData, config);
->>>>>>> 23a9c3e630b2b6181a753b6e542f3e047ded610f
-      
-      return response;
+        credentials: 'include'
+      });
+
+      const responseData = await response.json();
+
+      if (!response.ok) {
+        console.error('Server responded with error:', responseData);
+        throw new Error(responseData.message || 'Failed to create post');
+      }
+
+      console.log('Post created successfully:', responseData);
+      return { data: responseData };
     } catch (error) {
       console.error('Error in createPost:', error);
+      if (error.response) {
+        console.error('Response data:', error.response.data);
+        console.error('Response status:', error.response.status);
+        console.error('Response headers:', error.response.headers);
+      } else if (error.request) {
+        console.error('No response received:', error.request);
+      } else {
+        console.error('Error message:', error.message);
+      }
       throw error; // Re-throw to be handled by the caller
     }
   },
@@ -83,13 +96,19 @@ const postService = {
    */
   async getPosts(filters = {}) {
     try {
-      console.log('[postService.js:getPosts] Requesting /api/posts with params:', {
+      console.log('[postService.js:getPosts] Requesting posts with params:', {
         ...filters,
+        sort: filters.sort || '-createdAt',
+        limit: filters.limit || 20,
         populate: 'user,author,createdBy'
       });
-      const response = await api.get('/posts', {
+      
+      // Use the full path to the posts endpoint with /api prefix
+      const response = await api.get('/api/posts', {
         params: {
           ...filters,
+          sort: filters.sort || '-createdAt',
+          limit: filters.limit || 20,
           populate: 'user,author,createdBy'  // Ensure we get user data populated
         }
       });

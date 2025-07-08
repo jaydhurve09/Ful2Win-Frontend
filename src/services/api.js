@@ -1,11 +1,7 @@
 import axios from 'axios';
-<<<<<<< HEAD
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000' || import.meta.env.VITE_API_BACKEND_URL;
 
-=======
-// Use environment variable if set, otherwise default to localhost for development
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
->>>>>>> 23a9c3e630b2b6181a753b6e542f3e047ded610f
+// The proxy will handle the /api prefix in development
+const API_BASE_URL = ('http://localhost:5000' || import.meta.env.VITE_API_BACKEND_URL).replace(/\/api$/, '');
 
 // Environment configuration
 const api = axios.create({
@@ -28,23 +24,47 @@ api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
     if (!config.headers) config.headers = {};
-    if (token && !config.headers.Authorization) {
+    
+    // Always set the Authorization header if token exists
+    if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    
     // For FormData uploads, let the browser set the Content-Type with boundary
     if (config.data instanceof FormData) {
-      // Remove any Content-Type headers so browser can set multipart boundary automatically
-      delete config.headers['Content-Type'];
-      if (config.headers.common) delete config.headers.common['Content-Type'];
-      if (config.headers.post) delete config.headers.post['Content-Type'];
-      if (config.headers.put) delete config.headers.put['Content-Type'];
-      if (config.headers.patch) delete config.headers.patch['Content-Type'];
-    } else if (!config.headers['Content-Type']) {
+      // Don't set Content-Type header, let the browser set it with the correct boundary
+      if (config.headers && config.headers['Content-Type'] === undefined) {
+        // If Content-Type is explicitly set to undefined, remove it
+        delete config.headers['Content-Type'];
+      } else if (config.headers) {
+        // Otherwise, let the browser set it
+        delete config.headers['Content-Type'];
+      }
+      
+      // Also clear any axios default Content-Type headers
+      if (config.headers && config.headers.common) {
+        delete config.headers.common['Content-Type'];
+      }
+      if (config.headers && config.headers.post) {
+        delete config.headers.post['Content-Type'];
+      }
+      if (config.headers && config.headers.put) {
+        delete config.headers.put['Content-Type'];
+      }
+      if (config.headers && config.headers.patch) {
+        delete config.headers.patch['Content-Type'];
+      }
+    } else if (config.headers && !config.headers['Content-Type']) {
+      // Only set Content-Type for non-FormData requests if not already set
       config.headers['Content-Type'] = 'application/json';
     }
+    
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => {
+    console.error('Request interceptor error:', error);
+    return Promise.reject(error);
+  }
 );
 
 // Response interceptor for error handling

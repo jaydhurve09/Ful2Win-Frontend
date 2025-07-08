@@ -1,16 +1,11 @@
 import axios from 'axios';
 
 // Environment configuration
-const ENV = {
-  isProduction: import.meta.env.PROD,
-  isDevelopment: import.meta.env.DEV,
-  apiBaseUrl: process.env.REACT_APP_API_URL || '',
-  apiUrl: import.meta.env.VITE_API_URL || ''
-};
+const API_BASE_URL = import.meta.env.VITE_API_BACKEND_URL || 'http://localhost:5000';
 
 // Create axios instance with base configuration
 const api = axios.create({
-  baseURL: ENV.isProduction ? '' : ENV.apiBaseUrl, // Use relative URLs in production
+  baseURL: API_BASE_URL,
   timeout: 30000, // 30 seconds
   withCredentials: true,
   headers: {
@@ -159,7 +154,16 @@ const postService = {
   // Get all posts
   getPosts: async (params = {}) => {
     try {
-      const response = await api.get('/api/posts', { params });
+      const response = await api.get('/api/posts', { 
+        params: {
+          ...params,
+          sort: params.sort || '-createdAt',
+          limit: params.limit || 20,
+          populate: 'user,author,createdBy'
+        },
+        // Ensure the baseURL is not overridden
+        baseURL: ''
+      });
       return response.data;
     } catch (error) {
       console.error('Get posts error:', error);
