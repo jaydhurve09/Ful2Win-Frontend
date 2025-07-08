@@ -1,20 +1,24 @@
 import api from './api';
 
+// Base URL for file uploads that need direct axios
+const baseURL = import.meta.env.MODE === 'development' ? 'http://localhost:5000' : import.meta.env.VITE_API_BACKEND_URL;
 const postService = {
   /**
    * Create a new post
-   * @param {FormData} formData - Form data containing post content and optional media
+   * @param {Object} postData - Post data containing content and optional tags
+   * @param {File} [file=null] - Optional file to upload with the post
    * @returns {Promise<Object>} Created post data
    */
-
-
   async createPost(postData, file = null) {
     try {
       // Create a new FormData instance
       const formData = new FormData();
       
       // Add content and tags to formData
-      formData.append('content', postData.content || '');
+      if (postData.content) {
+        formData.append('content', postData.content);
+      }
+      
       if (postData.tags) {
         formData.append('tags', postData.tags);
       }
@@ -28,6 +32,7 @@ const postService = {
               type: file.type || 'application/octet-stream',
             });
           }
+          // Append file with the correct field name that backend expects
           formData.append('media', file);
           console.log('File prepared for upload:', {
             name: file.name,
@@ -46,33 +51,50 @@ const postService = {
         console.log(`${key}:`, value instanceof File ? `[File] ${value.name}` : value);
       }
 
-      // Get the token for manual header
+      // Get the token
       const token = localStorage.getItem('token');
       if (!token) {
         throw new Error('No authentication token found');
       }
 
-      // Make the request with fetch API for better control
-      console.log('Sending POST request to /api/posts');
-      const response = await fetch(`${baseURL}/api/posts`, {
-        method: 'POST',
-        body: formData,
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          // Let the browser set the Content-Type with boundary
-        },
-        credentials: 'include'
+      // Create a new XMLHttpRequest for better control over the upload
+      return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        
+        xhr.open('POST', `${baseURL}/api/posts`, true);
+        xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+        
+        xhr.onload = function() {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            const response = JSON.parse(xhr.responseText);
+            console.log('Post created successfully:', response);
+            resolve({ data: response });
+          } else {
+            let error;
+            try {
+              error = new Error(JSON.parse(xhr.responseText).message || 'Failed to create post');
+              error.response = { data: JSON.parse(xhr.responseText) };
+            } catch (e) {
+              error = new Error('Failed to create post');
+            }
+            error.status = xhr.status;
+            console.error('Error creating post:', error);
+            reject(error);
+          }
+        };
+        
+        xhr.onerror = function() {
+          const error = new Error('Network error occurred');
+          console.error('Network error:', error);
+          reject(error);
+        };
+        
+        // Don't set Content-Type header, let the browser set it with the correct boundary
+        xhr.withCredentials = true;
+        
+        // Send the form data
+        xhr.send(formData);
       });
-
-      const responseData = await response.json();
-
-      if (!response.ok) {
-        console.error('Server responded with error:', responseData);
-        throw new Error(responseData.message || 'Failed to create post');
-      }
-
-      console.log('Post created successfully:', responseData);
-      return { data: responseData };
     } catch (error) {
       console.error('Error in createPost:', error);
       if (error.response) {
@@ -103,9 +125,9 @@ const postService = {
         limit: filters.limit || 20,
         populate: 'user,author,createdBy'
       });
-      
-      // Get posts using the api instance (baseURL is already set)
-      const response = await api.get('/posts', {
+
+      // Get posts using the centralized api instance
+      const response = await api.get('/api/posts', {
         params: {
           ...filters,
           sort: filters.sort || '-createdAt',
@@ -115,7 +137,9 @@ const postService = {
       });
       
       // Process the response to ensure consistent post structure
-      const posts = Array.isArray(response.data) ? response.data : [];
+      const responseData = response.data;
+      const posts = Array.isArray(responseData) ? responseData : [];
+      
       return posts.map(post => ({
         ...post,
         // Ensure we have a user object with all required fields
@@ -135,6 +159,19 @@ const postService = {
       }));
     } catch (error) {
       console.error('Error fetching posts:', error);
+      if (error.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        console.error('Error data:', error.response.data);
+        console.error('Error status:', error.response.status);
+        console.error('Error headers:', error.response.headers);
+      } else if (error.request) {
+        // The request was made but no response was received
+        console.error('No response received:', error.request);
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        console.error('Error message:', error.message);
+      }
       throw error;
     }
   },

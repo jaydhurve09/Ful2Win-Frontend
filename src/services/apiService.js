@@ -1,5 +1,24 @@
-// Import the centralized API instance
-import api from './api';
+import axios from 'axios';
+
+// Environment configuration
+const API_BASE_URL = import.meta.env.MODE === 'development' ? 'http://localhost:5000' : import.meta.env.VITE_API_BACKEND_URL;
+
+// Create axios instance with base configuration
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: 30000, // 30 seconds
+  withCredentials: true,
+  headers: {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    'Cache-Control': 'no-cache, no-store, must-revalidate',
+    'Pragma': 'no-cache',
+    'Expires': '0'
+  },
+  validateStatus: function (status) {
+    return status >= 200 && status < 500; // Resolve only if status code is less than 500
+  }
+});
 
 // Request interceptor to add auth token
 api.interceptors.request.use(
