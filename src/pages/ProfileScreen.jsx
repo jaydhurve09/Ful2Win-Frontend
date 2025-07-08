@@ -281,7 +281,7 @@ const ProfileScreen = () => {
 
   const navItems = [
     { id: "account", label: "Account", icon: <FiUser />, path: "/account" },
-    { id: "tournament", label: "Tournament Log", icon: <FaTrophy />, path: "/tournamenthistory" },
+    { id: "tournament", label: "History", icon: <FaTrophy />, path: "/tournamenthistory" },
     { id: "users", label: "Users", icon: <FiUsers />, path: "/users" },
     { id: "wallet", label: "Wallet", icon: <FaRupeeSign />, path: "/wallet" },
   ];
