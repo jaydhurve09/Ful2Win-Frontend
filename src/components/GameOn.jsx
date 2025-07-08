@@ -59,7 +59,7 @@ const getUserInfo = async() => {
         try {
        
 
-          await api.post('/score/submit-score', {
+          await api.post('/api/score/submit-score', {
             userId,
             userName,
             score,
