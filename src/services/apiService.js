@@ -187,10 +187,24 @@ const gameService = {
   // Get game by ID
   getGame: async (gameId) => {
     try {
+      console.log(`Fetching game with ID: ${gameId}`);
       const response = await api.get(`/games/${gameId}`);
+      console.log('Game response:', response.data);
       return response.data;
     } catch (error) {
-      console.error('Get game error:', error);
+      console.error('Get game error:', {
+        message: error.message,
+        response: error.response ? {
+          status: error.response.status,
+          statusText: error.response.statusText,
+          data: error.response.data
+        } : 'No response',
+        config: error.config ? {
+          url: error.config.url,
+          method: error.config.method,
+          headers: error.config.headers
+        } : 'No config'
+      });
       throw error;
     }
   },
@@ -198,10 +212,25 @@ const gameService = {
   // Get all games
   getGames: async (params = {}) => {
     try {
+      console.log('Fetching games with params:', params);
       const response = await api.get('/games', { params });
+      console.log('Games response:', response.data);
       return response.data;
     } catch (error) {
-      console.error('Get games error:', error);
+      console.error('Get games error:', {
+        message: error.message,
+        response: error.response ? {
+          status: error.response.status,
+          statusText: error.response.statusText,
+          data: error.response.data
+        } : 'No response',
+        config: error.config ? {
+          url: error.config.url,
+          method: error.config.method,
+          headers: error.config.headers
+        } : 'No config',
+        stack: error.stack
+      });
       throw error;
     }
   },
