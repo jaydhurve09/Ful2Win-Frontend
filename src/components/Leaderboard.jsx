@@ -16,7 +16,7 @@ const Leaderboard = () => {
 
   const fetchLeaderboard = async () => {
     try {
-      const response =await fetch('/api/score/submit-score', {
+      const response =await fetch('/api/score/get-score', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
