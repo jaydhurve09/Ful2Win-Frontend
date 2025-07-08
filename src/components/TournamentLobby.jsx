@@ -254,7 +254,7 @@ const handleRegisterTournament = async (tournamentId) => {
       return;
     }
 
-    const response = await fetch(
+    const response = await axios.post(
       `/api/tournaments/${tournamentId}/register`,
       { playerId: user._id },
       

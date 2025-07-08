@@ -1,5 +1,15 @@
 import api from './api';
 
+// Helper function to get auth headers
+const getAuthHeaders = () => {
+  const token = localStorage.getItem('token');
+  return {
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
+  };
+};
+
 const chatService = {
   /**
    * Get conversation between two users
@@ -10,11 +20,17 @@ const chatService = {
   async getConversation(currentUserId, otherUserId) {
     try {
       const response = await api.get(
-        `/api/messages/conversation?user1=${currentUserId}&user2=${otherUserId}`
+        `/messages/conversation?user1=${currentUserId}&user2=${otherUserId}`,
+        { headers: getAuthHeaders() }
       );
       return response.data || [];
     } catch (error) {
       console.error('Error fetching conversation:', error);
+      if (error.response?.status === 401) {
+        // Handle unauthorized (token expired, etc.)
+        localStorage.removeItem('token');
+        window.location.href = '/login';
+      }
       throw error;
     }
   },
@@ -27,13 +43,22 @@ const chatService = {
    */
   async sendMessage(recipientId, content) {
     try {
-      const response = await api.post('/api/messages', {
-        recipient: recipientId,
-        content: content.trim()
-      });
+      const response = await api.post(
+        '/messages',
+        {
+          recipient: recipientId,
+          content: content.trim()
+        },
+        { headers: getAuthHeaders() }
+      );
       return response.data;
     } catch (error) {
       console.error('Error sending message:', error);
+      if (error.response?.status === 401) {
+        // Handle unauthorized (token expired, etc.)
+        localStorage.removeItem('token');
+        window.location.href = '/login';
+      }
       throw error;
     }
   },
@@ -45,10 +70,18 @@ const chatService = {
    */
   async markAsRead(messageIds) {
     try {
-      const response = await api.patch('/api/messages/read', { messageIds });
+      const response = await api.patch(
+        '/messages/read',
+        { messageIds },
+        { headers: getAuthHeaders() }
+      );
       return response.data;
     } catch (error) {
       console.error('Error marking messages as read:', error);
+      if (error.response?.status === 401) {
+        localStorage.removeItem('token');
+        window.location.href = '/login';
+      }
       throw error;
     }
   },
@@ -59,11 +92,18 @@ const chatService = {
    */
   async getUnreadCount() {
     try {
-      const response = await api.get('/api/messages/unread-count');
+      const response = await api.get(
+        '/messages/unread/count',
+        { headers: getAuthHeaders() }
+      );
       return response.data.count || 0;
     } catch (error) {
       console.error('Error getting unread count:', error);
-      return 0;
+      if (error.response?.status === 401) {
+        localStorage.removeItem('token');
+        window.location.href = '/login';
+      }
+      return 0; // Return 0 on error to prevent UI issues
     }
   },
 
@@ -74,11 +114,18 @@ const chatService = {
    */
   async getRecentConversations(limit = 10) {
     try {
-      const response = await api.get(`/api/messages/conversations?limit=${limit}`);
+      const response = await api.get(
+        `/messages/conversations?limit=${limit}`,
+        { headers: getAuthHeaders() }
+      );
       return response.data || [];
     } catch (error) {
       console.error('Error getting recent conversations:', error);
-      return [];
+      if (error.response?.status === 401) {
+        localStorage.removeItem('token');
+        window.location.href = '/login';
+      }
+      return []; // Return empty array on error to prevent UI issues
     }
   }
 };
