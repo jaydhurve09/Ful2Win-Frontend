@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaSearch, FaFire, FaStar, FaArrowRight, FaGamepad, FaSpinner } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
-import api from '../services/api';
+import { gameService } from '../services/apiService';
 import Header from '../components/Header';
 import Navbar from '../components/Navbar';
 import BackgroundBubbles from '../components/BackgroundBubbles';
@@ -45,31 +45,20 @@ const Games = () => {
         setLoading(true);
         setError(null);
         
-        // Use relative URL for API requests
-       
-//console.log(apiUrl);
-       // console.log('Fetching games from:', apiUrl);
-       const response = await api.get('/games', {
-         headers: {
-           'Content-Type': 'application/json',
-           'Accept': 'application/json',
-         },
-         withCredentials: true,
-       });
-
-       const responseData = response.data;
- 
+        // Use gameService to fetch games
+        const response = await gameService.getGames();
+        
         // Handle different response formats
         let gamesData = [];
-        if (Array.isArray(responseData)) {
+        if (Array.isArray(response)) {
           // If the response is directly an array
-          gamesData = responseData;
-        } else if (responseData && Array.isArray(responseData.data)) {
+          gamesData = response;
+        } else if (response && Array.isArray(response.data)) {
           // If the response has a data array
-          gamesData = responseData.data;
-        } else if (responseData && responseData.games) {
+          gamesData = response.data;
+        } else if (response && response.games) {
           // If the response has a games array
-          gamesData = Array.isArray(responseData.games) ? responseData.games : [];
+          gamesData = Array.isArray(response.games) ? response.games : [];
         }
         
         setGames(gamesData);

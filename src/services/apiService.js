@@ -1,7 +1,17 @@
 import axios from 'axios';
 
 // Environment configuration
-const API_BASE_URL = import.meta.env.MODE === 'development' ? 'http://localhost:5000' : import.meta.env.VITE_API_BACKEND_URL;
+const getBaseUrl = () => {
+  if (import.meta.env.MODE === 'development') {
+    return 'http://localhost:5000/api';
+  }
+  // Use VITE_API_BACKEND_URL if provided, otherwise use production URL
+  const baseUrl = import.meta.env.VITE_API_BACKEND_URL || 'https://api.fulboost.fun';
+  // Ensure no trailing slash and add /api
+  return `${baseUrl.replace(/\/$/, '')}/api`;
+};
+
+const API_BASE_URL = getBaseUrl();
 
 // Create axios instance with base configuration
 const api = axios.create({
@@ -177,10 +187,24 @@ const gameService = {
   // Get game by ID
   getGame: async (gameId) => {
     try {
+      console.log(`Fetching game with ID: ${gameId}`);
       const response = await api.get(`/games/${gameId}`);
+      console.log('Game response:', response.data);
       return response.data;
     } catch (error) {
-      console.error('Get game error:', error);
+      console.error('Get game error:', {
+        message: error.message,
+        response: error.response ? {
+          status: error.response.status,
+          statusText: error.response.statusText,
+          data: error.response.data
+        } : 'No response',
+        config: error.config ? {
+          url: error.config.url,
+          method: error.config.method,
+          headers: error.config.headers
+        } : 'No config'
+      });
       throw error;
     }
   },
@@ -188,10 +212,25 @@ const gameService = {
   // Get all games
   getGames: async (params = {}) => {
     try {
+      console.log('Fetching games with params:', params);
       const response = await api.get('/games', { params });
+      console.log('Games response:', response.data);
       return response.data;
     } catch (error) {
-      console.error('Get games error:', error);
+      console.error('Get games error:', {
+        message: error.message,
+        response: error.response ? {
+          status: error.response.status,
+          statusText: error.response.statusText,
+          data: error.response.data
+        } : 'No response',
+        config: error.config ? {
+          url: error.config.url,
+          method: error.config.method,
+          headers: error.config.headers
+        } : 'No config',
+        stack: error.stack
+      });
       throw error;
     }
   },
