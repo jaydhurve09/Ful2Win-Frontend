@@ -49,7 +49,7 @@ const Games = () => {
        
 //console.log(apiUrl);
        // console.log('Fetching games from:', apiUrl);
-       const response = await api.get('/games', {
+       const response = await api.get('/api/games', {
          headers: {
            'Content-Type': 'application/json',
            'Accept': 'application/json',
