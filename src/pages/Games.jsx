@@ -6,8 +6,6 @@ import api from '../services/api';
 import Header from '../components/Header';
 import Navbar from '../components/Navbar';
 import BackgroundBubbles from '../components/BackgroundBubbles';
-import axios from 'axios';
-import { a } from 'framer-motion/client';
 // Default game images (fallback)
 // Using a placeholder image URL instead of local file
 const defaultGameImage = 'https://via.placeholder.com/300x200/1a1a2e/ffffff?text=Game+Image'; // Make sure to add a default game image

@@ -1,9 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import axios from "axios";
 import ScoreCard from "./ScoreCard"; // Make sure this component exists
-
-const API_URL = import.meta.env.VITE_API_BACKEND_URL || 'http://localhost:5000'; // Use the environment variable for API URL
+import api from "../services/api";
 
 const GameOn = () => {
   const { gameId, tournamentId } = useParams(); // ✅ fetch route params
@@ -18,13 +16,7 @@ const GameOn = () => {
   useEffect(() => {
     const fetchGameById = async () => {
       try {
-        const token = localStorage.getItem("token");
-        const response = await axios.get(`${API_URL}/api/games`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-     
+        const response = await api.get('/games');
         const allGames = response.data?.data || [];
         const foundGame = allGames.find((g) => g._id === gameId);
 
