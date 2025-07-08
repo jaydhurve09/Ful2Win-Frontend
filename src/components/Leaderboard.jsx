@@ -7,6 +7,7 @@ import BackgroundBubbles from '../components/BackgroundBubbles';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import api from '../services/api';
+import axios from 'axios';
 const Leaderboard = () => {
   const navigate = useNavigate();
   const { gameName, tournamentId } = useParams(); // ✅ Get from URL
@@ -16,15 +17,9 @@ const Leaderboard = () => {
 
   const fetchLeaderboard = async () => {
     try {
-      const response =await fetch('/api/score/get-score', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          roomId: tournamentId,
-          gameName: gameName,
-        }),
+      const response = await axios.post('/api/score/get-score', {
+        gameName,
+        roomId: tournamentId,
       });
 
       const data = response.data;
