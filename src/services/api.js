@@ -2,9 +2,8 @@ import axios from 'axios';
 
 // Get the base URL from environment variables or use the production URL as fallback
 const envUrl = import.meta.env.VITE_API_BACKEND_URL || 'https://api.fulboost.fun';
-// Ensure we don't have double slashes in the URL and add /api suffix
-const baseUrl = envUrl.endsWith('/') ? envUrl.slice(0, -1) : envUrl;
-const API_BASE_URL = `${baseUrl}/api`;
+// Ensure we don't have double slashes in the URL
+const API_BASE_URL = import.meta.env.MODE === 'development' ? 'http://localhost:5000' : import.meta.env.VITE_API_BACKEND_URL;
 
 // Environment configuration
 const api = axios.create({
@@ -13,12 +12,16 @@ const api = axios.create({
   withCredentials: true,
   headers: {
     'Accept': 'application/json',
-    'Content-Type': 'application/json',
-    'Cache-Control': 'no-cache, no-store, must-revalidate',
-    'Pragma': 'no-cache',
-    'Expires': '0'
+    'Content-Type': 'application/json'
   },
-  
+  // Prevent axios from adding cache-control headers
+  transformRequest: [(data, headers) => {
+    if (headers && headers.common) {
+      delete headers.common['Cache-Control'];
+      delete headers.common['Pragma'];
+    }
+    return data;
+  }],
   validateStatus: function (status) {
     return status < 500; // Resolve all status codes less than 500
   }
@@ -30,6 +33,14 @@ api.interceptors.request.use(
     const token = localStorage.getItem('token');
     if (!config.headers) {
       config.headers = {};
+    }
+    
+    // Remove any cache-control headers that might have been added
+    if (config.headers) {
+      delete config.headers['Cache-Control'];
+      delete config.headers['cache-control'];
+      delete config.headers['Pragma'];
+      delete config.headers['pragma'];
     }
     
     // Always set the Authorization header if token exists
