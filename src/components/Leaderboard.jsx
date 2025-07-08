@@ -16,9 +16,18 @@ const Leaderboard = () => {
 
   const fetchLeaderboard = async () => {
     try {
-      const response = await api.post('/api/score/get-score', {
-        gameName,
-        roomId: tournamentId,
+      const response =await fetch('/api/score/submit-score', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId,
+          userName,
+          score,
+          roomId: tournamentId,
+          gameName: game?.name || "Game",
+        }),
       });
 
       const data = response.data;
