@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { FaUser, FaTrophy, FaArrowLeft } from "react-icons/fa";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import axios from "axios";
 import { toast } from "react-toastify";
+import api from "../services/api";
 
 const LeaderboardPage = () => {
   const [searchParams] = useSearchParams();
@@ -25,19 +25,7 @@ const LeaderboardPage = () => {
           return;
         }
 
-        const apiUrl = 
-          (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL) 
-          || (typeof process !== 'undefined' && process.env && process.env.REACT_APP_API_URL) 
-          || 'http://localhost:5000';
-
-        const response = await axios.get(
-          `${apiUrl}/api/tournaments/${tournamentId}/leaderboard`,
-          {
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
-          }
-        );
+        const response = await api.get(`/tournaments/${tournamentId}/leaderboard`);
 
         setLeaderboard(response.data.leaderboard || []);
         setCurrentUserRank(response.data.currentUserRank || null);

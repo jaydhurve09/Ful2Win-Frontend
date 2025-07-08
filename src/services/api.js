@@ -1,7 +1,9 @@
 import axios from 'axios';
 
-// The proxy will handle the /api prefix in development
-const API_BASE_URL = ('http://localhost:5000/api' || import.meta.env.VITE_API_BACKEND_URL).replace(/\/api$/, '');
+// Get the base URL from environment variables or use localhost as fallback
+const envUrl = import.meta.env.VITE_API_BACKEND_URL || 'https://api.fulboost.fun';
+// Ensure we don't have double slashes in the URL
+const API_BASE_URL = envUrl.endsWith('/') ? envUrl.slice(0, -1) : envUrl;
 
 // Environment configuration
 const api = axios.create({
@@ -10,6 +12,7 @@ const api = axios.create({
   withCredentials: true,
   headers: {
     'Accept': 'application/json',
+    'Content-Type': 'application/json',
     'Cache-Control': 'no-cache, no-store, must-revalidate',
     'Pragma': 'no-cache',
     'Expires': '0'
@@ -24,7 +27,9 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
-    if (!config.headers) config.headers = {};
+    if (!config.headers) {
+      config.headers = {};
+    }
     
     // Always set the Authorization header if token exists
     if (token) {

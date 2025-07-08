@@ -4,7 +4,7 @@ import logo from '../assets/logo.png';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import BackgroundBubbles from '../components/BackgroundBubbles';
-import axios from 'axios';
+import api from '../services/api';
 import authService from '../services/authService';
 import {
   FaArrowLeft,
@@ -62,7 +62,7 @@ const Signup = () => {
     
     try {
       setIsValidatingCode(true);
-      const response = await axios.get(`/api/referrals/validate?code=${encodeURIComponent(code)}`);
+      const response = await api.get(`/referrals/validate?code=${encodeURIComponent(code)}`);
       
       if (response.data.valid) {
         setIsReferralCodeValid(true);

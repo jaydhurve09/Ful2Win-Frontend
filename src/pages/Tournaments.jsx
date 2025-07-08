@@ -44,7 +44,7 @@ const Tournaments = () => {
             if (!gameId) return { ...game, tournamentCount: 0, activePlayers: 0, maxPlayers: 0 };
 
             try {
-              const tournamentsRes = await axios.get(`${API_URL}/tournaments?gameId=${gameId}`, {
+              const tournamentsRes = await api.get(`/tournaments?gameId=${gameId}`, {
                 headers: { Authorization: `Bearer ${token}` },
                 validateStatus: status => status < 500
               });

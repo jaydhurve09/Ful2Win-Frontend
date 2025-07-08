@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { useState } from "react";
-import axios from "axios";
+import api from "../services/api";
 import ScoreCard from "../components/ScoreCard";
 const scoreData = {
   userId: "12345", // Replace with actual user ID
@@ -22,14 +22,13 @@ const MatchMerge = () => {
 
       if (type === "GAME_OVER") {
         
-        // Send the score to the backend
-        axios
-          .post('https://api.fulboost.fun/score/submit-score', {
-            userId: "12345", // Replace with actual user ID
-            score: score,
-            roomId: "67890", // Replace with actual room ID
-            gameName: "match and Merge",
-          });
+        // Send the score to the backend using the centralized api instance
+        api.post('/score/submit-score', {
+          userId: "12345", // Replace with actual user ID
+          score: score,
+          roomId: "67890", // Replace with actual room ID
+          gameName: "match and Merge",
+        });
           
         setGameOn(true);
         console.log(gameOn)

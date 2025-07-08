@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import axios from 'axios';
+import api from '../services/api';
 import { FaSpinner, FaArrowLeft, FaRedo } from 'react-icons/fa';
 
 const MAX_RETRIES = 2;

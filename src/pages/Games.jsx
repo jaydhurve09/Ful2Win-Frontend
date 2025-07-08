@@ -49,15 +49,15 @@ const Games = () => {
        
 //console.log(apiUrl);
        // console.log('Fetching games from:', apiUrl);
-       const response = await axios.get(`${import.meta.env.VITE_API_BACKEND_URL}/api/games`, {
-  headers: {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json',
-  },
-  withCredentials: true, // Add if needed
-});
+       const response = await api.get('/games', {
+         headers: {
+           'Content-Type': 'application/json',
+           'Accept': 'application/json',
+         },
+         withCredentials: true,
+       });
 
-const responseData = response.data;
+       const responseData = response.data;
  
         // Handle different response formats
         let gamesData = [];

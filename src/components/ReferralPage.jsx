@@ -16,9 +16,9 @@ import {
   FaSearch
 } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import api from '../services/api';
 import BackgroundBubbles from '../components/BackgroundBubbles';
 import BackgroundCircles from '../components/BackgroundCircles';
 import Header from '../components/Header';
@@ -92,13 +92,13 @@ const ReferralPage = () => {
         
         try {
           // First get the referral code
-          const referralResponse = await axios.get('/api/referrals/my-code', { headers });
+          const referralResponse = await api.get('/referrals/my-code', { headers });
           if (referralResponse.data.success) {
             setReferralCode(referralResponse.data.referralCode);
           }
           
           // Then get the referrals and stats in one request
-          const referralsResponse = await axios.get('/api/referrals/my-referrals', { headers });
+          const referralsResponse = await api.get('/referrals/my-referrals', { headers });
           
           if (referralsResponse.data.success) {
             // Set the referrals list
