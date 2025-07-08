@@ -12,10 +12,61 @@ const api = axios.create({
     'Pragma': 'no-cache',
     'Expires': '0'
   },
+  transformRequest: [
+    (data, headers) => {
+      // Ensure we only stringify objects, not strings or FormData
+      if (data && typeof data === 'object' && !(data instanceof FormData)) {
+        return JSON.stringify(data);
+      }
+      return data;
+    }
+  ],
+  transformResponse: [
+    (data) => {
+      try {
+        return JSON.parse(data);
+      } catch (e) {
+        return data;
+      }
+    }
+  ],
   validateStatus: function (status) {
     return status >= 200 && status < 500; // Resolve only if status code is less than 500
   }
 });
+
+// Request interceptor for logging
+api.interceptors.request.use(
+  config => {
+    console.log('Request:', {
+      url: config.url,
+      method: config.method,
+      headers: config.headers,
+      data: config.data
+    });
+    return config;
+  },
+  error => {
+    console.error('Request Error:', error);
+    return Promise.reject(error);
+  }
+);
+
+// Response interceptor for logging
+api.interceptors.response.use(
+  response => {
+    console.log('Response:', {
+      url: response.config.url,
+      status: response.status,
+      data: response.data
+    });
+    return response;
+  },
+  error => {
+    console.error('Response Error:', error);
+    return Promise.reject(error);
+  }
+);
 
 // Request interceptor to add auth token
 api.interceptors.request.use(
@@ -50,9 +101,16 @@ const authService = {
   login: async (userData) => {
     try {
       console.log('Sending login request to /users/login');
-      const response = await api.post('/users/login', {
-        phone: userData.phoneNumber,
+      const loginData = {
+        phoneNumber: userData.phoneNumber, // Changed from phone to phoneNumber to match backend
         password: userData.password
+      };
+      
+      console.log('Login request data:', loginData);
+      const response = await api.post('/users/login', loginData, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
 
       if (response.data && response.data.token) {
