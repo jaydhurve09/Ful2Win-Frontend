@@ -1,7 +1,5 @@
 import api from './api';
 
-// Base URL for file uploads that need direct axios
-const baseURL = import.meta.env.MODE === 'development' ? 'http://localhost:5000' : import.meta.env.VITE_API_BACKEND_URL;
 const postService = {
   /**
    * Create a new post
@@ -11,7 +9,6 @@ const postService = {
    */
   async createPost(postData, file = null) {
     try {
-      // Create a new FormData instance
       const formData = new FormData();
       
       // Add content and tags to formData
@@ -28,11 +25,10 @@ const postService = {
         try {
           // Ensure we have a proper File object
           if (!(file instanceof File)) {
-            file = new File([file], file.name || 'file', {
+            file = new File([file], 'upload.' + (file.type?.split('/')[1] || 'jpg'), {
               type: file.type || 'application/octet-stream',
             });
           }
-          // Append file with the correct field name that backend expects
           formData.append('media', file);
           console.log('File prepared for upload:', {
             name: file.name,
@@ -40,99 +36,57 @@ const postService = {
             size: file.size
           });
         } catch (fileError) {
-          console.error('Error preparing file:', fileError);
-          throw new Error('Failed to prepare file for upload');
+          console.error('Error preparing file for upload:', fileError);
+          throw new Error('Failed to process file for upload');
         }
       }
 
-      // Log formData entries for debugging
-      console.log('Form data entries:');
+      // Log form data for debugging
+      console.log('FormData contents:');
       for (let [key, value] of formData.entries()) {
         console.log(`${key}:`, value instanceof File ? `[File] ${value.name}` : value);
       }
 
-      // Get the token
-      const token = localStorage.getItem('token');
-      if (!token) {
-        throw new Error('No authentication token found');
-      }
+      // Use the centralized api instance with proper headers for FormData
+      const config = {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      };
 
-      // Create a new XMLHttpRequest for better control over the upload
-      return new Promise((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        
-        xhr.open('POST', `${baseURL}/api/posts`, true);
-        xhr.setRequestHeader('Authorization', `Bearer ${token}`);
-        
-        xhr.onload = function() {
-          if (xhr.status >= 200 && xhr.status < 300) {
-            const response = JSON.parse(xhr.responseText);
-            console.log('Post created successfully:', response);
-            resolve({ data: response });
-          } else {
-            let error;
-            try {
-              error = new Error(JSON.parse(xhr.responseText).message || 'Failed to create post');
-              error.response = { data: JSON.parse(xhr.responseText) };
-            } catch (e) {
-              error = new Error('Failed to create post');
-            }
-            error.status = xhr.status;
-            console.error('Error creating post:', error);
-            reject(error);
-          }
-        };
-        
-        xhr.onerror = function() {
-          const error = new Error('Network error occurred');
-          console.error('Network error:', error);
-          reject(error);
-        };
-        
-        // Don't set Content-Type header, let the browser set it with the correct boundary
-        xhr.withCredentials = true;
-        
-        // Send the form data
-        xhr.send(formData);
-      });
+      const response = await api.post('/api/posts', formData, config);
+      return response.data;
     } catch (error) {
       console.error('Error in createPost:', error);
       if (error.response) {
-        console.error('Response data:', error.response.data);
-        console.error('Response status:', error.response.status);
-        console.error('Response headers:', error.response.headers);
+        console.error('Error data:', error.response.data);
+        console.error('Error status:', error.response.status);
       } else if (error.request) {
         console.error('No response received:', error.request);
       } else {
         console.error('Error message:', error.message);
       }
-      throw error; // Re-throw to be handled by the caller
+      throw error;
     }
   },
+
   /**
-   * Get all posts
-   * @param {Object} [filters] - Optional filters for posts
-   * @returns {Promise<Array>} Array of posts
-   */
-  /**
-   * Only uses '/posts' endpoint. Never call '/users/posts' or construct endpoint dynamically.
+   * Get all posts with optional filters
+   * @param {Object} filters - Filter parameters
+   * @param {string} [filters.sort=-createdAt] - Sort order
+   * @param {number} [filters.limit=20] - Number of posts to return
+   * @param {string} [filters.userId] - Filter by user ID
+   * @param {string} [filters.tournamentId] - Filter by tournament ID
+   * @returns {Promise<Array>} List of posts
    */
   async getPosts(filters = {}) {
     try {
-      console.log('[postService.js:getPosts] Requesting posts with params:', {
-        ...filters,
-        sort: filters.sort || '-createdAt',
-        limit: filters.limit || 20,
-        populate: 'user,author,createdBy'
-      });
-
-      // Get posts using the centralized api instance
       const response = await api.get('/api/posts', {
         params: {
           ...filters,
           sort: filters.sort || '-createdAt',
           limit: filters.limit || 20,
-          populate: 'user,author,createdBy'  // Ensure we get user data populated
+          populate: 'user,author,createdBy'
         }
       });
       
@@ -142,36 +96,17 @@ const postService = {
       
       return posts.map(post => ({
         ...post,
-        // Ensure we have a user object with all required fields
         user: post.user || post.author || post.createdBy || {
-          _id: post.userId || 'unknown',
-          username: 'user',
-          fullName: 'Unknown User',
-          profilePicture: null
+          _id: 'unknown',
+          username: 'Unknown User',
+          profilePicture: ''
         },
-        // Ensure we have required post fields
-        likes: Array.isArray(post.likes) ? post.likes : [],
-        comments: Array.isArray(post.comments) ? post.comments : [],
-        likeCount: post.likeCount || post.likes?.length || 0,
-        commentCount: post.commentCount || post.comments?.length || 0,
         createdAt: post.createdAt || new Date().toISOString(),
-        content: post.content || ''
+        content: post.content || '',
+        media: Array.isArray(post.media) ? post.media : []
       }));
     } catch (error) {
       console.error('Error fetching posts:', error);
-      if (error.response) {
-        // The request was made and the server responded with a status code
-        // that falls out of the range of 2xx
-        console.error('Error data:', error.response.data);
-        console.error('Error status:', error.response.status);
-        console.error('Error headers:', error.response.headers);
-      } else if (error.request) {
-        // The request was made but no response was received
-        console.error('No response received:', error.request);
-      } else {
-        // Something happened in setting up the request that triggered an Error
-        console.error('Error message:', error.message);
-      }
       throw error;
     }
   },
