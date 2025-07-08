@@ -21,21 +21,21 @@ const GameLobbyPage = () => {
     useEffect(() => {
       const fetchGameById = async () => {
         try {
-          const response = await api.get(`/games/${gameId}`);
+          const response = await api.get(`/api/games/${gameId}`);
           
           if (response.data && response.data.success) {
             setGame(response.data.data);
           } else {
             setError(response.data?.message || "Game not found");
             toast.error(response.data?.message || "Game not found");
-            setTimeout(() => navigate('/games'), 2000);
+            setTimeout(() => navigate('/api/games'), 2000);
           }
         } catch (err) {
           const errorMessage = err.response?.data?.message || "Failed to load game data";
           setError(errorMessage);
           toast.error(errorMessage);
           console.error('Game fetch error:', err);
-          setTimeout(() => navigate('/games'), 2000);
+          setTimeout(() => navigate('/api/games'), 2000);
         }
       };
   
@@ -45,7 +45,7 @@ const GameLobbyPage = () => {
         const errorMsg = "No game ID provided";
         setError(errorMsg);
         toast.error(errorMsg);
-        setTimeout(() => navigate('/games'), 2000);
+        setTimeout(() => navigate('/api/games'), 2000);
       }
     }, [gameId]);
   

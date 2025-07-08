@@ -16,7 +16,7 @@ const Leaderboard = () => {
 
   const fetchLeaderboard = async () => {
     try {
-      const response = await api.post('/score/get-score', {
+      const response = await api.post('/api/score/get-score', {
         gameName,
         roomId: tournamentId,
       });

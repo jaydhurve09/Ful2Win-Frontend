@@ -6,6 +6,7 @@ import { gameService } from '../services/apiService';
 import Header from '../components/Header';
 import Navbar from '../components/Navbar';
 import BackgroundBubbles from '../components/BackgroundBubbles';
+import api from '../services/api';
 // Default game images (fallback)
 // Using a placeholder image URL instead of local file
 const defaultGameImage = 'https://via.placeholder.com/300x200/1a1a2e/ffffff?text=Game+Image'; // Make sure to add a default game image
@@ -45,9 +46,20 @@ const Games = () => {
         setLoading(true);
         setError(null);
         
-        // Use gameService to fetch games
-        const response = await gameService.getGames();
-        
+        // Use relative URL for API requests
+       
+//console.log(apiUrl);
+       // console.log('Fetching games from:', apiUrl);
+       const response = await api.get('/api/games', {
+         headers: {
+           'Content-Type': 'application/json',
+           'Accept': 'application/json',
+         },
+         withCredentials: true,
+       });
+
+       const responseData = response.data;
+ 
         // Handle different response formats
         let gamesData = [];
         if (Array.isArray(response)) {
