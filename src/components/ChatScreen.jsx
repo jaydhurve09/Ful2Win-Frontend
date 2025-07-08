@@ -60,25 +60,29 @@ const ChatScreen = ({ selectedFriend, setSelectedFriend }) => {
       // Set up socket event listeners
       const socket = socketRef.current;
 
-      socket.on('connect', () => {
+      const handleConnect = () => {
         console.log('Socket connected');
         setSocketError(false);
         // Join user's personal room
         socket.emit('join_user_room', currentUserId);
         console.log('Joined user room:', currentUserId);
-      });
+      };
 
-      socket.on('connect_error', (err) => {
+      const handleConnectError = (err) => {
         console.error('Socket connection error:', err);
         setSocketError(true);
-      });
+        setError('Connection error. Reconnecting...');
+      };
 
-      socket.on('disconnect', (reason) => {
+      const handleDisconnect = (reason) => {
         console.log('Socket disconnected:', reason);
-      });
+        if (reason === 'io server disconnect') {
+          // Reconnect if server disconnects
+          socket.connect();
+        }
+      };
 
-      // Handle new messages
-      socket.on('new_message', (msg) => {
+      const handleNewMessage = (msg) => {
         console.log('Received new message via socket:', msg);
         
         // Normalize message format
@@ -86,12 +90,18 @@ const ChatScreen = ({ selectedFriend, setSelectedFriend }) => {
           ...msg,
           sender: msg.sender?._id || msg.sender || null,
           recipient: msg.recipient?._id || msg.recipient || null,
-          createdAt: msg.createdAt || new Date().toISOString()
+          createdAt: msg.createdAt || new Date().toISOString(),
+          localId: msg._id ? `server-${msg._id}` : `local-${Date.now()}`,
+          status: 'received'
         };
         
         setMessages(prev => {
           // Check if message already exists to prevent duplicates
-          const exists = prev.some(m => m._id === normalizedMsg._id);
+          const exists = prev.some(m => 
+            (m._id && m._id === normalizedMsg._id) || 
+            (m.localId === normalizedMsg.localId)
+          );
+          
           if (!exists) {
             const updated = [...prev, normalizedMsg]
               .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
@@ -100,14 +110,42 @@ const ChatScreen = ({ selectedFriend, setSelectedFriend }) => {
           }
           return prev;
         });
-      });
-      
-      // Log all socket events for debugging
-      const originalEmit = socket.emit;
-      socket.emit = function() {
-        console.log('Emitting event:', arguments[0], arguments[1]);
-        return originalEmit.apply(socket, arguments);
+        
+        // Mark as read if it's a new message from the current conversation
+        if (selectedFriend?._id && 
+            String(normalizedMsg.sender) === String(selectedFriend._id) &&
+            !normalizedMsg.readAt) {
+          chatService.markAsRead([normalizedMsg._id]).catch(console.error);
+        }
       };
+
+      const handleTypingStatus = (data) => {
+        if (data.from === selectedFriend?._id) {
+          setIsTyping(true);
+          // Clear any existing timeout
+          if (typingTimeout) clearTimeout(typingTimeout);
+          // Set timeout to hide typing indicator after 3 seconds
+          const timeout = setTimeout(() => setIsTyping(false), 3000);
+          setTypingTimeout(timeout);
+        }
+      };
+
+      // Set up event listeners
+      socket.on('connect', handleConnect);
+      socket.on('connect_error', handleConnectError);
+      socket.on('disconnect', handleDisconnect);
+      socket.on('new_message', handleNewMessage);
+      socket.on('typing', handleTypingStatus);
+      socket.on('stop_typing', () => setIsTyping(false));
+      
+      // Log all socket events for debugging in development
+      if (process.env.NODE_ENV === 'development') {
+        const originalEmit = socket.emit;
+        socket.emit = function() {
+          console.log('Emitting event:', arguments[0], arguments[1]);
+          return originalEmit.apply(socket, arguments);
+        };
+      }
     }
 
     // Clean up on unmount
@@ -118,11 +156,13 @@ const ChatScreen = ({ selectedFriend, setSelectedFriend }) => {
         socketRef.current.off('connect_error');
         socketRef.current.off('disconnect');
         socketRef.current.off('new_message');
+        socketRef.current.off('typing');
+        socketRef.current.off('stop_typing');
         socketRef.current.disconnect();
         socketRef.current = null;
       }
     };
-  }, [currentUserId]);
+  }, [currentUserId, selectedFriend?._id, typingTimeout]);
 
   // Load messages when selected friend changes
   const loadMessages = useCallback(async () => {
@@ -230,12 +270,15 @@ const ChatScreen = ({ selectedFriend, setSelectedFriend }) => {
   
   // Handle typing indicator
   const handleTyping = useCallback(() => {
+    if (!selectedFriend?._id || !currentUserId) return;
+    
+    // Clear any existing timeout
     if (typingTimeout) clearTimeout(typingTimeout);
     
-    // Notify typing
+    // Notify typing if we haven't already
     if (socketRef.current?.connected) {
       socketRef.current.emit('typing', {
-        to: selectedFriend?._id,
+        to: selectedFriend._id,
         from: currentUserId
       });
     }
@@ -244,11 +287,12 @@ const ChatScreen = ({ selectedFriend, setSelectedFriend }) => {
     const timeout = setTimeout(() => {
       if (socketRef.current?.connected) {
         socketRef.current.emit('stop_typing', {
-          to: selectedFriend?._id,
+          to: selectedFriend._id,
           from: currentUserId
         });
       }
-    }, 2000);
+      setIsTyping(false);
+    }, 2000); // 2 seconds of inactivity
     
     setTypingTimeout(timeout);
   }, [selectedFriend?._id, currentUserId, typingTimeout]);
@@ -270,6 +314,7 @@ const ChatScreen = ({ selectedFriend, setSelectedFriend }) => {
     if (!trimmedMessage || !selectedFriend?._id || !currentUserId || sending) return;
     
     setSending(true);
+    setError(null);
     
     // Create optimistic message
     const tempId = `temp-${Date.now()}`;
@@ -302,13 +347,22 @@ const ChatScreen = ({ selectedFriend, setSelectedFriend }) => {
             ? { 
                 ...sentMessage, 
                 localId: `server-${sentMessage._id}`,
-                status: 'sent'
+                status: 'sent',
+                isOptimistic: false
               } 
             : msg
         )
       );
       
-      // Auto-scroll to bottom
+      // Notify recipient via socket
+      if (socketRef.current?.connected) {
+        socketRef.current.emit('send_message', {
+          ...sentMessage,
+          recipient: selectedFriend._id
+        });
+      }
+      
+      // Auto-scroll to show the new message
       scrollToBottom();
       
     } catch (err) {
@@ -317,7 +371,11 @@ const ChatScreen = ({ selectedFriend, setSelectedFriend }) => {
       setMessages(prev => 
         prev.map(msg => 
           msg.localId === tempId 
-            ? { ...msg, status: 'failed' } 
+            ? { 
+                ...msg, 
+                status: 'failed',
+                error: err.response?.data?.message || 'Failed to send message'
+              } 
             : msg
         )
       );
@@ -335,8 +393,32 @@ const ChatScreen = ({ selectedFriend, setSelectedFriend }) => {
   };
   
   const handleInputChange = (e) => {
-    setMessage(e.target.value);
-    handleTyping();
+    const newValue = e.target.value;
+    setMessage(newValue);
+    
+    // Only show typing indicator if there's text and we have a recipient
+    if (newValue.trim() && selectedFriend?._id) {
+      handleTyping();
+    }
+  };
+  
+  const handleRetrySend = async (localId) => {
+    if (!localId) return;
+    
+    // Find the failed message
+    const failedMsg = messages.find(msg => msg.localId === localId);
+    if (!failedMsg) return;
+    
+    // Remove the failed message
+    setMessages(prev => prev.filter(msg => msg.localId !== localId));
+    
+    // Set the message content and send it again
+    setMessage(failedMsg.content);
+    
+    // Small delay to ensure state updates
+    setTimeout(() => {
+      sendMessage();
+    }, 100);
   };
 
   console.log('ChatScreen render', {
@@ -386,13 +468,10 @@ const ChatScreen = ({ selectedFriend, setSelectedFriend }) => {
                 </div>
               ) : (
                 messages.map((msg) => {
-                  // Debug log for each message
-                  console.log('Rendering message:', msg);
-                  
-                  // Handle both object and string sender formats
                   const senderId = msg.sender?._id || msg.sender || '';
                   const isSent = String(senderId) === String(currentUserId);
-                  const isOptimistic = msg.isOptimistic;
+                  const isOptimistic = msg.isOptimistic || msg.status === 'sending';
+                  const isFailed = msg.status === 'failed';
                   
                   // Format timestamp
                   let formattedTime = 'Sending...';
@@ -409,7 +488,7 @@ const ChatScreen = ({ selectedFriend, setSelectedFriend }) => {
                   
                   return (
                     <div 
-                      key={msg._id || `temp-${Date.now()}`} 
+                      key={msg.localId || msg._id || `msg-${Date.now()}`}
                       className={`my-2 flex ${isSent ? 'justify-end' : 'justify-start'} px-2`}
                     >
                       <div
@@ -417,23 +496,37 @@ const ChatScreen = ({ selectedFriend, setSelectedFriend }) => {
                           isSent 
                             ? 'bg-blue-500 text-white rounded-br-none' 
                             : 'bg-gray-200 text-gray-800 rounded-bl-none'
-                        } ${isOptimistic ? 'opacity-70' : ''}`}
+                        } ${isOptimistic ? 'opacity-70' : ''} ${isFailed ? 'border border-red-400' : ''}`}
                         style={{
                           wordBreak: 'break-word',
                           boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
-                          minWidth: '80px', // Ensure messages have minimum width
+                          minWidth: '80px',
                         }}
                       >
                         <div className="text-sm">
                           {msg.content || '[No content]'}
                         </div>
-                        <div className="text-right mt-1">
+                        <div className="flex justify-between items-center mt-1">
+                          {isFailed && (
+                            <button
+                              onClick={() => handleRetrySend(msg.localId)}
+                              className="text-xs text-red-400 hover:text-red-300"
+                              title="Retry sending"
+                            >
+                              Tap to retry
+                            </button>
+                          )}
                           <span 
-                            className={`text-xs ${isSent ? 'text-blue-100' : 'text-gray-500'}`}
+                            className={`text-xs ml-auto ${isSent ? 'text-blue-100' : 'text-gray-500'}`}
                             style={{ whiteSpace: 'nowrap' }}
                           >
                             {formattedTime}
-                            {isOptimistic && ' • Sending...'}
+                            {isOptimistic && !isFailed && (
+                              <span className="ml-1">• Sending...</span>
+                            )}
+                            {isFailed && (
+                              <span className="ml-1">• Failed</span>
+                            )}
                           </span>
                         </div>
                       </div>
