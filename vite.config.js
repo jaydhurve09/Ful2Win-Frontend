@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react';
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
   const isProduction = mode === 'production';
-  const apiBaseUrl = env.VITE_API_BASE_URL || 'http://localhost:5000';
+  const apiBaseUrl = env.VITE_API_BACKEND_URL || 'http://localhost:5000';
   
   return {
     plugins: [react()],
@@ -16,6 +16,9 @@ export default defineConfig(({ mode }) => {
           changeOrigin: true,
           secure: false,
           ws: true,
+          pathRewrite: {
+            '^/api': '' // Remove /api prefix when forwarding to backend
+          },
           configure: (proxy, _options) => {
             proxy.on('error', (err, _req, _res) => {
               console.log('Proxy error:', err);

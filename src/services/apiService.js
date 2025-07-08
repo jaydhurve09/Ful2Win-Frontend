@@ -1,16 +1,11 @@
 import axios from 'axios';
 
 // Environment configuration
-const ENV = {
-  isProduction: import.meta.env.PROD,
-  isDevelopment: import.meta.env.DEV,
-  apiBaseUrl: process.env.REACT_APP_API_URL || '',
-  apiUrl: import.meta.env.VITE_API_URL || ''
-};
+const API_BASE_URL = import.meta.env.VITE_API_BACKEND_URL || 'http://localhost:5000';
 
 // Create axios instance with base configuration
 const api = axios.create({
-  baseURL: ENV.isProduction ? '' : ENV.apiBaseUrl, // Use relative URLs in production
+  baseURL: API_BASE_URL,
   timeout: 30000, // 30 seconds
   withCredentials: true,
   headers: {
@@ -57,8 +52,8 @@ const authService = {
   // Login user
   login: async (userData) => {
     try {
-      console.log('Sending login request to /api/users/login');
-      const response = await api.post('/api/users/login', {
+      console.log('Sending login request to /users/login');
+      const response = await api.post('/users/login', {
         phone: userData.phoneNumber,
         password: userData.password
       });
@@ -91,7 +86,7 @@ const authService = {
   // Register user
   register: async (userData) => {
     try {
-      const response = await api.post('/api/users/register', userData);
+      const response = await api.post('/users/register', userData);
       return response.data;
     } catch (error) {
       console.error('Registration error:', error);
@@ -102,7 +97,7 @@ const authService = {
   // Logout user
   logout: async () => {
     try {
-      await api.post('/api/users/logout');
+      await api.post('/users/logout');
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
@@ -114,7 +109,7 @@ const authService = {
   // Get current user profile
   getCurrentUserProfile: async () => {
     try {
-      const response = await api.get('/api/users/me');
+      const response = await api.get('/users/me');
       return response.data;
     } catch (error) {
       console.error('Get profile error:', error);
@@ -134,7 +129,7 @@ const authService = {
         };
       }
       
-      const response = await api.put(`/api/users/profile/${userId}`, userData, config);
+      const response = await api.put(`/users/profile/${userId}`, userData, config);
       return response.data;
     } catch (error) {
       console.error('Update profile error:', error);
@@ -148,7 +143,7 @@ const postService = {
   // Create a new post
   createPost: async (postData) => {
     try {
-      const response = await api.post('/api/posts', postData);
+      const response = await api.post('/posts', postData);
       return response.data;
     } catch (error) {
       console.error('Create post error:', error);
@@ -159,7 +154,16 @@ const postService = {
   // Get all posts
   getPosts: async (params = {}) => {
     try {
-      const response = await api.get('/api/posts', { params });
+      const response = await api.get('/api/posts', { 
+        params: {
+          ...params,
+          sort: params.sort || '-createdAt',
+          limit: params.limit || 20,
+          populate: 'user,author,createdBy'
+        },
+        // Ensure the baseURL is not overridden
+        baseURL: ''
+      });
       return response.data;
     } catch (error) {
       console.error('Get posts error:', error);
@@ -173,7 +177,7 @@ const gameService = {
   // Get game by ID
   getGame: async (gameId) => {
     try {
-      const response = await api.get(`/api/games/${gameId}`);
+      const response = await api.get(`/games/${gameId}`);
       return response.data;
     } catch (error) {
       console.error('Get game error:', error);
@@ -184,7 +188,7 @@ const gameService = {
   // Get all games
   getGames: async (params = {}) => {
     try {
-      const response = await api.get('/api/games', { params });
+      const response = await api.get('/games', { params });
       return response.data;
     } catch (error) {
       console.error('Get games error:', error);
@@ -195,7 +199,7 @@ const gameService = {
   // Submit game score
   submitScore: async (gameId, scoreData) => {
     try {
-      const response = await api.post(`/api/games/${gameId}/scores`, scoreData);
+      const response = await api.post(`/games/${gameId}/scores`, scoreData);
       return response.data;
     } catch (error) {
       console.error('Submit score error:', error);

@@ -1,14 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { FaArrowLeft } from 'react-icons/fa';
-import axios from 'axios';
 import Header from '../components/Header';
 import Navbar from '../components/Navbar';
 import BackgroundBubbles from '../components/BackgroundBubbles';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-
-const API_URL = import.meta.env.VITE_API_BACKEND_URL || 'http://localhost:5000'; // Use the environment variable for API URL
+import api from '../services/api';
 const Leaderboard = () => {
   const navigate = useNavigate();
   const { gameName, tournamentId } = useParams(); // ✅ Get from URL
@@ -18,7 +16,7 @@ const Leaderboard = () => {
 
   const fetchLeaderboard = async () => {
     try {
-      const response = await axios.post(`${API_URL}/api/score/get-score`, {
+      const response = await api.post('/score/get-score', {
         gameName,
         roomId: tournamentId,
       });

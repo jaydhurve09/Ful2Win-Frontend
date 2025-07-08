@@ -4,10 +4,8 @@ import { FaGamepad, FaUsers, FaTrophy, FaSearch } from 'react-icons/fa';
 import Header from '../components/Header';
 import Navbar from '../components/Navbar';
 import BackgroundBubbles from '../components/BackgroundBubbles';
-import axios from 'axios';
 import { toast } from 'react-toastify';
-
-const API_URL = `${import.meta.env.VITE_API_BACKEND_URL}/api` || 'http://localhost:5000';
+import api from '../services/api';
 
 const Tournaments = () => {
   const navigate = useNavigate();
@@ -35,10 +33,7 @@ const Tournaments = () => {
   const fetchGames = useCallback(async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API_URL}/games`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await api.get('/games');
 
       if (response.data.success) {
         const gamesData = response.data.data || [];

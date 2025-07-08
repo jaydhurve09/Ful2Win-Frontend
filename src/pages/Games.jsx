@@ -6,8 +6,6 @@ import api from '../services/api';
 import Header from '../components/Header';
 import Navbar from '../components/Navbar';
 import BackgroundBubbles from '../components/BackgroundBubbles';
-import axios from 'axios';
-import { a } from 'framer-motion/client';
 // Default game images (fallback)
 // Using a placeholder image URL instead of local file
 const defaultGameImage = 'https://via.placeholder.com/300x200/1a1a2e/ffffff?text=Game+Image'; // Make sure to add a default game image
@@ -78,7 +76,14 @@ const responseData = response.data;
         
       } catch (err) {
         console.error('Error fetching games:', err);
-        setError('Failed to load games. Please try again later.');
+        // Try to extract backend error message if available
+        let errorMsg = 'Failed to load games. Please try again later.';
+        if (err.response && err.response.data && err.response.data.error) {
+          errorMsg = `Server error: ${err.response.data.error}`;
+        } else if (err.message) {
+          errorMsg = `Error: ${err.message}`;
+        }
+        setError(errorMsg);
         setGames([]);
       } finally {
         setLoading(false);
@@ -459,6 +464,12 @@ const responseData = response.data;
             </div>
           )}
         </section>
+      {/* Error message UI */}
+      {error && (
+        <div className="bg-red-700 text-white p-4 mb-4 rounded-xl text-center font-semibold">
+          {error}
+        </div>
+      )}
       </main>
     </div>
   );
