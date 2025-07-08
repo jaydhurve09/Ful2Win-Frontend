@@ -4,7 +4,7 @@ import { processProfilePicture } from '../utils/imageUtils';
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL:  `${import.meta.env.VITE_API_BACKEND_URL}/api` || 'http://localhost:5000/api',
+  baseURL: import.meta.env.MODE === 'development' ? 'http://localhost:5000/api' : import.meta.env.VITE_API_BACKEND_URL + '/api',
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json'
