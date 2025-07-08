@@ -61,7 +61,11 @@ const postService = {
       };
       
       // Use axios for the request
+<<<<<<< HEAD
       const response = await axios.post(apiBaseUrl ? `${apiBaseUrl}/api/posts` : 'http://localhost:5000/api/posts', formData, config);
+=======
+      const response = await api.post('/posts', formData, config);
+>>>>>>> 23a9c3e630b2b6181a753b6e542f3e047ded610f
       
       return response;
     } catch (error) {
@@ -83,7 +87,7 @@ const postService = {
         ...filters,
         populate: 'user,author,createdBy'
       });
-      const response = await api.get('http://localhost:5000/api/posts' || `${process.env.BACKEND_URL}api/posts`, {
+      const response = await api.get('/posts', {
         params: {
           ...filters,
           populate: 'user,author,createdBy'  // Ensure we get user data populated
@@ -122,7 +126,7 @@ const postService = {
    */
   async updatePost(postId, postData) {
     try {
-      const response = await api.put(`http://localhost:5000/api/posts/${postId}`, postData);
+      const response = await api.put(`/posts/${postId}`, postData);
       return response.data;
     } catch (error) {
       console.error('Error updating post:', error);
@@ -137,7 +141,7 @@ const postService = {
    */
   async deletePost(postId) {
     try {
-      const response = await api.delete(`http://localhost:5000/api/posts/{postId}`);
+      const response = await api.delete(`/posts/${postId}`);
       return response.data;
     } catch (error) {
       console.error('Error deleting post:', error);
@@ -156,7 +160,7 @@ const postService = {
   async reportPost(postId, reportData) {
     try {
       const response = await api.post(
-        `/api/posts/${postId}/report`,
+        `/posts/${postId}/report`,
         reportData
       );
       return response.data;
