@@ -1,11 +1,8 @@
 // IMPORTANT: All post-related API calls must use '/posts' (not '/users/posts').
 // Authorization and Content-Type headers are managed globally by the axios instance in api.js.
 // Do NOT set these headers manually in this file.
-console.info('postService.js loaded - version 2025-07-07T15:01:42+05:30');
-import axios from 'axios';
+console.info('postService.js loaded - version 2025-07-08T11:45:00+05:30');
 import api from './api';
-
-const apiBaseUrl = import.meta.env.VITE_API_BACKEND_URL
 
 const postService = {
   /**

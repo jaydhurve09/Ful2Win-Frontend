@@ -1,7 +1,15 @@
 import axios from 'axios';
 
+// Debug environment variables
+console.log('Environment Variables:', {
+  VITE_API_BASE_URL: import.meta.env.VITE_API_BASE_URL,
+  VITE_API_URL: import.meta.env.VITE_API_URL,
+  VITE_API_BACKEND_URL: import.meta.env.VITE_API_BACKEND_URL
+});
+
 // Use environment variable if set, otherwise default to localhost for development
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BACKEND_URL || 'http://localhost:5000';
+console.log('Using API Base URL:', API_BASE_URL);
 
 // Environment configuration
 const api = axios.create({
