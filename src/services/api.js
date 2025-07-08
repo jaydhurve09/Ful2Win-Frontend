@@ -14,6 +14,7 @@ const api = axios.create({
     'Pragma': 'no-cache',
     'Expires': '0'
   },
+  
   validateStatus: function (status) {
     return status < 500; // Resolve all status codes less than 500
   }
