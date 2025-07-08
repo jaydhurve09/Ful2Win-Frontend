@@ -1,21 +1,8 @@
 import axios from 'axios';
 
-// Environment configuration
-const getBaseUrl = () => {
-  if (import.meta.env.MODE === 'development') {
-    return 'http://localhost:5000/api';
-  }
-  // Use VITE_API_BACKEND_URL if provided, otherwise use production URL
-  const baseUrl = import.meta.env.VITE_API_BACKEND_URL || 'https://api.fulboost.fun';
-  // Ensure no trailing slash and add /api
-  return `${baseUrl.replace(/\/$/, '')}/api`;
-};
-
-const API_BASE_URL = getBaseUrl();
-
-// Create axios instance with base configuration
+// API Configuration
 const api = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: 'https://api.fulboost.fun/api',
   timeout: 30000, // 30 seconds
   withCredentials: true,
   headers: {
