@@ -305,7 +305,7 @@ const Games = () => {
                                   e.stopPropagation();
                                   const gameId = game._id || game.name;
                                   if (gameId) {
-                                    navigate(`/games/${gameId}`);
+                                    navigate(`/game-lobby/${gameId}`);
                                   }
                                 }}
                               >
