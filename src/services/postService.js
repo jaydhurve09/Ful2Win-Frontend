@@ -60,12 +60,8 @@ const postService = {
         timeout: 60000 // 60 seconds timeout
       };
       
-      // Use axios for the request
-<<<<<<< HEAD
-      const response = await axios.post(apiBaseUrl ? `${apiBaseUrl}/api/posts` : 'http://localhost:5000/api/posts', formData, config);
-=======
+      // Use the configured api instance for the request
       const response = await api.post('/posts', formData, config);
->>>>>>> 23a9c3e630b2b6181a753b6e542f3e047ded610f
       
       return response;
     } catch (error) {
