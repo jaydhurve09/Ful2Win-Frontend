@@ -86,7 +86,7 @@ const ChatScreen = ({ selectedFriend, setSelectedFriend }) => {
   useEffect(() => {
     if (!selectedFriend || !selectedFriend._id || !currentUserId) return;
     setLoading(true);
-    api.get(`/messages/conversation?user1=${currentUserId}&user2=${selectedFriend._id}`)
+    api.get(`/api/messages/conversation?user1=${currentUserId}&user2=${selectedFriend._id}`)
       .then(res => {
         const sorted = (res.data || []).sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
         setMessages(sorted);
@@ -94,7 +94,7 @@ const ChatScreen = ({ selectedFriend, setSelectedFriend }) => {
         console.log('Fetched messages:', sorted);
       })
       .catch(() => {
-        api.get(`/messages/${selectedFriend._id}`)
+        api.get(`/api/messages/${selectedFriend._id}`)
           .then(res2 => {
             const sorted2 = (res2.data || []).sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
             setMessages(sorted2);
