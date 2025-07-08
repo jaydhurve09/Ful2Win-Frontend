@@ -1,4 +1,51 @@
-import api from './api';
+import axios from 'axios';
+
+// Environment configuration
+const API_BASE_URL = import.meta.env.VITE_API_BACKEND_URL || 'http://localhost:5000';
+
+// Create axios instance with base configuration
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: 30000, // 30 seconds
+  withCredentials: true,
+  headers: {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    'Cache-Control': 'no-cache, no-store, must-revalidate',
+    'Pragma': 'no-cache',
+    'Expires': '0'
+  },
+  validateStatus: function (status) {
+    return status >= 200 && status < 500; // Resolve only if status code is less than 500
+  }
+});
+
+// Request interceptor to add auth token
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Response interceptor for error handling
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    // Handle 401 Unauthorized
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
 
 // Auth Service
 const authService = {
@@ -107,7 +154,16 @@ const postService = {
   // Get all posts
   getPosts: async (params = {}) => {
     try {
-      const response = await api.get('/posts', { params });
+      const response = await api.get('/api/posts', { 
+        params: {
+          ...params,
+          sort: params.sort || '-createdAt',
+          limit: params.limit || 20,
+          populate: 'user,author,createdBy'
+        },
+        // Ensure the baseURL is not overridden
+        baseURL: ''
+      });
       return response.data;
     } catch (error) {
       console.error('Get posts error:', error);
