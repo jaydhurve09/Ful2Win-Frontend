@@ -13,6 +13,7 @@ import {
 } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import api from '../services/api';
+import axios from 'axios'
 import Header from './Header';
 import BackgroundBubbles from './BackgroundBubbles';
 import Navbar from './Navbar';
@@ -498,11 +499,11 @@ const TournamentCard = ({ id, name, entryFee, prizePool, participants, maxPartic
       }
 
       const [gameResponse, tournamentsResponse] = await Promise.all([
-        axios.get(`${API_URL}/games/${gameId}`, {
+        api.get(`/games/${gameId}`, {
           headers: { Authorization: `Bearer ${token}` },
           validateStatus: (status) => status < 500
         }),
-        axios.get(`${API_URL}/tournaments?gameId=${gameId}`, {
+        api.get(`/tournaments?gameId=${gameId}`, {
           headers: { Authorization: `Bearer ${token}` },
           validateStatus: (status) => status < 500
         })
