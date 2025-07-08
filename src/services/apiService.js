@@ -13,9 +13,9 @@ const api = axios.create({
     'Expires': '0'
   },
   transformRequest: [
-    (data, headers) => {
-      // Ensure we only stringify objects, not strings or FormData
-      if (data && typeof data === 'object' && !(data instanceof FormData)) {
+    function (data, headers) {
+      // Ensure we're sending proper JSON
+      if (data) {
         return JSON.stringify(data);
       }
       return data;

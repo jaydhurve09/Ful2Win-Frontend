@@ -59,13 +59,24 @@ const getUserInfo = async() => {
         try {
        
 
-          await api.post('/api/score/submit-score', {
+          const scorePayload = {
             userId,
             userName,
             score,
             roomId: tournamentId,
             gameName: game?.name || "Game",
+            gameId: game?._id || gameId
+          };
+          
+          console.log('Submitting score with payload:', scorePayload);
+          
+          const response = await api.post('/api/score/submit-score', scorePayload, {
+            headers: {
+              'Content-Type': 'application/json'
+            }
           });
+          
+          console.log('Score submission response:', response.data);
 
           setScoreData({
             userId,
