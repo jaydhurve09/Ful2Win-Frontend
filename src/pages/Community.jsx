@@ -755,47 +755,34 @@ const Community = () => {
       console.log('Starting post creation...');
       setIsCreatingPost(true);
       
-      // Create FormData for file upload
-      const formData = new FormData();
-      
-      // Add file if selected
-      if (selectedFile) {
-        console.log('Adding file to FormData:', {
-          name: selectedFile.name,
-          type: selectedFile.type,
-          size: selectedFile.size
-        });
-        formData.append('media', selectedFile);
-      } else {
-        console.log('No file selected for upload');
-      }
-      
       // Prepare post data
       const postData = {
         content: newPostContent,
         tags: '' // Add tags if needed
       };
       
-      // Add post data to formData for file upload
-      if (selectedFile) {
-        Object.entries(postData).forEach(([key, value]) => {
-          formData.append(key, value);
-        });
-      }
-      
       // Log request data
-      console.log('Request data:', postData);
+      console.log('Post data:', postData);
+      
+      let fileToUpload = null;
       if (selectedFile) {
-        console.log('File to upload:', {
-          name: selectedFile.name,
+        // Create a new File object to ensure we have all the necessary properties
+        fileToUpload = new File([selectedFile], selectedFile.name, {
           type: selectedFile.type,
-          size: selectedFile.size
+          lastModified: selectedFile.lastModified
+        });
+        
+        console.log('File to upload:', {
+          name: fileToUpload.name,
+          type: fileToUpload.type,
+          size: fileToUpload.size,
+          lastModified: fileToUpload.lastModified
         });
       }
       
       console.log('Sending request to create post...');
       // Call postService with the post data and file (if any)
-      const response = await postService.createPost(postData, selectedFile || null);
+      const response = await postService.createPost(postData, fileToUpload || null);
       
       if (!response) {
         const errorMsg = 'No response from server';

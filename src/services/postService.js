@@ -2,6 +2,7 @@
 // Authorization and Content-Type headers are managed globally by the axios instance in api.js.
 // Do NOT set these headers manually in this file.
 console.info('postService.js loaded - version 2025-07-07T15:01:42+05:30');
+import axios from 'axios';
 import api from './api';
 
 const postService = {
@@ -15,53 +16,55 @@ const postService = {
       // Get the authentication token from localStorage
       const token = localStorage.getItem('token');
       
-      let response;
+      // Create a new FormData instance
+      const formData = new FormData();
       
+      // Add post data to formData
+      formData.append('content', postData.content || '');
+      if (postData.tags) {
+        formData.append('tags', postData.tags);
+      }
+      
+      // If there's a file, add it to formData
       if (file) {
-        // If there's a file, use FormData
-        const formData = new FormData();
-        formData.append('media', file);
-        formData.append('content', postData.content);
+        // Create a new file object to ensure all properties are set
+        const fileObj = new File([file], file.name, { type: file.type });
+        formData.append('media', fileObj);
         
-        response = await api.post('http://localhost:5000/api/posts', formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            'Authorization': `Bearer ${token}`
-          },
-          withCredentials: true
-        });
-      } else {
-        // For text-only posts, send as JSON
-        response = await api.post('http://localhost:5000/api/posts', postData, {
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          withCredentials: true
+        console.log('File to be uploaded:', {
+          name: fileObj.name,
+          type: fileObj.type,
+          size: fileObj.size,
+          lastModified: fileObj.lastModified
         });
       }
       
-      return response.data;
+      // Log formData contents for debugging
+      console.log('FormData contents:');
+      for (let [key, value] of formData.entries()) {
+        console.log(key, value instanceof File ? 
+          `[File] ${value.name} (${value.size} bytes, ${value.type})` : 
+          value
+        );
+      }
+      
+      // Create axios config with headers
+      const config = {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          'Authorization': `Bearer ${token}`
+        },
+        withCredentials: true,
+        timeout: 60000 // 60 seconds timeout
+      };
+      
+      // Use axios for the request
+      const response = await axios.post('http://localhost:5000/api/posts', formData, config);
+      
+      return response;
     } catch (error) {
-      console.error('Error creating post:', error);
-      if (error.response) {
-        console.error('Response data:', error.response.data);
-        console.error('Response status:', error.response.status);
-        console.error('Response headers:', error.response.headers);
-        
-        // If there's a validation error, show the specific error message
-        if (error.response.data && error.response.data.message) {
-          throw new Error(error.response.data.message);
-        }
-      } else if (error.request) {
-        console.error('No response received:', error.request);
-        throw new Error('No response received from server. Please check your connection.');
-      } else {
-        console.error('Error message:', error.message);
-        throw error;
-      }
-      
-      throw new Error('Failed to create post. Please try again.');
+      console.error('Error in createPost:', error);
+      throw error; // Re-throw to be handled by the caller
     }
   },
   /**
