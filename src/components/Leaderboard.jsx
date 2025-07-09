@@ -7,7 +7,6 @@ import BackgroundBubbles from '../components/BackgroundBubbles';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import api from '../services/api';
-import axios from 'axios';
 const Leaderboard = () => {
   const navigate = useNavigate();
   const { gameName, tournamentId } = useParams(); // ✅ Get from URL
@@ -19,20 +18,23 @@ const Leaderboard = () => {
     try {
       console.log('[Leaderboard] Fetching leaderboard with params:', { gameName, tournamentId });
       
-      const response = await axios.get('/api/score/get-score', {
+      const response = await api.get('/score/get-score', {
         params: {
           gameName,
           roomId: tournamentId
         }
       });
       
+      const data = response.data;
       console.log('[Leaderboard] Raw API response:', response);
-      console.log('[Leaderboard] Response data:', response.data);
+      console.log('[Leaderboard] Response data:', data);
       
-      if (response.data && Array.isArray(response.data.scores)) {
-        console.log(`[Leaderboard] Received ${response.data.scores.length} scores`);
-        setLeaderboardData(response.data.scores);
-      } else if (response.data && response.data.message) {
+      if (data && Array.isArray(data.scores)) {
+        console.log(`[Leaderboard] Received ${data.scores.length} scores`);
+        setLeaderboardData(data.scores);
+      } else if (data && data.message) {
+        console.log('[Leaderboard] Server message:', data.message);
+        toast.info(data.message);
         console.log('[Leaderboard] Server message:', response.data.message);
         toast.info(response.data.message);
         setLeaderboardData([]);
