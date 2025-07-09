@@ -168,11 +168,19 @@ const [confirmModal, setConfirmModal] = useState({
   console.log("run setTournamentStatus");
   try {
     const token = localStorage.getItem('token');
-    const res = await api.put(`/tournaments/${tournamentId}/status`, 
-      { status: newStatus },
-      { headers: { Authorization: `Bearer ${token}` } }
+    const response = await fetch(
+      `${import.meta.env.VITE_API_BACKEND_URL}/api/tournaments/${tournamentId}/status`,
+      {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ status: newStatus })
+      }
     );
-    return res.data.success;
+    const data = await response.json();
+    return data.success;
   } catch (error) {
     console.error('Failed to set tournament status:', error);
     return false;
@@ -256,7 +264,7 @@ const handleRegisterTournament = async (tournamentId) => {
 
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_API_BACKEND_URL}/tournaments/${tournamentId}/register`,
+        `${import.meta.env.VITE_API_BACKEND_URL}/api/tournaments/${tournamentId}/register`,
         {
           method: 'POST',
           headers: {
