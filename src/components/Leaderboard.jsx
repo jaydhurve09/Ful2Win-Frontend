@@ -17,11 +17,13 @@ const Leaderboard = () => {
 
   const fetchLeaderboard = async () => {
     try {
-      const response = await axios.post('/api/score/get-score', {
-        gameName,
-        roomId: tournamentId,
-      });
-
+     
+      const response = await axios.get('/api/score/get-score', {
+        params: {
+          gameName,
+          roomId: tournamentId,
+          
+        }});
       const data = response.data;
       if (data && Array.isArray(data.scores)) {
         setLeaderboardData(data.scores);
@@ -29,7 +31,6 @@ const Leaderboard = () => {
         console.error("Invalid leaderboard data format", response.data);
       }
     } catch (error) {
-      
       toast.error(error.response?.data?.message || "An error occurred while fetching leaderboard data.");
       navigate(-1);
       console.error("Error fetching leaderboard data:", error);
