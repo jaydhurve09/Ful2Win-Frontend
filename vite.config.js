@@ -12,9 +12,12 @@ export default defineConfig(({ command, mode }) => {
   
   return {
     plugins: [react()],
+    define: {
+      'import.meta.env.VITE_API_BACKEND_URL': JSON.stringify(apiBaseUrl)
+    },
     server: {
       port: 5173,
-      proxy: !isProduction ? {
+      proxy: {
         '/api': {
           target: apiBaseUrl,
           changeOrigin: true,
@@ -36,7 +39,7 @@ export default defineConfig(({ command, mode }) => {
             });
           }
         }
-      } : undefined,
+      },
       cors: true
     },
     preview: {
@@ -45,7 +48,10 @@ export default defineConfig(({ command, mode }) => {
         '/api': {
           target: apiBaseUrl,
           changeOrigin: true,
-          secure: false
+          secure: false,
+          pathRewrite: {
+            '^/api': ''
+          }
         }
       }
     },
