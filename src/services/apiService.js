@@ -198,8 +198,22 @@ const postService = {
   // Create a new post
   createPost: async (postData) => {
     try {
-      const response = await api.post('/posts', postData);
-      return response.data;
+      const response = await fetch(`${import.meta.env.VITE_API_BACKEND_URL}/api/posts`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+        },
+        body: JSON.stringify(postData)
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to create post');
+      }
+      
+      return await response.json();
     } catch (error) {
       console.error('Create post error:', error);
       throw error;
