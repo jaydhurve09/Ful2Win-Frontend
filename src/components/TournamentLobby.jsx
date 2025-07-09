@@ -168,7 +168,7 @@ const [confirmModal, setConfirmModal] = useState({
   console.log("run setTournamentStatus");
   try {
     const token = localStorage.getItem('token');
-    const res = await api.put(`/api/tournaments/${tournamentId}/status`, 
+    const res = await api.put(`/tournaments/${tournamentId}/status`, 
       { status: newStatus },
       { headers: { Authorization: `Bearer ${token}` } }
     );
@@ -255,7 +255,7 @@ const handleRegisterTournament = async (tournamentId) => {
     }
 
     const response = await axios.post(
-      `/api/tournaments/${tournamentId}/register`,
+      `/tournaments/${tournamentId}/register`,
       { playerId: user._id },
       
       {
@@ -501,11 +501,11 @@ const TournamentCard = ({ id, name, entryFee, prizePool, participants, maxPartic
       }
 
       const [gameResponse, tournamentsResponse] = await Promise.all([
-        api.get(`/api/games/${gameId}`, {
+        api.get(`/games/${gameId}`, {
           headers: { Authorization: `Bearer ${token}` },
           validateStatus: (status) => status < 500
         }),
-        api.get(`/api/tournaments?gameId=${gameId}`, {
+        api.get(`/tournaments?gameId=${gameId}`, {
           headers: { Authorization: `Bearer ${token}` },
           validateStatus: (status) => status < 500
         })

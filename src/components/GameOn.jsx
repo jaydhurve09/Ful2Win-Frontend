@@ -16,7 +16,7 @@ const GameOn = () => {
   useEffect(() => {
     const fetchGameById = async () => {
       try {
-        const response = await api.get('/api/games');
+        const response = await api.get('/games');
         const allGames = response.data?.data || [];
         const foundGame = allGames.find((g) => g._id === gameId);
 
