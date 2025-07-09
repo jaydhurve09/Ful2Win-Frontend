@@ -71,31 +71,45 @@ const getUserInfo = async() => {
           console.log('Submitting score with payload:', scorePayload);
           
           try {
-            const response = await api.post('/score/submit-score', {
+            // Create the request data object
+            const requestData = {
               userId,
               userName,
               score,
               roomId: tournamentId,
               gameName: game?.name || "Game",
               gameId: game?._id || gameId
-            }, {
+            };
+            
+            console.log('Sending request with data:', JSON.stringify(requestData, null, 2));
+            
+            // Make the API call with proper headers
+            const response = await fetch(`${import.meta.env.VITE_API_BACKEND_URL}/api/score/submit-score`, {
+              method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
-                'Accept': 'application/json'
-              }
+                'Accept': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+              },
+              body: JSON.stringify(requestData)
             });
-            console.log('Score submitted successfully:', response.data);
-          } catch (error) {
-            console.error('Error submitting score:', error);
-            if (error.response) {
-              console.error('Response data:', error.response.data);
-              console.error('Response status:', error.response.status);
-              console.error('Response headers:', error.response.headers);
-            } else if (error.request) {
-              console.error('No response received:', error.request);
-            } else {
-              console.error('Error setting up request:', error.message);
+
+            const responseData = await response.json();
+            
+            if (!response.ok) {
+              throw new Error(responseData.message || 'Failed to submit score');
             }
+            
+            console.log('Score submitted successfully:', responseData);
+            return responseData;
+            
+          } catch (error) {
+            console.error('Error in score submission:', {
+              message: error.message,
+              stack: error.stack,
+              response: error.response?.data || 'No response data'
+            });
+            throw error;
           }
          
         
