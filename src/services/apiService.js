@@ -198,18 +198,33 @@ const postService = {
   // Create a new post
   createPost: async (postData) => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BACKEND_URL}/api/posts`, {
+      // Check if postData is FormData
+      const isFormData = postData instanceof FormData;
+      
+      const headers = {
+        'Accept': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+      };
+      
+      // Only set Content-Type if not FormData (browser will set it automatically with boundary)
+      if (!isFormData) {
+        headers['Content-Type'] = 'application/json';
+      }
+      
+      const response = await fetch(`${import.meta.env.VITE_API_BACKEND_URL}/api/v1/posts`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
-        },
-        body: JSON.stringify(postData)
+        headers: headers,
+        body: isFormData ? postData : JSON.stringify(postData)
       });
       
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorText = await response.text();
+        let errorData;
+        try {
+          errorData = JSON.parse(errorText);
+        } catch (e) {
+          throw new Error(`Server error: ${response.status} ${response.statusText}`);
+        }
         throw new Error(errorData.message || 'Failed to create post');
       }
       
