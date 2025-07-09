@@ -4,7 +4,7 @@ import axios from 'axios';
 // Ensure the URL ends with /api/ for proper routing
 let baseUrl = import.meta.env.MODE === 'development' 
   ? 'http://localhost:5000' 
-  : import.meta.env.VITE_API_BACKEND_URL;
+  : 'https://api.fulboost.fun';
 
 // Ensure the base URL ends with /api
 const API_BASE_URL = baseUrl.endsWith('/api') 
