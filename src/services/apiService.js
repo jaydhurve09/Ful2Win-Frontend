@@ -195,26 +195,27 @@ const authService = {
 
 // Post Service
 const postService = {
-  // Create a new post
+  // Create a new post - simplified for text and image uploads
   createPost: async (postData) => {
     try {
-      // Check if postData is FormData
-      const isFormData = postData instanceof FormData;
+      let formData = new FormData();
       
-      const headers = {
-        'Accept': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
-      };
+      // Handle both text content and file uploads
+      if (postData.content) {
+        formData.append('content', postData.content);
+      }
       
-      // Only set Content-Type if not FormData (browser will set it automatically with boundary)
-      if (!isFormData) {
-        headers['Content-Type'] = 'application/json';
+      // Handle file upload if present
+      if (postData.image) {
+        formData.append('image', postData.image);
       }
       
       const response = await fetch(`${import.meta.env.VITE_API_BACKEND_URL}/api/v1/posts`, {
         method: 'POST',
-        headers: headers,
-        body: isFormData ? postData : JSON.stringify(postData)
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+        },
+        body: formData
       });
       
       if (!response.ok) {
