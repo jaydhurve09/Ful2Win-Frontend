@@ -70,8 +70,7 @@ const getUserInfo = async() => {
           
           console.log('Submitting score with payload:', scorePayload);
           
-          await fetch('/api/score/submit-score', {
-            method: 'POST',
+          api.post('/api/score/submit-score', {
             headers: {
               'Content-Type': 'application/json',
             },
