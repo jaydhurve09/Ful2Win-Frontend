@@ -54,7 +54,7 @@ const postService = {
         }
       };
 
-      const response = await api.post('/api/posts', formData, config);
+      const response = await api.post('/posts', formData, config);
       return response.data;
     } catch (error) {
       console.error('Error in createPost:', error);
@@ -81,7 +81,7 @@ const postService = {
    */
   async getPosts(filters = {}) {
     try {
-      const response = await api.get('/api/posts', {
+      const response = await api.get('/posts', {
         params: {
           ...filters,
           sort: filters.sort || '-createdAt',
