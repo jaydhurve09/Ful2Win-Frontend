@@ -3,13 +3,9 @@ import axios from 'axios';
 // Get the base URL from environment variables or use the production URL as fallback
 // Ensure the URL ends with /api/ for proper routing
 let baseUrl = import.meta.env.MODE === 'development' 
-  ? 'http://localhost:5000' 
-  : 'https://api.fulboost.fun';
+  ? 'http://localhost:5000/api' 
+  : 'https://api.fulboost.fun/api';
 
-// Ensure the base URL ends with /api
-const API_BASE_URL = baseUrl.endsWith('/api') 
-  ? baseUrl 
-  : `${baseUrl.replace(/\/$/, '')}/api`;
 
 console.log('API Base URL:', API_BASE_URL); // Debug log
 
