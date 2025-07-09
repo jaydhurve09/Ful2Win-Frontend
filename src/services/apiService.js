@@ -198,16 +198,19 @@ const postService = {
   // Create a new post - simplified for text and image uploads
   createPost: async (postData) => {
     try {
-      let formData = new FormData();
+      const formData = new FormData();
       
-      // Handle both text content and file uploads
+      // Handle text content
       if (postData.content) {
         formData.append('content', postData.content);
       }
       
-      // Handle file upload if present
+      // Handle file upload if present - using 'image' field to match backend
       if (postData.image) {
         formData.append('image', postData.image);
+      } else if (postData.media) {
+        // For backward compatibility
+        formData.append('image', postData.media);
       }
       
       const response = await fetch(`${import.meta.env.VITE_API_BACKEND_URL}/api/v1/posts`, {
