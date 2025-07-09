@@ -195,30 +195,36 @@ const authService = {
 
 // Post Service
 const postService = {
-  // Create a new post - simplified for text and image uploads
+  // Create a new post - using JSON format
   createPost: async (postData) => {
     try {
-      const formData = new FormData();
-      
-      // Handle text content
-      if (postData.content) {
-        formData.append('content', postData.content);
+      // If there's a file, we'll need to handle it differently
+      if (postData.image || postData.media) {
+        // For file uploads, we'll need to use FormData
+        const formData = new FormData();
+        if (postData.content) formData.append('content', postData.content);
+        if (postData.image) formData.append('image', postData.image);
+        if (postData.media) formData.append('image', postData.media);
+        
+        const response = await fetch(`${import.meta.env.VITE_API_BACKEND_URL}/api/v1/posts`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+          },
+          body: formData
+        });
+        return response;
       }
       
-      // Handle file upload if present - using 'image' field to match backend
-      if (postData.image) {
-        formData.append('image', postData.image);
-      } else if (postData.media) {
-        // For backward compatibility
-        formData.append('image', postData.media);
-      }
-      
+      // For non-file uploads, use JSON format
       const response = await fetch(`${import.meta.env.VITE_API_BACKEND_URL}/api/v1/posts`, {
         method: 'POST',
         headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
         },
-        body: formData
+        body: JSON.stringify(postData)
       });
       
       if (!response.ok) {
