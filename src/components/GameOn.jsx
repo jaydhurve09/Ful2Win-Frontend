@@ -99,7 +99,16 @@ const getUserInfo = async() => {
             if (!response.ok) {
               throw new Error(responseData.message || 'Failed to submit score');
             }
-            
+            setScoreData({
+              userId,
+              userName,
+              score,
+              game: game?._id || gameId,
+              roomId: tournamentId,
+              gameName: game?.name,
+            });
+  
+            setGameOver(true);
             console.log('Score submitted successfully:', responseData);
             return responseData;
             
@@ -111,21 +120,6 @@ const getUserInfo = async() => {
             });
             throw error;
           }
-         
-        
-          
-          console.log('Score submission response:', response.data);
-
-          setScoreData({
-            userId,
-            userName,
-            score,
-            game: game?._id || gameId,
-            roomId: tournamentId,
-            gameName: game?.name,
-          });
-
-          setGameOver(true);
         } catch (err) {
           console.error("Score submit failed", err);
         }
