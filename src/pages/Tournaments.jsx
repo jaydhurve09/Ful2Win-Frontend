@@ -33,7 +33,7 @@ const Tournaments = () => {
   const fetchGames = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await api.get('/api/games');
+      const response = await api.get('/games');
 
       if (response.data.success) {
         const gamesData = response.data.data || [];
