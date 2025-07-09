@@ -71,16 +71,12 @@ const getUserInfo = async() => {
           console.log('Submitting score with payload:', scorePayload);
           
           api.post('/score/submit-score', {
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              userId,
-              userName,
-              score,
-              roomId: tournamentId,
-              gameName: game?.name || "Game",
-            }),
+            userId,
+            userName,
+            score,
+            roomId: tournamentId,
+            gameName: game?.name || "Game",
+            gameId: game?._id || gameId
           });
          
         
