@@ -254,17 +254,32 @@ const handleRegisterTournament = async (tournamentId) => {
       return;
     }
 
-    const response = await fetch (
-      `${import.meta.env.VITE_API_BACKEND_URL}/tournaments/${tournamentId}/register`,
-      { playerId: user._id },
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_API_BACKEND_URL}/tournaments/${tournamentId}/register`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ playerId: user._id }),
+          credentials: 'include'
+        }
+      );
+
+      const data = await response.json();
       
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to register for tournament');
       }
-    );
+
+      toast.success('Successfully registered for the tournament!');
+      // Add any success handling here (e.g., update UI state)
+    } catch (error) {
+      console.error('Registration error:', error);
+      toast.error(error.message || 'Failed to register for tournament');
+    }
 
     if (response.data.success) {
       toast.success('Registered successfully!');
