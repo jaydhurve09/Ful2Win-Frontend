@@ -70,14 +70,33 @@ const getUserInfo = async() => {
           
           console.log('Submitting score with payload:', scorePayload);
           
-          api.post('/score/submit-score', {
-            userId,
-            userName,
-            score,
-            roomId: tournamentId,
-            gameName: game?.name || "Game",
-            gameId: game?._id || gameId
-          });
+          try {
+            const response = await api.post('/score/submit-score', {
+              userId,
+              userName,
+              score,
+              roomId: tournamentId,
+              gameName: game?.name || "Game",
+              gameId: game?._id || gameId
+            }, {
+              headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+              }
+            });
+            console.log('Score submitted successfully:', response.data);
+          } catch (error) {
+            console.error('Error submitting score:', error);
+            if (error.response) {
+              console.error('Response data:', error.response.data);
+              console.error('Response status:', error.response.status);
+              console.error('Response headers:', error.response.headers);
+            } else if (error.request) {
+              console.error('No response received:', error.request);
+            } else {
+              console.error('Error setting up request:', error.message);
+            }
+          }
          
         
           
