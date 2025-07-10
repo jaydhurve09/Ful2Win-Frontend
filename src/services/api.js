@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Get the base URL from environment variables or use the production URL as fallback
 const API_BASE_URL = import.meta.env.MODE === 'development' 
-? 'http://localhost:5000/api' 
+  ? 'http://localhost:5000/api'
 :  `${import.meta.env.VITE_API_BACKEND_URL}/api`
 
 console.log('API Base URL:', API_BASE_URL); // Debug log
@@ -15,7 +15,8 @@ const api = axios.create({
   headers: {
     'Accept': 'application/json',
     'Content-Type': 'application/json',
-    'X-Requested-With': 'XMLHttpRequest'
+    'X-Requested-With': 'XMLHttpRequest',
+    'Access-Control-Allow-Credentials': 'true'
   },
   // Prevent axios from adding cache-control headers
   transformRequest: [(data, headers) => {

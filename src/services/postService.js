@@ -50,8 +50,13 @@ const postService = {
       // Use the centralized api instance with proper headers for FormData
       const config = {
         headers: {
-          'Content-Type': 'multipart/form-data'
-        }
+          'Content-Type': 'multipart/form-data',
+          'Accept': 'application/json',
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        },
+        withCredentials: true
       };
 
       const response = await api.post('/posts', formData, config);
@@ -133,10 +138,22 @@ const postService = {
    */
   async deletePost(postId) {
     try {
-      const response = await api.delete(`/posts/${postId}`);
+      const config = {
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        },
+        withCredentials: true
+      };
+      
+      const response = await api.delete(`/posts/${postId}`, config);
       return response.data;
     } catch (error) {
       console.error('Error deleting post:', error);
+      if (error.response) {
+        console.error('Error response:', error.response.data);
+      }
       throw error;
     }
   },
@@ -151,13 +168,26 @@ const postService = {
    */
   async reportPost(postId, reportData) {
     try {
+      const config = {
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        },
+        withCredentials: true
+      };
+      
       const response = await api.post(
         `/posts/${postId}/report`,
-        reportData
+        reportData,
+        config
       );
       return response.data;
     } catch (error) {
       console.error('Error reporting post:', error);
+      if (error.response) {
+        console.error('Error response:', error.response.data);
+      }
       throw error;
     }
   },
@@ -170,20 +200,26 @@ const postService = {
    */
   async likePost(postId, isLiked) {
     try {
-      const endpoint = isLiked ? `/posts/unlike` : `/posts/like`;
-      // Get the current user's ID from localStorage or auth context
-      const user = JSON.parse(localStorage.getItem('user'));
-      if (!user || !user._id) {
-        throw new Error('User not authenticated');
-      }
-      // Send both postId and userId in the request body
-      const response = await api.post(endpoint, { 
-        postId,
-        userId: user._id 
-      });
+      const config = {
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        },
+        withCredentials: true
+      };
+      
+      const response = await api[isLiked ? 'delete' : 'post'](
+        `/posts/${postId}/like`,
+        {},
+        config
+      );
       return response.data;
     } catch (error) {
       console.error('Error toggling like:', error);
+      if (error.response) {
+        console.error('Error response:', error.response.data);
+      }
       throw error;
     }
   },
@@ -196,10 +232,27 @@ const postService = {
    */
   async addComment(postId, content) {
     try {
-      const response = await api.post(`/posts/${postId}/comments`, { content });
+      const config = {
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        },
+        withCredentials: true
+      };
+      
+      const response = await api.post(
+        `/posts/${postId}/comments`, 
+        { content },
+        config
+      );
       return response.data;
     } catch (error) {
       console.error('Error adding comment:', error);
+      if (error.response) {
+        console.error('Error response:', error.response.data);
+      }
       throw error;
     }
   },
@@ -211,10 +264,22 @@ const postService = {
    */
   async getComments(postId) {
     try {
-      const response = await api.get(`/api/posts/${postId}/comments`);
+      const config = {
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        },
+        withCredentials: true
+      };
+      
+      const response = await api.get(`/posts/${postId}/comments`, config);
       return response.data;
     } catch (error) {
       console.error('Error fetching comments:', error);
+      if (error.response) {
+        console.error('Error response:', error.response.data);
+      }
       throw error;
     }
   }
