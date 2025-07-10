@@ -59,19 +59,46 @@ const postService = {
         withCredentials: true
       };
 
+      console.log('Sending POST request to /posts with data:', {
+        content: postData.content,
+        hasFile: !!file,
+        fileInfo: file ? { name: file.name, type: file.type, size: file.size } : null
+      });
+      
       const response = await api.post('/posts', formData, config);
+      console.log('Response from server:', response);
       return response.data;
     } catch (error) {
       console.error('Error in createPost:', error);
       if (error.response) {
-        console.error('Error data:', error.response.data);
-        console.error('Error status:', error.response.status);
+        console.error('Response error details:', {
+          status: error.response.status,
+          statusText: error.response.statusText,
+          headers: error.response.headers,
+          data: error.response.data,
+          config: {
+            url: error.response.config?.url,
+            method: error.response.config?.method,
+            headers: error.response.config?.headers
+          }
+        });
       } else if (error.request) {
-        console.error('No response received:', error.request);
+        console.error('No response received. Request details:', {
+          request: error.request,
+          message: error.message,
+          stack: error.stack
+        });
       } else {
-        console.error('Error message:', error.message);
+        console.error('Error setting up request:', error.message);
       }
-      throw error;
+      
+      // Create a more user-friendly error message
+      const friendlyError = new Error('Failed to create post. Please try again.');
+      if (error.response?.data?.message) {
+        friendlyError.message = error.response.data.message;
+      }
+      friendlyError.originalError = error;
+      throw friendlyError;
     }
   },
 
