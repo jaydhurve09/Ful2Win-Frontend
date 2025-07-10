@@ -50,55 +50,23 @@ const postService = {
       // Use the centralized api instance with proper headers for FormData
       const config = {
         headers: {
-          'Content-Type': 'multipart/form-data',
-          'Accept': 'application/json',
-          'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache',
-          'Expires': '0'
-        },
-        withCredentials: true
+          'Content-Type': 'multipart/form-data'
+        }
       };
 
-      console.log('Sending POST request to /posts with data:', {
-        content: postData.content,
-        hasFile: !!file,
-        fileInfo: file ? { name: file.name, type: file.type, size: file.size } : null
-      });
-      
       const response = await api.post('/posts', formData, config);
-      console.log('Response from server:', response);
       return response.data;
     } catch (error) {
       console.error('Error in createPost:', error);
       if (error.response) {
-        console.error('Response error details:', {
-          status: error.response.status,
-          statusText: error.response.statusText,
-          headers: error.response.headers,
-          data: error.response.data,
-          config: {
-            url: error.response.config?.url,
-            method: error.response.config?.method,
-            headers: error.response.config?.headers
-          }
-        });
+        console.error('Error data:', error.response.data);
+        console.error('Error status:', error.response.status);
       } else if (error.request) {
-        console.error('No response received. Request details:', {
-          request: error.request,
-          message: error.message,
-          stack: error.stack
-        });
+        console.error('No response received:', error.request);
       } else {
-        console.error('Error setting up request:', error.message);
+        console.error('Error message:', error.message);
       }
-      
-      // Create a more user-friendly error message
-      const friendlyError = new Error('Failed to create post. Please try again.');
-      if (error.response?.data?.message) {
-        friendlyError.message = error.response.data.message;
-      }
-      friendlyError.originalError = error;
-      throw friendlyError;
+      throw error;
     }
   },
 
@@ -165,22 +133,10 @@ const postService = {
    */
   async deletePost(postId) {
     try {
-      const config = {
-        headers: {
-          'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache',
-          'Expires': '0'
-        },
-        withCredentials: true
-      };
-      
-      const response = await api.delete(`/posts/${postId}`, config);
+      const response = await api.delete(`/posts/${postId}`);
       return response.data;
     } catch (error) {
       console.error('Error deleting post:', error);
-      if (error.response) {
-        console.error('Error response:', error.response.data);
-      }
       throw error;
     }
   },
@@ -195,26 +151,13 @@ const postService = {
    */
   async reportPost(postId, reportData) {
     try {
-      const config = {
-        headers: {
-          'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache',
-          'Expires': '0'
-        },
-        withCredentials: true
-      };
-      
       const response = await api.post(
         `/posts/${postId}/report`,
-        reportData,
-        config
+        reportData
       );
       return response.data;
     } catch (error) {
       console.error('Error reporting post:', error);
-      if (error.response) {
-        console.error('Error response:', error.response.data);
-      }
       throw error;
     }
   },
@@ -227,26 +170,20 @@ const postService = {
    */
   async likePost(postId, isLiked) {
     try {
-      const config = {
-        headers: {
-          'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache',
-          'Expires': '0'
-        },
-        withCredentials: true
-      };
-      
-      const response = await api[isLiked ? 'delete' : 'post'](
-        `/posts/${postId}/like`,
-        {},
-        config
-      );
+      const endpoint = isLiked ? `/posts/unlike` : `/posts/like`;
+      // Get the current user's ID from localStorage or auth context
+      const user = JSON.parse(localStorage.getItem('user'));
+      if (!user || !user._id) {
+        throw new Error('User not authenticated');
+      }
+      // Send both postId and userId in the request body
+      const response = await api.post(endpoint, { 
+        postId,
+        userId: user._id 
+      });
       return response.data;
     } catch (error) {
       console.error('Error toggling like:', error);
-      if (error.response) {
-        console.error('Error response:', error.response.data);
-      }
       throw error;
     }
   },
@@ -259,27 +196,10 @@ const postService = {
    */
   async addComment(postId, content) {
     try {
-      const config = {
-        headers: {
-          'Content-Type': 'application/json',
-          'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache',
-          'Expires': '0'
-        },
-        withCredentials: true
-      };
-      
-      const response = await api.post(
-        `/posts/${postId}/comments`, 
-        { content },
-        config
-      );
+      const response = await api.post(`/posts/${postId}/comments`, { content });
       return response.data;
     } catch (error) {
       console.error('Error adding comment:', error);
-      if (error.response) {
-        console.error('Error response:', error.response.data);
-      }
       throw error;
     }
   },
@@ -291,22 +211,10 @@ const postService = {
    */
   async getComments(postId) {
     try {
-      const config = {
-        headers: {
-          'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache',
-          'Expires': '0'
-        },
-        withCredentials: true
-      };
-      
-      const response = await api.get(`/posts/${postId}/comments`, config);
+      const response = await api.get(`/api/posts/${postId}/comments`);
       return response.data;
     } catch (error) {
       console.error('Error fetching comments:', error);
-      if (error.response) {
-        console.error('Error response:', error.response.data);
-      }
       throw error;
     }
   }
