@@ -11,26 +11,23 @@ const postService = {
     console.log('[PostService] Starting createPost with data:', {
       contentLength: postData?.content?.length || 0,
       hasFile: !!file,
-      fileInfo: file ? {
-        name: file.name,
-        type: file.type,
-        size: file.size
-      } : null,
       tags: postData?.tags
     });
 
     try {
       const formData = new FormData();
       
-      // Add content and tags to formData
+      // Add content to formData if it exists
       if (postData.content) {
         formData.append('content', postData.content);
         console.log('[PostService] Added content to formData');
       }
       
+      // Handle tags - ensure it's properly formatted
       if (postData.tags) {
-        formData.append('tags', postData.tags);
-        console.log('[PostService] Added tags to formData:', postData.tags);
+        const tagsArray = Array.isArray(postData.tags) ? postData.tags : [postData.tags];
+        formData.append('tags', JSON.stringify(tagsArray));
+        console.log('[PostService] Added tags to formData:', tagsArray);
       }
       
       // Handle file upload if present
@@ -39,42 +36,55 @@ const postService = {
         try {
           // Ensure we have a proper File object
           if (!(file instanceof File)) {
-            console.log('[PostService] Converting file object to proper File instance');
-            file = new File([file], 'upload.' + (file.type?.split('/')[1] || 'jpg'), {
-              type: file.type || 'application/octet-stream',
-            });
+            const fileExtension = file.name?.split('.').pop() || 'jpg';
+            file = new File(
+              [file], 
+              `upload-${Date.now()}.${fileExtension}`, 
+              { type: file.type || 'application/octet-stream' }
+            );
           }
+          
           formData.append('media', file);
           console.log('[PostService] File prepared for upload:', {
             name: file.name,
             type: file.type,
             size: file.size,
-            isFileInstance: file instanceof File
+            lastModified: file.lastModified
           });
         } catch (fileError) {
-          console.error('[PostService] Error preparing file for upload:', {
-            error: fileError,
+          console.error('[PostService] Error preparing file:', {
+            error: fileError.message,
             stack: fileError.stack,
-            fileType: typeof file
+            fileType: typeof file,
+            fileProps: Object.keys(file || {})
           });
           throw new Error('Failed to process file for upload');
         }
       }
 
-      // Log form data for debugging
-      console.log('FormData contents:');
-      for (let [key, value] of formData.entries()) {
-        console.log(`${key}:`, value instanceof File ? `[File] ${value.name}` : value);
+      // Log form data keys for debugging (don't log file content)
+      console.log('[PostService] FormData keys:');
+      for (let key of formData.keys()) {
+        console.log(`- ${key}`);
       }
 
-      // Use the centralized api instance with proper headers for FormData
+      // Don't set Content-Type header - let the browser set it with boundary
       const config = {
         headers: {
-          'Content-Type': 'multipart/form-data'
-        }
+          'Accept': 'application/json',
+          // Remove Content-Type to let the browser set it with the correct boundary
+        },
+        // Important for FormData with files
+        timeout: 30000, // 30 seconds timeout
+        withCredentials: true // Include cookies in the request
       };
 
-      const response = await api.post('/posts', formData, config);
+      console.log('[PostService] Sending request to /api/posts');
+      const response = await api.post('/api/posts', formData, config);
+      console.log('[PostService] Post created successfully:', {
+        postId: response.data?._id,
+        hasMedia: !!response.data?.media
+      });
       return response.data;
     } catch (error) {
       console.error('[PostService] Error in createPost:', {
