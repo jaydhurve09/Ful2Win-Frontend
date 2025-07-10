@@ -47,13 +47,19 @@ const postService = {
         console.log(`${key}:`, value instanceof File ? `[File] ${value.name}` : value);
       }
 
-      // Use the centralized api instance with proper headers for FormData
+      // Set proper headers for file upload
       const config = {
         headers: {
-          'Content-Type': 'multipart/form-data'
-        }
+          'Content-Type': 'multipart/form-data',
+          'Accept': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
+          'Access-Control-Allow-Credentials': 'true',
+          'Access-Control-Allow-Origin': window.location.origin
+        },
+        withCredentials: true
       };
 
+      // Use the centralized api instance with proper headers for FormData
       const response = await api.post('/posts', formData, config);
       return response.data;
     } catch (error) {
