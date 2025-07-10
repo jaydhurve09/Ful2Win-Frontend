@@ -272,22 +272,20 @@ const Community = () => {
       }));
 
       try {
-        // API call to like/unlike post
-        const response = await authService.likePost(postId, isLiked);
+        // API call to like/unlike post using postService
+        const updatedPost = await postService.likePost(postId, isLiked);
         
         // Update the post with the server response
-        if (response?.success) {
-          setPosts(posts.map(post => {
-            if (post._id === postId) {
-              return {
-                ...post,
-                likes: response.likes || post.likes,
-                likeCount: response.likeCount || post.likeCount
-              };
-            }
-            return post;
-          }));
-        }
+        setPosts(posts.map(post => {
+          if (post._id === postId) {
+            return {
+              ...post,
+              likes: updatedPost.likes || post.likes,
+              likeCount: updatedPost.likeCount || post.likeCount
+            };
+          }
+          return post;
+        }));
       } catch (apiError) {
         console.error('API Error in handleLike:', apiError);
         // If API call fails, show error but don't revert UI (better UX)
@@ -451,14 +449,12 @@ const Community = () => {
       }));
 
       try {
-        // API call to add comment
-        const response = await authService.addComment(postId, { 
-          comment: commentText
-        });
+        // API call to add comment using postService
+        const response = await postService.addComment(postId, commentText);
         
-        if (response?.data) {
+        if (response) {
           // Process the server's response to ensure we have user data
-          const processedComments = await processComments([response.data]);
+          const processedComments = await processComments([response]);
           const serverComment = processedComments[0];
           
           if (serverComment) {

@@ -160,6 +160,63 @@ const postService = {
       console.error('Error reporting post:', error);
       throw error;
     }
+  },
+
+  /**
+   * Like or unlike a post
+   * @param {string} postId - Post ID to like/unlike
+   * @param {boolean} isLiked - Whether the post is already liked
+   * @returns {Promise<Object>} Updated post data
+   */
+  async likePost(postId, isLiked) {
+    try {
+      const endpoint = isLiked ? `/posts/unlike` : `/posts/like`;
+      // Get the current user's ID from localStorage or auth context
+      const user = JSON.parse(localStorage.getItem('user'));
+      if (!user || !user._id) {
+        throw new Error('User not authenticated');
+      }
+      // Send both postId and userId in the request body
+      const response = await api.post(endpoint, { 
+        postId,
+        userId: user._id 
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error toggling like:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Add a comment to a post
+   * @param {string} postId - Post ID to comment on
+   * @param {string} content - Comment content
+   * @returns {Promise<Object>} Created comment data
+   */
+  async addComment(postId, content) {
+    try {
+      const response = await api.post(`/posts/${postId}/comments`, { content });
+      return response.data;
+    } catch (error) {
+      console.error('Error adding comment:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Get comments for a post
+   * @param {string} postId - Post ID to get comments for
+   * @returns {Promise<Array>} List of comments
+   */
+  async getComments(postId) {
+    try {
+      const response = await api.get(`/api/posts/${postId}/comments`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching comments:', error);
+      throw error;
+    }
   }
 };
 
