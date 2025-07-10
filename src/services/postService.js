@@ -8,7 +8,7 @@ const postService = {
    * @returns {Promise<Object>} Created post data
    */
   async createPost(postData, file = null) {
-    console.log('[PostService] Starting createPost with data:', {
+    console.log('[PostService] 🚀 Starting createPost with data:', {
       contentLength: postData?.content?.length || 0,
       hasFile: !!file,
       tags: postData?.tags
@@ -20,22 +20,28 @@ const postService = {
       // Add content to formData if it exists
       if (postData.content) {
         formData.append('content', postData.content);
-        console.log('[PostService] Added content to formData');
+        console.log('[PostService] ✅ Added content to formData');
+      } else {
+        console.log('[PostService] ℹ️ No content provided');
       }
       
       // Handle tags - ensure it's properly formatted
       if (postData.tags) {
         const tagsArray = Array.isArray(postData.tags) ? postData.tags : [postData.tags];
         formData.append('tags', JSON.stringify(tagsArray));
-        console.log('[PostService] Added tags to formData:', tagsArray);
+        console.log('[PostService] ✅ Added tags to formData:', tagsArray);
+      } else {
+        formData.append('tags', JSON.stringify([]));
+        console.log('[PostService] ℹ️ No tags provided, using empty array');
       }
       
       // Handle file upload if present
       if (file) {
-        console.log('[PostService] Processing file upload...');
+        console.log('[PostService] 📂 Processing file upload...');
         try {
           // Ensure we have a proper File object
           if (!(file instanceof File)) {
+            console.log('[PostService] 🔄 Converting file object to proper File instance');
             const fileExtension = file.name?.split('.').pop() || 'jpg';
             file = new File(
               [file], 
@@ -45,47 +51,76 @@ const postService = {
           }
           
           formData.append('media', file);
-          console.log('[PostService] File prepared for upload:', {
+          console.log('[PostService] ✅ File prepared for upload:', {
             name: file.name,
             type: file.type,
             size: file.size,
-            lastModified: file.lastModified
+            lastModified: file.lastModified,
+            isFileInstance: file instanceof File
           });
         } catch (fileError) {
-          console.error('[PostService] Error preparing file:', {
+          console.error('[PostService] ❌ Error preparing file:', {
             error: fileError.message,
             stack: fileError.stack,
             fileType: typeof file,
-            fileProps: Object.keys(file || {})
+            fileProps: file ? Object.getOwnPropertyNames(file) : 'No file object'
           });
           throw new Error('Failed to process file for upload');
         }
+      } else {
+        console.log('[PostService] ℹ️ No file provided for upload');
       }
 
       // Log form data keys for debugging (don't log file content)
-      console.log('[PostService] FormData keys:');
+      console.log('[PostService] 📋 FormData keys:');
       for (let key of formData.keys()) {
-        console.log(`- ${key}`);
+        const value = formData.get(key);
+        console.log(`- ${key}:`, value instanceof File ? `[File] ${value.name} (${value.size} bytes)` : 
+          (typeof value === 'string' && value.length > 100 ? `${value.substring(0, 100)}...` : value));
       }
 
-      // Don't set Content-Type header - let the browser set it with boundary
+      // Prepare request config
       const config = {
         headers: {
           'Accept': 'application/json',
-          // Remove Content-Type to let the browser set it with the correct boundary
+          // Let the browser set Content-Type with the correct boundary
         },
         // Important for FormData with files
-        timeout: 30000, // 30 seconds timeout
-        withCredentials: true // Include cookies in the request
+        timeout: 60000, // 60 seconds timeout for file uploads
+        withCredentials: true, // Include cookies in the request
+        maxContentLength: Infinity,
+        maxBodyLength: Infinity
       };
 
-      console.log('[PostService] Sending request to /posts');
-      const response = await api.post('/posts/create', formData, config);
-      console.log('[PostService] Post created successfully:', {
-        postId: response.data?._id,
-        hasMedia: !!response.data?.media
-      });
-      return response.data;
+      console.log('[PostService] 📤 Sending POST request to /posts/create');
+      try {
+        const response = await api.post('/posts/create', formData, config);
+        console.log('[PostService] ✅ Post created successfully:', {
+          postId: response.data?._id,
+          hasMedia: !!response.data?.media,
+          status: response.status,
+          statusText: response.statusText
+        });
+        return response.data;
+      } catch (error) {
+        console.error('[PostService] ❌ Error in API request:', {
+          message: error.message,
+          code: error.code,
+          config: {
+            url: error.config?.url,
+            method: error.config?.method,
+            headers: error.config?.headers,
+            data: error.config?.data ? '[FormData]' : 'No data'
+          },
+          response: error.response ? {
+            status: error.response.status,
+            statusText: error.response.statusText,
+            data: error.response.data
+          } : 'No response',
+          request: error.request ? 'Request made but no response received' : 'No request was made'
+        });
+        throw error;
+      }
     } catch (error) {
       console.error('[PostService] Error in createPost:', {
         error: error.message,
@@ -303,6 +338,7 @@ const postService = {
    * @returns {Promise<Array>} List of comments
    */
   async getComments(postId) {
+    
     try {
       const response = await api.get(`/api/posts/${postId}/comments`);
       return response.data;
