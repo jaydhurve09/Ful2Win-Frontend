@@ -50,7 +50,7 @@ const Games = () => {
        
 //console.log(apiUrl);
        // console.log('Fetching games from:', apiUrl);
-       const response = await api.get('/games', {
+       const response = await api.get('/api/games', {
          headers: {
            'Content-Type': 'application/json',
            'Accept': 'application/json',
@@ -58,20 +58,20 @@ const Games = () => {
          withCredentials: true,
        });
 
-       const responseData = response.data;
- 
-        // Handle different response formats
-        let gamesData = [];
-        if (Array.isArray(response)) {
-          // If the response is directly an array
-          gamesData = response;
-        } else if (response && Array.isArray(response.data)) {
-          // If the response has a data array
-          gamesData = response.data;
-        } else if (response && response.games) {
-          // If the response has a games array
-          gamesData = Array.isArray(response.games) ? response.games : [];
-        }
+       console.log('API Response:', response); // Debug log
+       
+       // Handle the response format from the API
+       let gamesData = [];
+       if (response.data && response.data.success !== undefined) {
+         // If the response has a success flag, extract data from response.data.data
+         gamesData = Array.isArray(response.data.data) ? response.data.data : [];
+       } else if (Array.isArray(response.data)) {
+         // Fallback: if response.data is an array
+         gamesData = response.data;
+       } else if (response.data && response.data.games) {
+         // Fallback: if response has a games array
+         gamesData = Array.isArray(response.data.games) ? response.data.games : [];
+       }
         
         setGames(gamesData);
         
