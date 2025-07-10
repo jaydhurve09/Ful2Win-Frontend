@@ -8,35 +8,55 @@ const postService = {
    * @returns {Promise<Object>} Created post data
    */
   async createPost(postData, file = null) {
+    console.log('[PostService] Starting createPost with data:', {
+      contentLength: postData?.content?.length || 0,
+      hasFile: !!file,
+      fileInfo: file ? {
+        name: file.name,
+        type: file.type,
+        size: file.size
+      } : null,
+      tags: postData?.tags
+    });
+
     try {
       const formData = new FormData();
       
       // Add content and tags to formData
       if (postData.content) {
         formData.append('content', postData.content);
+        console.log('[PostService] Added content to formData');
       }
       
       if (postData.tags) {
         formData.append('tags', postData.tags);
+        console.log('[PostService] Added tags to formData:', postData.tags);
       }
       
       // Handle file upload if present
       if (file) {
+        console.log('[PostService] Processing file upload...');
         try {
           // Ensure we have a proper File object
           if (!(file instanceof File)) {
+            console.log('[PostService] Converting file object to proper File instance');
             file = new File([file], 'upload.' + (file.type?.split('/')[1] || 'jpg'), {
               type: file.type || 'application/octet-stream',
             });
           }
           formData.append('media', file);
-          console.log('File prepared for upload:', {
+          console.log('[PostService] File prepared for upload:', {
             name: file.name,
             type: file.type,
-            size: file.size
+            size: file.size,
+            isFileInstance: file instanceof File
           });
         } catch (fileError) {
-          console.error('Error preparing file for upload:', fileError);
+          console.error('[PostService] Error preparing file for upload:', {
+            error: fileError,
+            stack: fileError.stack,
+            fileType: typeof file
+          });
           throw new Error('Failed to process file for upload');
         }
       }
@@ -57,15 +77,23 @@ const postService = {
       const response = await api.post('/posts', formData, config);
       return response.data;
     } catch (error) {
-      console.error('Error in createPost:', error);
-      if (error.response) {
-        console.error('Error data:', error.response.data);
-        console.error('Error status:', error.response.status);
-      } else if (error.request) {
-        console.error('No response received:', error.request);
-      } else {
-        console.error('Error message:', error.message);
-      }
+      console.error('[PostService] Error in createPost:', {
+        error: error.message,
+        errorType: error.constructor.name,
+        stack: error.stack,
+        response: error.response ? {
+          status: error.response.status,
+          statusText: error.response.statusText,
+          data: error.response.data,
+          headers: error.response.headers
+        } : null,
+        request: error.request ? {
+          method: error.config?.method,
+          url: error.config?.url,
+          headers: error.config?.headers,
+          data: error.config?.data
+        } : null
+      });
       throw error;
     }
   },
@@ -106,7 +134,16 @@ const postService = {
         media: Array.isArray(post.media) ? post.media : []
       }));
     } catch (error) {
-      console.error('Error fetching posts:', error);
+      console.error('[PostService] Error fetching posts:', {
+        error: error.message,
+        errorType: error.constructor.name,
+        stack: error.stack,
+        response: error.response ? {
+          status: error.response.status,
+          statusText: error.response.statusText,
+          data: error.response.data
+        } : null
+      });
       throw error;
     }
   },
@@ -169,18 +206,43 @@ const postService = {
    * @returns {Promise<Object>} Updated post data
    */
   async likePost(postId, isLiked) {
+    console.log(`[PostService] ${isLiked ? 'Unliking' : 'Liking'} post:`, {
+      postId,
+      timestamp: new Date().toISOString()
+    });
+
     try {
       const endpoint = isLiked ? `/posts/unlike` : `/posts/like`;
+      console.log('[PostService] Using endpoint:', endpoint);
+      
       // Get the current user's ID from localStorage or auth context
       const user = JSON.parse(localStorage.getItem('user'));
+      console.log('[PostService] Retrieved user from localStorage:', {
+        userId: user?._id,
+        hasUser: !!user
+      });
+      
       if (!user || !user._id) {
-        throw new Error('User not authenticated');
+        const error = new Error('User not authenticated');
+        console.error('[PostService] Authentication error:', error);
+        throw error;
       }
-      // Send both postId and userId in the request body
-      const response = await api.post(endpoint, { 
+      
+      // Prepare request data
+      const requestData = { 
         postId,
         userId: user._id 
+      };
+      
+      console.log('[PostService] Sending like/unlike request:', requestData);
+      
+      const response = await api.post(endpoint, requestData);
+      
+      console.log(`[PostService] Successfully ${isLiked ? 'unliked' : 'liked'} post:`, {
+        postId,
+        response: response.data
       });
+      
       return response.data;
     } catch (error) {
       console.error('Error toggling like:', error);
@@ -195,8 +257,29 @@ const postService = {
    * @returns {Promise<Object>} Created comment data
    */
   async addComment(postId, content) {
+    console.log('[PostService] Adding comment:', {
+      postId,
+      contentLength: content?.length || 0,
+      timestamp: new Date().toISOString()
+    });
+
     try {
-      const response = await api.post(`/posts/${postId}/comments`, { content });
+      const endpoint = `/posts/${postId}/comments`;
+      const requestData = { content };
+      
+      console.log('[PostService] Sending comment request:', {
+        endpoint,
+        contentPreview: content?.substring(0, 50) + (content?.length > 50 ? '...' : '')
+      });
+      
+      const response = await api.post(endpoint, requestData);
+      
+      console.log('[PostService] Successfully added comment:', {
+        postId,
+        commentId: response.data?._id,
+        timestamp: new Date().toISOString()
+      });
+      
       return response.data;
     } catch (error) {
       console.error('Error adding comment:', error);
