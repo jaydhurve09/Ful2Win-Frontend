@@ -79,8 +79,8 @@ const postService = {
         withCredentials: true // Include cookies in the request
       };
 
-      console.log('[PostService] Sending request to /api/posts');
-      const response = await api.post('/api/posts', formData, config);
+      console.log('[PostService] Sending request to /posts');
+      const response = await api.post('/posts/create', formData, config);
       console.log('[PostService] Post created successfully:', {
         postId: response.data?._id,
         hasMedia: !!response.data?.media
