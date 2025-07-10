@@ -7,117 +7,168 @@ const postService = {
    * @param {File} [file=null] - Optional file to upload with the post
    * @returns {Promise<Object>} Created post data
    */
-  async createPost(postData, file = null) {
-    console.log('[PostService] 🚀 Starting createPost with data:', {
-      contentLength: postData?.content?.length || 0,
-      hasFile: !!file,
-      tags: postData?.tags
-    });
-
+  
+  async createPost(postData = {}, file = null) {
+    const requestId = `req_${Date.now()}`;
+    console.log(`[PostService][${requestId}] 🚀 Starting createPost`);
+    
     try {
+      // Input validation
+      if (!postData && !file) {
+        throw new Error('Either post content or a file is required');
+      }
+
+      // Log input data (safely)
+      console.log(`[PostService][${requestId}] Input data:`, {
+        contentLength: postData?.content?.length || 0,
+        hasFile: !!file,
+        tags: postData?.tags,
+        fileInfo: file ? {
+          name: file.name,
+          type: file.type,
+          size: file.size,
+          isFile: file instanceof File
+        } : null
+      });
+
       const formData = new FormData();
       
-      // Add content to formData if it exists
-      if (postData.content) {
-        formData.append('content', postData.content);
-        console.log('[PostService] ✅ Added content to formData');
+      // Add content with validation
+      if (postData?.content) {
+        const content = String(postData.content).trim();
+        if (content) {
+          formData.append('content', content);
+          console.log(`[PostService][${requestId}] ✅ Added content (${content.length} chars)`);
+        } else {
+          formData.append('content', '');
+        }
       } else {
-        console.log('[PostService] ℹ️ No content provided');
+        formData.append('content', '');
       }
       
-      // Handle tags - ensure it's properly formatted
-      if (postData.tags) {
-        const tagsArray = Array.isArray(postData.tags) ? postData.tags : [postData.tags];
-        formData.append('tags', JSON.stringify(tagsArray));
-        console.log('[PostService] ✅ Added tags to formData:', tagsArray);
-      } else {
+      // Handle tags with validation
+      try {
+        const tags = postData?.tags || [];
+        const tagsArray = Array.isArray(tags) ? tags : [tags].filter(Boolean);
+        const validTags = tagsArray.filter(tag => tag && typeof tag === 'string');
+        
+        formData.append('tags', JSON.stringify(validTags));
+        console.log(`[PostService][${requestId}] ✅ Added ${validTags.length} tags`);
+      } catch (tagError) {
+        console.warn(`[PostService][${requestId}] ⚠️ Error processing tags, using empty array`, tagError);
         formData.append('tags', JSON.stringify([]));
-        console.log('[PostService] ℹ️ No tags provided, using empty array');
       }
       
       // Handle file upload if present
       if (file) {
-        console.log('[PostService] 📂 Processing file upload...');
+        console.log(`[PostService][${requestId}] 📂 Processing file upload...`);
         try {
+          let fileToUpload = file;
+          
           // Ensure we have a proper File object
-          if (!(file instanceof File)) {
-            console.log('[PostService] 🔄 Converting file object to proper File instance');
-            const fileExtension = file.name?.split('.').pop() || 'jpg';
-            file = new File(
-              [file], 
-              `upload-${Date.now()}.${fileExtension}`, 
-              { type: file.type || 'application/octet-stream' }
+          if (!(fileToUpload instanceof File)) {
+            console.log(`[PostService][${requestId}] 🔄 Converting to File instance`);
+            const fileExtension = fileToUpload.name?.split('.').pop() || 'jpg';
+            fileToUpload = new File(
+              [fileToUpload], 
+              `upload-${Date.now()}.${fileExtension}`.toLowerCase(),
+              { type: fileToUpload.type || 'application/octet-stream' }
             );
           }
           
-          formData.append('media', file);
-          console.log('[PostService] ✅ File prepared for upload:', {
-            name: file.name,
-            type: file.type,
-            size: file.size,
-            lastModified: file.lastModified,
-            isFileInstance: file instanceof File
+          // Basic file validation
+          const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+          if (fileToUpload.size > MAX_FILE_SIZE) {
+            throw new Error(`File too large (${(fileToUpload.size / (1024 * 1024)).toFixed(2)}MB > 10MB)`);
+          }
+          
+          const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'video/mp4'];
+          if (!allowedTypes.includes(fileToUpload.type.toLowerCase())) {
+            throw new Error(`Unsupported file type: ${fileToUpload.type}`);
+          }
+          
+          formData.append('media', fileToUpload);
+          console.log(`[PostService][${requestId}] ✅ File ready:`, {
+            name: fileToUpload.name,
+            type: fileToUpload.type,
+            size: `${(fileToUpload.size / 1024).toFixed(2)}KB`
           });
+          
         } catch (fileError) {
-          console.error('[PostService] ❌ Error preparing file:', {
+          console.error(`[PostService][${requestId}] ❌ File processing failed:`, {
             error: fileError.message,
-            stack: fileError.stack,
-            fileType: typeof file,
-            fileProps: file ? Object.getOwnPropertyNames(file) : 'No file object'
+            fileType: file?.type,
+            fileName: file?.name,
+            fileSize: file?.size
           });
-          throw new Error('Failed to process file for upload');
+          throw new Error(`File upload failed: ${fileError.message}`);
         }
-      } else {
-        console.log('[PostService] ℹ️ No file provided for upload');
       }
 
-      // Log form data keys for debugging (don't log file content)
-      console.log('[PostService] 📋 FormData keys:');
-      for (let key of formData.keys()) {
-        const value = formData.get(key);
-        console.log(`- ${key}:`, value instanceof File ? `[File] ${value.name} (${value.size} bytes)` : 
-          (typeof value === 'string' && value.length > 100 ? `${value.substring(0, 100)}...` : value));
+      // Log form data structure (safely)
+      console.log(`[PostService][${requestId}] 📋 FormData entries:`);
+      for (let [key, value] of formData.entries()) {
+        if (value instanceof File) {
+          console.log(`- ${key}: [File] ${value.name} (${(value.size / 1024).toFixed(2)}KB)`);
+        } else if (typeof value === 'string' && value.length > 50) {
+          console.log(`- ${key}: ${value.substring(0, 50)}... [${value.length} chars]`);
+        } else {
+          console.log(`- ${key}:`, value);
+        }
       }
 
-      // Prepare request config
+      // Configure request
       const config = {
+        timeout: 120000, // 2 minutes
+        withCredentials: true,
+        maxContentLength: 100 * 1024 * 1024, // 100MB
+        maxBodyLength: 100 * 1024 * 1024, // 100MB
         headers: {
           'Accept': 'application/json',
-          // Let the browser set Content-Type with the correct boundary
+          'Cache-Control': 'no-cache',
+          'X-Request-ID': requestId
         },
-        // Important for FormData with files
-        timeout: 60000, // 60 seconds timeout for file uploads
-        withCredentials: true, // Include cookies in the request
-        maxContentLength: Infinity,
-        maxBodyLength: Infinity
+        // Let the browser set Content-Type with boundary
+        transformRequest: (data, headers) => {
+          delete headers['Content-Type'];
+          if (headers.common) delete headers.common['Content-Type'];
+          if (headers.post) delete headers.post['Content-Type'];
+          return data;
+        },
+        onUploadProgress: (progressEvent) => {
+          if (progressEvent.lengthComputable) {
+            const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            console.log(`[PostService][${requestId}] 📤 Upload: ${percent}%`);
+          }
+        }
       };
 
-      console.log('[PostService] 📤 Sending POST request to /posts/create');
+      console.log(`[PostService][${requestId}] 📤 Sending to /posts/create`);
+      const startTime = Date.now();
+      
       try {
         const response = await api.post('/posts/create', formData, config);
-        console.log('[PostService] ✅ Post created successfully:', {
-          postId: response.data?._id,
-          hasMedia: !!response.data?.media,
+        const duration = Date.now() - startTime;
+        
+        console.log(`[PostService][${requestId}] ✅ Success (${duration}ms)`, {
           status: response.status,
-          statusText: response.statusText
+          statusText: response.statusText,
+          postId: response.data?._id,
+          hasMedia: !!response.data?.media
         });
+        
         return response.data;
       } catch (error) {
-        console.error('[PostService] ❌ Error in API request:', {
-          message: error.message,
-          code: error.code,
+        console.error(`[PostService][${requestId}] ❌ Request failed:`, {
+          error: error.message,
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          responseData: error.response?.data,
           config: {
             url: error.config?.url,
             method: error.config?.method,
-            headers: error.config?.headers,
-            data: error.config?.data ? '[FormData]' : 'No data'
-          },
-          response: error.response ? {
-            status: error.response.status,
-            statusText: error.response.statusText,
-            data: error.response.data
-          } : 'No response',
-          request: error.request ? 'Request made but no response received' : 'No request was made'
+            headers: error.config?.headers
+          }
         });
         throw error;
       }
