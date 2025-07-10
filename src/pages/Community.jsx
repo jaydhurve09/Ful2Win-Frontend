@@ -644,7 +644,7 @@ const Community = () => {
           setPosts([]);
         }
       } catch (error) {
-        toast.error('Failed to load posts');
+        //toast.error('Failed to load posts');
       } finally {
         setIsLoading(false);
       }
