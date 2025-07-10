@@ -94,7 +94,7 @@ const postService = {
 
       console.log('[PostService] 📤 Sending POST request to /posts/create');
       try {
-        const response = await api.post('/posts/create', formData, config);
+        const response = await api.post('/post/create', formData, config);
         console.log('[PostService] ✅ Post created successfully:', {
           postId: response.data?._id,
           hasMedia: !!response.data?.media,
