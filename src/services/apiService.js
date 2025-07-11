@@ -331,4 +331,88 @@ const gameService = {
   }
 };
 
-export { authService, postService, gameService };
+// Challenge Service
+const challengeService = {
+  // Create a new challenge
+  createChallenge: async (challengeData) => {
+    try {
+      const response = await api.post('/challenges', challengeData);
+      return response.data;
+    } catch (error) {
+      console.error('Create challenge error:', error);
+      throw error;
+    }
+  },
+
+  // Get user challenges
+  getUserChallenges: async (params = {}) => {
+    try {
+      const response = await api.get('/challenges', { params });
+      return response.data;
+    } catch (error) {
+      console.error('Get user challenges error:', error);
+      throw error;
+    }
+  },
+
+  // Accept a challenge
+  acceptChallenge: async (challengeId) => {
+    try {
+      const response = await api.put(`/challenges/${challengeId}/accept`);
+      return response.data;
+    } catch (error) {
+      console.error('Accept challenge error:', error);
+      throw error;
+    }
+  },
+
+  // Reject a challenge
+  rejectChallenge: async (challengeId) => {
+    try {
+      const response = await api.put(`/challenges/${challengeId}/reject`);
+      return response.data;
+    } catch (error) {
+      console.error('Reject challenge error:', error);
+      throw error;
+    }
+  },
+
+  // Cancel a challenge
+  cancelChallenge: async (challengeId) => {
+    try {
+      const response = await api.put(`/challenges/${challengeId}/cancel`);
+      return response.data;
+    } catch (error) {
+      console.error('Cancel challenge error:', error);
+      throw error;
+    }
+  },
+
+  // Get users for challenge
+  getUsersForChallenge: async (search = '') => {
+    try {
+      const response = await api.get('/challenges/users', { 
+        params: { search } 
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Get users for challenge error:', error);
+      throw error;
+    }
+  },
+
+  // Get games for challenge
+  getGamesForChallenge: async (search = '') => {
+    try {
+      const response = await api.get('/challenges/games', { 
+        params: { search } 
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Get games for challenge error:', error);
+      throw error;
+    }
+  }
+};
+
+export { authService, postService, gameService, challengeService };

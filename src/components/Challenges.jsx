@@ -4,85 +4,187 @@ import Navbar from '../components/Navbar';
 import BackgroundBubbles from '../components/BackgroundBubbles';
 import { useNavigate } from 'react-router-dom';
 import { FiArrowLeft } from 'react-icons/fi';
+import { FaSearch, FaSpinner } from 'react-icons/fa';
+import { toast } from 'react-toastify';
+import api from '../services/api';
 
 const Challenges = () => {
   const [isFormOpen, setIsFormOpen] = useState(true);
   const [friendName, setFriendName] = useState('');
   const [gameInput, setGameInput] = useState('');
+  const [message, setMessage] = useState('');
   const [challenges, setChallenges] = useState([]);
   const [incomingInvites, setIncomingInvites] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [games, setGames] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [showUserSuggestions, setShowUserSuggestions] = useState(false);
+  const [showGameSuggestions, setShowGameSuggestions] = useState(false);
 
   const navigate = useNavigate();
 
-  const allFriends = [
-    'Kevin Marshall',
-    'Ritika Sharma',
-    'Aayush Patel',
-    'Rohan Mehta',
-    'Kiran Jain',
-    'Anjali Rao',
-    'Akshay Kulkarni',
-  ];
+  // Fetch users and games on component mount
+  useEffect(() => {
+    fetchUsers();
+    fetchGames();
+    fetchChallenges();
+  }, []);
 
-  const allGames = ['Ludo', 'Rummy', 'Carrom', 'Chess', 'Snake & Ladder', 'Poker', 'UNO'];
-  const mostPlayed = ['Ludo', 'Rummy', 'Chess'];
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get('/challenges/users');
+      setUsers(response.data.users || []);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      toast.error('Failed to load users');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const filteredFriends = friendName.length > 0
-    ? allFriends.filter(
-      (name) =>
-        name.toLowerCase().includes(friendName.toLowerCase()) &&
-        name.toLowerCase() !== friendName.toLowerCase()
-    )
+  const fetchGames = async () => {
+    try {
+      const response = await api.get('/challenges/games');
+      setGames(response.data.games || []);
+    } catch (error) {
+      console.error('Error fetching games:', error);
+      toast.error('Failed to load games');
+    }
+  };
+
+  const fetchChallenges = async () => {
+    try {
+      const response = await api.get('/challenges');
+      const allChallenges = response.data.challenges || [];
+      
+      // Separate incoming and outgoing challenges
+      const incoming = allChallenges.filter(challenge => 
+        challenge.challenged._id === localStorage.getItem('userId') && 
+        challenge.status === 'pending'
+      );
+      const outgoing = allChallenges.filter(challenge => 
+        challenge.challenger._id === localStorage.getItem('userId') && 
+        challenge.status === 'pending'
+      );
+      
+      setIncomingInvites(incoming);
+      setChallenges([...outgoing, ...allChallenges.filter(c => c.status !== 'pending')]);
+    } catch (error) {
+      console.error('Error fetching challenges:', error);
+      toast.error('Failed to load challenges');
+    }
+  };
+
+  const filteredUsers = friendName.length > 0
+    ? users.filter(user =>
+        user.fullName.toLowerCase().includes(friendName.toLowerCase()) &&
+        user.fullName.toLowerCase() !== friendName.toLowerCase()
+      )
     : [];
 
   const filteredGames = gameInput.length > 0
-    ? allGames.filter((game) =>
-      game.toLowerCase().includes(gameInput.toLowerCase())
-    )
-    : allGames;
+    ? games.filter(game =>
+        game.displayName.toLowerCase().includes(gameInput.toLowerCase())
+      )
+    : games;
 
-  useEffect(() => {
-    // Mocking incoming invites and ongoing challenges
-    setIncomingInvites([
-      { id: 100, name: 'Ritika Sharma', game: 'Rummy', status: 'Pending' },
-    ]);
-
-    setChallenges([
-      { id: 1, name: 'Kevin Marshall', game: 'Ludo', status: 'Pending' },
-      { id: 2, name: 'Aayush Patel', game: 'Chess', status: 'Accepted' },
-    ]);
-  }, []);
-
-  const handleInviteSubmit = (e) => {
+  const handleInviteSubmit = async (e) => {
     e.preventDefault();
-    if (!friendName || !gameInput) return alert('Fill both fields');
+    if (!friendName || !gameInput) {
+      toast.error('Please fill both friend name and game fields');
+      return;
+    }
 
-    const newChallenge = {
-      id: Date.now(),
-      name: friendName,
-      game: gameInput,
-      status: 'Pending',
-    };
+    // Find the selected user and game
+    const selectedUser = users.find(user => 
+      user.fullName.toLowerCase() === friendName.toLowerCase()
+    );
+    const selectedGame = games.find(game => 
+      game.displayName.toLowerCase() === gameInput.toLowerCase()
+    );
 
-    setChallenges((prev) => [...prev, newChallenge]);
-    setFriendName('');
-    setGameInput('');
+    if (!selectedUser || !selectedGame) {
+      toast.error('Please select valid user and game from the suggestions');
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      const response = await api.post('/challenges', {
+        challengedUserId: selectedUser._id,
+        gameId: selectedGame._id,
+        message: message
+      });
+
+      toast.success('Challenge sent successfully!');
+      setFriendName('');
+      setGameInput('');
+      setMessage('');
+      fetchChallenges(); // Refresh the challenges list
+    } catch (error) {
+      console.error('Error sending challenge:', error);
+      const errorMessage = error.response?.data?.message || 'Failed to send challenge';
+      toast.error(errorMessage);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  const handleCancelChallenge = (id) => {
-    setChallenges((prev) => prev.filter((ch) => ch.id !== id));
+  const handleCancelChallenge = async (challengeId) => {
+    try {
+      await api.put(`/challenges/${challengeId}/cancel`);
+      toast.success('Challenge cancelled successfully');
+      fetchChallenges();
+    } catch (error) {
+      console.error('Error cancelling challenge:', error);
+      toast.error('Failed to cancel challenge');
+    }
   };
 
-  const handleAcceptInvite = (id) => {
-    setIncomingInvites((prev) => prev.filter((invite) => invite.id !== id));
-    setChallenges((prev) => [
-      ...prev,
-      { ...incomingInvites.find((inv) => inv.id === id), status: 'Accepted' },
-    ]);
+  const handleAcceptInvite = async (challengeId) => {
+    try {
+      await api.put(`/challenges/${challengeId}/accept`);
+      toast.success('Challenge accepted successfully');
+      fetchChallenges();
+    } catch (error) {
+      console.error('Error accepting challenge:', error);
+      toast.error('Failed to accept challenge');
+    }
   };
 
-  const handleRejectInvite = (id) => {
-    setIncomingInvites((prev) => prev.filter((invite) => invite.id !== id));
+  const handleRejectInvite = async (challengeId) => {
+    try {
+      await api.put(`/challenges/${challengeId}/reject`);
+      toast.success('Challenge rejected');
+      fetchChallenges();
+    } catch (error) {
+      console.error('Error rejecting challenge:', error);
+      toast.error('Failed to reject challenge');
+    }
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'pending': return 'text-yellow-600';
+      case 'accepted': return 'text-green-600';
+      case 'rejected': return 'text-red-600';
+      case 'completed': return 'text-blue-600';
+      case 'cancelled': return 'text-gray-600';
+      default: return 'text-gray-600';
+    }
+  };
+
+  const getStatusText = (status) => {
+    switch (status) {
+      case 'pending': return 'Pending';
+      case 'accepted': return 'Accepted';
+      case 'rejected': return 'Rejected';
+      case 'completed': return 'Completed';
+      case 'cancelled': return 'Cancelled';
+      default: return status;
+    }
   };
 
   return (
@@ -125,67 +227,93 @@ const Challenges = () => {
                     type="text"
                     placeholder="Enter friend's name"
                     value={friendName}
-                    onChange={(e) => setFriendName(e.target.value)}
+                    onChange={(e) => {
+                      setFriendName(e.target.value);
+                      setShowUserSuggestions(e.target.value.length > 0);
+                    }}
+                    onFocus={() => setShowUserSuggestions(friendName.length > 0)}
                     className="w-full p-2 border rounded"
                   />
-                  {filteredFriends.length > 0 && (
-                    <ul className="absolute w-full bg-white border rounded mt-1 z-10 text-sm">
-                      {filteredFriends.map((name, index) => (
+                  {showUserSuggestions && filteredUsers.length > 0 && (
+                    <ul className="absolute w-full bg-white border rounded mt-1 z-10 text-sm max-h-40 overflow-y-auto">
+                      {filteredUsers.map((user, index) => (
                         <li
                           key={index}
-                          onClick={() => setFriendName(name)}
-                          className="px-3 py-2 hover:bg-gray-200 cursor-pointer"
+                          onClick={() => {
+                            setFriendName(user.fullName);
+                            setShowUserSuggestions(false);
+                          }}
+                          className="px-3 py-2 hover:bg-gray-200 cursor-pointer flex items-center"
                         >
-                          {name}
+                          <img
+                            src={user.profilePicture || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}`}
+                            alt={user.fullName}
+                            className="w-6 h-6 rounded-full mr-2"
+                          />
+                          {user.fullName}
                         </li>
                       ))}
                     </ul>
                   )}
                 </div>
 
-                <input
-                  type="text"
-                  placeholder="Enter game name"
-                  value={gameInput}
-                  onChange={(e) => setGameInput(e.target.value)}
-                  className="w-full p-2 border rounded mt-3"
-                />
-
-                <div className="mt-2">
-                  <p className="text-sm text-gray-600">Most Played</p>
-                  <div className="flex flex-wrap gap-2 mt-1">
-                    {mostPlayed.map((game) => (
-                      <button
-                        key={game}
-                        type="button"
-                        onClick={() => setGameInput(game)}
-                        className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm hover:bg-blue-200"
-                      >
-                        {game}
-                      </button>
-                    ))}
-                  </div>
+                <div className="relative mt-3">
+                  <input
+                    type="text"
+                    placeholder="Enter game name"
+                    value={gameInput}
+                    onChange={(e) => {
+                      setGameInput(e.target.value);
+                      setShowGameSuggestions(e.target.value.length > 0);
+                    }}
+                    onFocus={() => setShowGameSuggestions(gameInput.length > 0)}
+                    className="w-full p-2 border rounded"
+                  />
+                  {showGameSuggestions && filteredGames.length > 0 && (
+                    <ul className="absolute w-full bg-white border rounded mt-1 z-10 text-sm max-h-40 overflow-y-auto">
+                      {filteredGames.map((game, index) => (
+                        <li
+                          key={index}
+                          onClick={() => {
+                            setGameInput(game.displayName);
+                            setShowGameSuggestions(false);
+                          }}
+                          className="px-3 py-2 hover:bg-gray-200 cursor-pointer flex items-center"
+                        >
+                          <img
+                            src={game.thumbnail || 'https://via.placeholder.com/30x30'}
+                            alt={game.displayName}
+                            className="w-6 h-6 rounded mr-2"
+                          />
+                          {game.displayName}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
 
-                {gameInput && (
-                  <ul className="bg-white border w-full mt-1 rounded shadow text-sm max-h-40 overflow-y-auto">
-                    {filteredGames.map((game, index) => (
-                      <li
-                        key={index}
-                        onClick={() => setGameInput(game)}
-                        className="px-3 py-2 hover:bg-gray-200 cursor-pointer"
-                      >
-                        {game}
-                      </li>
-                    ))}
-                  </ul>
-                )}
+                <textarea
+                  placeholder="Optional message (max 200 characters)"
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  maxLength={200}
+                  className="w-full p-2 border rounded mt-3 resize-none"
+                  rows="3"
+                />
 
                 <button
                   type="submit"
-                  className="w-full bg-blue-600 text-white py-2 mt-4 rounded hover:bg-blue-700"
+                  disabled={submitting}
+                  className="w-full bg-blue-600 text-white py-2 mt-4 rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                 >
-                  Send Invite
+                  {submitting ? (
+                    <>
+                      <FaSpinner className="animate-spin mr-2" />
+                      Sending...
+                    </>
+                  ) : (
+                    'Send Challenge'
+                  )}
                 </button>
               </form>
             </div>
@@ -197,20 +325,30 @@ const Challenges = () => {
               <div className="text-black">
                 <h2 className="text-lg font-semibold mb-3 text-red-700">Incoming Invites</h2>
                 {incomingInvites.map((invite) => (
-                  <div key={invite.id} className="flex justify-between items-center mb-3">
-                    <div>
-                      <p className="font-semibold">{invite.name}</p>
-                      <p className="text-sm text-gray-600">{invite.game}</p>
+                  <div key={invite._id} className="flex justify-between items-center mb-3 p-3 border rounded">
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={invite.challenger.profilePicture || `https://ui-avatars.com/api/?name=${encodeURIComponent(invite.challenger.fullName)}`}
+                        alt={invite.challenger.fullName}
+                        className="w-10 h-10 rounded-full"
+                      />
+                      <div>
+                        <p className="font-semibold">{invite.challenger.fullName}</p>
+                        <p className="text-sm text-gray-600">{invite.game.displayName}</p>
+                        {invite.message && (
+                          <p className="text-xs text-gray-500 mt-1">"{invite.message}"</p>
+                        )}
+                      </div>
                     </div>
                     <div className="flex gap-2">
                       <button
-                        onClick={() => handleAcceptInvite(invite.id)}
+                        onClick={() => handleAcceptInvite(invite._id)}
                         className="bg-green-100 text-green-700 px-3 py-1 rounded hover:bg-green-200 text-sm"
                       >
                         Accept
                       </button>
                       <button
-                        onClick={() => handleRejectInvite(invite.id)}
+                        onClick={() => handleRejectInvite(invite._id)}
                         className="bg-red-100 text-red-600 px-3 py-1 rounded hover:bg-red-200 text-sm"
                       >
                         Reject
@@ -226,34 +364,57 @@ const Challenges = () => {
           {challenges.length > 0 && (
             <div className="bg-white rounded-xl shadow-md p-4">
               <div className="text-black">
-                <h2 className="text-lg font-semibold mb-3 text-blue-700">Ongoing Challenges</h2>
-                {challenges.map((ch) => (
-                  <div key={ch.id} className="flex justify-between items-center mb-3">
+                <h2 className="text-lg font-semibold mb-3 text-blue-700">All Challenges</h2>
+                {challenges.map((challenge) => (
+                  <div key={challenge._id} className="flex justify-between items-center mb-3 p-3 border rounded">
                     <div className="flex items-center gap-3">
                       <img
-                        src={`https://ui-avatars.com/api/?name=${encodeURIComponent(ch.name)}`}
-                        alt={ch.name}
+                        src={challenge.challenger.profilePicture || `https://ui-avatars.com/api/?name=${encodeURIComponent(challenge.challenger.fullName)}`}
+                        alt={challenge.challenger.fullName}
                         className="w-10 h-10 rounded-full"
                       />
                       <div>
-                        <p className="font-semibold">{ch.name}</p>
-                        <p className="text-sm text-gray-600">{ch.game}</p>
+                        <p className="font-semibold">
+                          {challenge.challenger.fullName} → {challenge.challenged.fullName}
+                        </p>
+                        <p className="text-sm text-gray-600">{challenge.game.displayName}</p>
+                        <p className={`text-xs ${getStatusColor(challenge.status)}`}>
+                          {getStatusText(challenge.status)}
+                        </p>
+                        {challenge.message && (
+                          <p className="text-xs text-gray-500 mt-1">"{challenge.message}"</p>
+                        )}
                       </div>
                     </div>
-                    {ch.status === 'Pending' ? (
+                    {challenge.status === 'pending' && challenge.challenger._id === localStorage.getItem('userId') && (
                       <button
-                        onClick={() => handleCancelChallenge(ch.id)}
+                        onClick={() => handleCancelChallenge(challenge._id)}
                         className="bg-red-100 text-red-600 px-3 py-1 rounded hover:bg-red-200 text-sm"
                       >
                         Cancel
                       </button>
-                    ) : (
-                      <span className="bg-green-100 text-green-700 px-3 py-1 rounded text-sm">
-                        {ch.status}
-                      </span>
                     )}
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* Loading State */}
+          {loading && (
+            <div className="bg-white rounded-xl shadow-md p-4">
+              <div className="text-black text-center">
+                <FaSpinner className="animate-spin mx-auto mb-2" size={24} />
+                <p>Loading challenges...</p>
+              </div>
+            </div>
+          )}
+
+          {/* Empty State */}
+          {!loading && challenges.length === 0 && incomingInvites.length === 0 && (
+            <div className="bg-white rounded-xl shadow-md p-4">
+              <div className="text-black text-center">
+                <p className="text-gray-500">No challenges yet. Send a challenge to get started!</p>
               </div>
             </div>
           )}

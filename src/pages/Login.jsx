@@ -164,7 +164,7 @@ const Login = () => {
       </>
       )}
       {/* White section below the login container */}
-      <div className="w-full bg-white h-20"></div>
+      <div className="w-full bg-white h-0"></div>
     </div>   
   );
 };
