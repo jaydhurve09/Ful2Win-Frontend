@@ -316,8 +316,8 @@ const ChatScreen = ({ selectedFriend, setSelectedFriend }) => {
     setSending(true);
     setError(null);
     
-    // Create optimistic message
-    const tempId = `temp-${Date.now()}`;
+    // Create optimistic message with a unique ID
+    const tempId = `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     const optimisticMessage = {
       _id: tempId,
       localId: tempId,
@@ -340,19 +340,16 @@ const ChatScreen = ({ selectedFriend, setSelectedFriend }) => {
         trimmedMessage
       );
       
-      // Replace optimistic message with server response
-      setMessages(prev => 
-        prev.map(msg => 
-          msg.localId === tempId 
-            ? { 
-                ...sentMessage, 
-                localId: `server-${sentMessage._id}`,
-                status: 'sent',
-                isOptimistic: false
-              } 
-            : msg
-        )
-      );
+      // Remove the optimistic message and add the server response
+      setMessages(prev => [
+        ...prev.filter(msg => msg.localId !== tempId),
+        {
+          ...sentMessage,
+          localId: `server-${sentMessage._id}`,
+          status: 'sent',
+          isOptimistic: false
+        }
+      ]);
       
       // Notify recipient via socket
       if (socketRef.current?.connected) {
@@ -374,7 +371,7 @@ const ChatScreen = ({ selectedFriend, setSelectedFriend }) => {
             ? { 
                 ...msg, 
                 status: 'failed',
-                error: err.response?.data?.message || 'Failed to send message'
+                error: err.message || 'Failed to send message'
               } 
             : msg
         )
@@ -421,11 +418,6 @@ const ChatScreen = ({ selectedFriend, setSelectedFriend }) => {
     }, 100);
   };
 
-  console.log('ChatScreen render', {
-    messages,
-    currentUserId,
-    selectedFriend,
-  });
 
   return (
     <div className="fixed inset-0 w-full h-screen bg-blueGradient overflow-hidden">
@@ -481,8 +473,8 @@ const ChatScreen = ({ selectedFriend, setSelectedFriend }) => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
                   </svg>
                 </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-1">No messages yet</h3>
-                <p className="text-gray-500 text-sm max-w-md">Start the conversation by sending your first message to {selectedFriend.name || selectedFriend.username || 'your friend'}</p>
+                <h3 className="text-lg font-medium text-white mb-1">No messages yet</h3>
+                <p className="text-dullBlue text-sm max-w-md">Start the conversation by sending your first message to {selectedFriend.name || selectedFriend.username || 'your friend'}</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -512,8 +504,8 @@ const ChatScreen = ({ selectedFriend, setSelectedFriend }) => {
                     >
                       <div className={`relative max-w-[85%] lg:max-w-[65%] xl:max-w-[50%] px-4 py-2.5 rounded-2xl ${
                         isSent 
-                          ? 'bg-blue  -500 text-white rounded-br-sm' 
-                          : 'bg-white text-gray-800 rounded-bl-sm shadow-sm'
+                          ? 'bg-blue-500 text-white rounded-br-sm' 
+                          : 'bg-dullBlue text-gray-800 rounded-bl-sm shadow-sm'
                       } ${isOptimistic ? 'opacity-80' : ''} ${isFailed ? 'ring-1 ring-red-300' : ''}`}>
                         <div className="text-sm leading-relaxed break-words">
                           {msg.content || '[No content]'}

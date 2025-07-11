@@ -21,7 +21,12 @@ const chatService = {
     try {
       const response = await api.get(
         `/messages/conversation?user1=${currentUserId}&user2=${otherUserId}`,
-        { headers: getAuthHeaders() }
+        { 
+          headers: {
+            ...getAuthHeaders(),
+            'Accept': 'application/json'
+          }
+        }
       );
       return response.data || [];
     } catch (error) {
@@ -43,15 +48,29 @@ const chatService = {
    */
   async sendMessage(recipientId, content) {
     try {
-      const response = await api.post(
-        '/messages',
-        {
-          recipient: recipientId,
-          content: content.trim()
+      const messageData = JSON.stringify({
+        recipient: recipientId,
+        content: content.trim(),
+        timestamp: new Date().toISOString()
+      });
+      
+      const response = await fetch('http://localhost:5000/api/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Accept': 'application/json'
         },
-        { headers: getAuthHeaders() }
-      );
-      return response.data;
+        body: messageData,
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to send message');
+      }
+
+      return await response.json();
     } catch (error) {
       console.error('Error sending message:', error);
       if (error.response?.status === 401) {
