@@ -247,6 +247,8 @@ const Community = () => {
   const handleLike = async (postId) => {
     try {
       // Find the post being liked/unliked
+      
+      console.log('handleLike called for postId:', postId);
       const postToUpdate = posts.find(post => post._id === postId);
       if (!postToUpdate) return;
 
@@ -272,9 +274,20 @@ const Community = () => {
       }));
 
       try {
+        const API_BASE_URL = import.meta.env.MODE === 'development' 
+? 'http://localhost:5000/api' 
+:  `${import.meta.env.VITE_API_BACKEND_URL}/api`;
+
         // API call to like/unlike post using postService
-        const updatedPost = await postService.likePost(postId, isLiked);
-        
+        const response = await fetch(`${API_BASE_URL}/posts/${isLiked ? 'unlike' : 'like'}`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ postId })
+        });
+
         // Update the post with the server response
         setPosts(posts.map(post => {
           if (post._id === postId) {
@@ -1229,6 +1242,7 @@ const Community = () => {
                 onClick={(e) => {
                   e.stopPropagation();
                   handleLike(post._id);
+              //    console.log`Post liked: ${post._id}, User: ${currentUser?._id}`, )
                 }}
                 title={post.likes?.includes(currentUser?._id) ? 'Unlike' : 'Like'}
               >
