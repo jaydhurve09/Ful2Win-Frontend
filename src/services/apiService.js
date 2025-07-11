@@ -179,12 +179,12 @@ const authService = {
       
       // If it's a FormData request, set the correct headers
       if (isFormData) {
-        // DON'T set Content-Type, let axios handle it
-        config.headers = {
-          'Accept': 'application/json'
-          // 'Content-Type': 'multipart/form-data' // 🚫 remove this
-        };
+        if (config.headers) {
+          delete config.headers['Content-Type'];
+          delete config.headers.common?.['Content-Type'];
+        }
       }
+      
       
       
       const response = await api.put(`/users/profile/${userId}`, userData, config);
