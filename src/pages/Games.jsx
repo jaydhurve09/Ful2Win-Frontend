@@ -50,7 +50,7 @@ const Games = () => {
        
 //console.log(apiUrl);
        // console.log('Fetching games from:', apiUrl);
-       const response = await api.get('/api/games', {
+       const response = await api.get('/games', {
          headers: {
            'Content-Type': 'application/json',
            'Accept': 'application/json',
@@ -58,8 +58,6 @@ const Games = () => {
          withCredentials: true,
        });
 
-       console.log('API Response:', response); // Debug log
-       
        // Handle the response format from the API
        let gamesData = [];
        if (response.data && response.data.success !== undefined) {
