@@ -83,7 +83,7 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-blueGradient flex flex-col">
+    <div className="min-h-screen bg-blueGradient flex flex-col justify-end relative">
       <BackgroundBubbles />
       {showMainContent ? (<StartScreen />) : (
         <>
@@ -94,8 +94,8 @@ const Login = () => {
         </p>
       </div>
 
-      <div className="flex-grow flex items-center">
-        <div className="bg-white w-full max-w-md mx-auto rounded-t-3xl px-6 py-8 shadow-xl">
+      <div className="relative bg-white rounded-t-3xl px-6 py-8 w-full max-w-md mx-auto shadow-xl">
+        <div className="absolute bottom-0 left-0 right-0 h-px bg-white w-screen -translate-x-1/2 left-1/2"></div>
         <h2 className="text-2xl font-semibold text-gray-700 mb-5">Hello Again!</h2>
         <p className="text-gray-500 mb-5">Login to continue</p>
 
@@ -161,7 +161,6 @@ const Login = () => {
             Sign Up
           </Link>
         </p>
-        </div>
       </div>
       </>
       )};
