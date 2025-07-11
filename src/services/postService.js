@@ -147,7 +147,7 @@ const postService = {
       const startTime = Date.now();
       
       try {
-        const response = await api.post('/posts/create', formData, config);
+        const response = await api.post('/post/create', formData, config);
         const duration = Date.now() - startTime;
         
         console.log(`[PostService][${requestId}] ✅ Success (${duration}ms)`, {
@@ -312,22 +312,12 @@ const postService = {
       console.log('[PostService] Using endpoint:', endpoint);
       
       // Get the current user's ID from localStorage or auth context
-      const user = JSON.parse(localStorage.getItem('user'));
-      console.log('[PostService] Retrieved user from localStorage:', {
-        userId: user?._id,
-        hasUser: !!user
-      });
-      
-      if (!user || !user._id) {
-        const error = new Error('User not authenticated');
-        console.error('[PostService] Authentication error:', error);
-        throw error;
-      }
-      
+     
+      console.log("this is post id", postId);
       // Prepare request data
       const requestData = { 
-        postId,
-        userId: user._id 
+        postId
+      
       };
       
       console.log('[PostService] Sending like/unlike request:', requestData);
