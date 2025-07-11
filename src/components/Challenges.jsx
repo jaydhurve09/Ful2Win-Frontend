@@ -59,9 +59,11 @@ const Challenges = () => {
       const response = await api.get('/challenges');
       const allChallenges = response.data.challenges || [];
       
+      const userData = JSON.parse(localStorage.getItem('user'));
       // Separate incoming and outgoing challenges
+      console.log(userData._id);
       const incoming = allChallenges.filter(challenge => 
-        challenge.challenged._id === localStorage.getItem('userId') && 
+        challenge.challenged._id === userData._id && 
         challenge.status === 'pending'
       );
       const outgoing = allChallenges.filter(challenge => 
@@ -70,6 +72,7 @@ const Challenges = () => {
       );
       
       setIncomingInvites(incoming);
+      console.log(incoming);
       setChallenges([...outgoing, ...allChallenges.filter(c => c.status !== 'pending')]);
     } catch (error) {
       console.error('Error fetching challenges:', error);
@@ -111,12 +114,24 @@ const Challenges = () => {
     }
 
     try {
-      setSubmitting(true);
-      const response = await api.post('/challenges', {
-        challengedUserId: selectedUser._id,
+      const API_BASE_URL = import.meta.env.MODE === 'development' 
+         ? 'http://localhost:5000/api' 
+         :  `${import.meta.env.VITE_API_BACKEND_URL}/api`;
+
+      const response = await fetch(`${API_BASE_URL}/challenges`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          challengedUserId: selectedUser._id,
         gameId: selectedGame._id,
         message: message
+        })
       });
+
+      setSubmitting(true);
 
       toast.success('Challenge sent successfully!');
       setFriendName('');
@@ -325,6 +340,7 @@ const Challenges = () => {
               <div className="text-black">
                 <h2 className="text-lg font-semibold mb-3 text-red-700">Incoming Invites</h2>
                 {incomingInvites.map((invite) => (
+                  
                   <div key={invite._id} className="flex justify-between items-center mb-3 p-3 border rounded">
                     <div className="flex items-center gap-3">
                       <img
