@@ -56,14 +56,23 @@ const Tournaments = () => {
             return tournamentGameId === gameId || tournamentGameId === game._id;
           });
 
-          const activePlayers = gameTournaments.reduce((sum, t) => sum + (t.activePlayers || 0), 0);
-          const maxPlayers = gameTournaments.reduce((sum, t) => sum + (t.maxPlayers || 0), 0);
+          // Calculate active players from currentPlayers array length
+          const activePlayers = gameTournaments.reduce((sum, t) => {
+            const currentPlayersCount = Array.isArray(t.currentPlayers) ? t.currentPlayers.length : 0;
+            return sum + currentPlayersCount;
+          }, 0);
+          
+          const maxPlayers = gameTournaments.reduce((sum, t) => {
+            // Use maxPlayers if available, otherwise use currentPlayers length as fallback
+            if (t.maxPlayers !== undefined) return sum + (Number(t.maxPlayers) || 0);
+            return sum + (Array.isArray(t.currentPlayers) ? t.currentPlayers.length : 0);
+          }, 0);
 
           return {
             ...game,
             tournamentCount: gameTournaments.length,
             activePlayers,
-            maxPlayers
+            maxPlayers: maxPlayers || 1 // Ensure at least 1 to avoid division by zero
           };
         });
 
