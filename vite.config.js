@@ -23,9 +23,7 @@ export default defineConfig(({ command, mode }) => {
           changeOrigin: true,
           secure: false,
           ws: true,
-          pathRewrite: {
-            '^/api': '' // Remove /api prefix when forwarding to backend
-          },
+          // Don't rewrite the path - keep /api prefix
           configure: (proxy, _options) => {
             proxy.on('error', (err, _req, _res) => {
               console.log('Proxy error:', err);
@@ -48,10 +46,7 @@ export default defineConfig(({ command, mode }) => {
         '/api': {
           target: apiBaseUrl,
           changeOrigin: true,
-          secure: false,
-          pathRewrite: {
-            '^/api': ''
-          }
+          secure: false
         }
       }
     },

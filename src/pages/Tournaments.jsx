@@ -33,40 +33,48 @@ const Tournaments = () => {
   const fetchGames = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await api.get('/games');
+      const token = localStorage.getItem('token');
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      
+      // First, fetch all tournaments
+      const [gamesResponse, tournamentsResponse] = await Promise.all([
+        api.get('/games'),
+        api.get('/tournaments', { headers })
+      ]);
 
-      if (response.data.success) {
-        const gamesData = response.data.data || [];
+      if (gamesResponse.data.success) {
+        const gamesData = gamesResponse.data.data || [];
+        const tournaments = tournamentsResponse.data.success ? (tournamentsResponse.data.data || []) : [];
 
-        const gamesWithDetails = await Promise.all(
-          gamesData.map(async (game) => {
-            const gameId = game._id || game.id;
-            if (!gameId) return { ...game, tournamentCount: 0, activePlayers: 0, maxPlayers: 0 };
+        const gamesWithDetails = gamesData.map((game) => {
+          const gameId = game._id || game.id;
+          if (!gameId) return { ...game, tournamentCount: 0, activePlayers: 0, maxPlayers: 0 };
 
-            try {
-              const tournamentsRes = await api.get(`/tournaments?gameId=${gameId}`, {
-                headers: { Authorization: `Bearer ${token}` },
-                validateStatus: status => status < 500
-              });
+          // Filter tournaments for this game
+          const gameTournaments = tournaments.filter(t => {
+            const tournamentGameId = t.game?._id || t.game || t.gameId;
+            return tournamentGameId === gameId || tournamentGameId === game._id;
+          });
 
-              if (tournamentsRes.status === 200 && tournamentsRes.data?.success) {
-                const tournaments = tournamentsRes.data.data;
-                const activePlayers = tournaments.reduce((sum, t) => sum + (t.activePlayers || 0), 0);
-                const maxPlayers = tournaments.reduce((sum, t) => sum + (t.maxPlayers || 0), 0);
+          // Calculate active players from currentPlayers array length
+          const activePlayers = gameTournaments.reduce((sum, t) => {
+            const currentPlayersCount = Array.isArray(t.currentPlayers) ? t.currentPlayers.length : 0;
+            return sum + currentPlayersCount;
+          }, 0);
+          
+          const maxPlayers = gameTournaments.reduce((sum, t) => {
+            // Use maxPlayers if available, otherwise use currentPlayers length as fallback
+            if (t.maxPlayers !== undefined) return sum + (Number(t.maxPlayers) || 0);
+            return sum + (Array.isArray(t.currentPlayers) ? t.currentPlayers.length : 0);
+          }, 0);
 
-                return {
-                  ...game,
-                  tournamentCount: tournaments.length,
-                  activePlayers,
-                  maxPlayers
-                };
-              }
-              return { ...game, tournamentCount: 0, activePlayers: 0, maxPlayers: 0 };
-            } catch (err) {
-              return { ...game, tournamentCount: 0, activePlayers: 0, maxPlayers: 0 };
-            }
-          })
-        );
+          return {
+            ...game,
+            tournamentCount: gameTournaments.length,
+            activePlayers,
+            maxPlayers: maxPlayers || 1 // Ensure at least 1 to avoid division by zero
+          };
+        });
 
         setGames(gamesWithDetails);
       } else {

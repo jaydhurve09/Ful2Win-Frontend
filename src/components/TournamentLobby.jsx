@@ -246,10 +246,10 @@ const goToLeaderboard = ({ gameName, tournamentId }) => {
 const handleRegisterTournament = async (tournamentId) => {
   const tournament = tournaments.find(t => t.id === tournamentId || t._id === tournamentId);
     
-  if (!tournament) {
-    toast.error('Tournament not found');
-    return;
-  }
+  // if (!tournament) {
+  //   toast.error('Tournament not found');
+  //   return;
+  // }
 
   const isCoinTournament = tournament.tournamentType === 'coin';
 

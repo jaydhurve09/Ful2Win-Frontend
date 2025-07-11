@@ -25,6 +25,7 @@ const Login = () => {
       setShowMainContent(true);
       // Show splash for 2 seconds, then go home
       const timer = setTimeout(() => {
+       
         setShowMainContent(false);
         navigate('/', { replace: true });
       }, 2000);
@@ -66,7 +67,7 @@ const Login = () => {
         // Show splash, then redirect home
         setTimeout(() => {
           setShowMainContent(false);
-          //toast.success('Login successful!');
+        
           navigate('/', { replace: true });
         }, 2000);
       } else if (result && typeof result === 'object' && result.message) {

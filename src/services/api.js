@@ -14,7 +14,7 @@ const api = axios.create({
   withCredentials: true,
   headers: {
     'Accept': 'application/json',
-    'Content-Type': 'application/json',
+  
     'X-Requested-With': 'XMLHttpRequest'
   },
   // Prevent axios from adding cache-control headers
