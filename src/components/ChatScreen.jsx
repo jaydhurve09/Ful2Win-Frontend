@@ -85,30 +85,52 @@ const ChatScreen = ({ selectedFriend, setSelectedFriend }) => {
       const handleNewMessage = (msg) => {
         console.log('Received new message via socket:', msg);
         
+        // Skip if message is missing required fields
+        if (!msg || (!msg._id && !msg.localId)) {
+          console.warn('Received invalid message format:', msg);
+          return;
+        }
+        
         // Normalize message format
         const normalizedMsg = {
           ...msg,
+          _id: msg._id || `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
           sender: msg.sender?._id || msg.sender || null,
           recipient: msg.recipient?._id || msg.recipient || null,
           createdAt: msg.createdAt || new Date().toISOString(),
-          localId: msg._id ? `server-${msg._id}` : `local-${Date.now()}`,
-          status: 'received'
+          localId: `server-${msg._id || msg.localId || Date.now()}`,
+          status: 'received',
+          isOptimistic: false
         };
         
         setMessages(prev => {
+          // Generate a unique key for each message
+          const messageKey = normalizedMsg._id || normalizedMsg.localId;
+          
           // Check if message already exists to prevent duplicates
-          const exists = prev.some(m => 
+          const existingIndex = prev.findIndex(m => 
             (m._id && m._id === normalizedMsg._id) || 
-            (m.localId === normalizedMsg.localId)
+            (m.localId && m.localId === normalizedMsg.localId) ||
+            (m._id && normalizedMsg._id && m._id === normalizedMsg._id) ||
+            (m.localId && normalizedMsg.localId && m.localId === normalizedMsg.localId)
           );
           
-          if (!exists) {
+          if (existingIndex >= 0) {
+            // Update existing message if needed
+            const updated = [...prev];
+            updated[existingIndex] = {
+              ...updated[existingIndex],
+              ...normalizedMsg,
+              // Preserve existing localId if it exists
+              localId: updated[existingIndex].localId || normalizedMsg.localId
+            };
+            return updated;
+          } else {
+            // Add new message
             const updated = [...prev, normalizedMsg]
               .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
-            console.log('Updated messages after new message:', updated);
             return updated;
           }
-          return prev;
         });
         
         // Mark as read if it's a new message from the current conversation
@@ -497,15 +519,18 @@ const ChatScreen = ({ selectedFriend, setSelectedFriend }) => {
                     console.error('Error formatting time:', e);
                   }
                   
+                  // Generate a unique key for each message
+                  const messageKey = msg.localId || `msg-${msg._id || `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`}`;
+                  
                   return (
                     <div 
-                      key={msg.localId || msg._id || `msg-${Date.now()}`}
+                      key={messageKey}
                       className={`flex ${isSent ? 'justify-end' : 'justify-start'}`}
                     >
                       <div className={`relative max-w-[85%] lg:max-w-[65%] xl:max-w-[50%] px-4 py-2.5 rounded-2xl ${
                         isSent 
                           ? 'bg-blue-500 text-white rounded-br-sm' 
-                          : 'bg-dullBlue text-gray-800 rounded-bl-sm shadow-sm'
+                          : 'bg-dullBlue text-gray-900 rounded-bl-sm shadow-sm'
                       } ${isOptimistic ? 'opacity-80' : ''} ${isFailed ? 'ring-1 ring-red-300' : ''}`}>
                         <div className="text-sm leading-relaxed break-words">
                           {msg.content || '[No content]'}
@@ -525,7 +550,7 @@ const ChatScreen = ({ selectedFriend, setSelectedFriend }) => {
                           ) : (
                             <div className="w-4"></div> // Spacer for alignment
                           )}
-                          <span className={`text-xs ${isSent ? 'text-indigo-100' : 'text-gray-400'}`}>
+                          <span className={`text-xs ${isSent ? 'text-indigo-100' : 'text-gray-800'}`}>
                             {formattedTime}
                             {isOptimistic && !isFailed && (
                               <span className="inline-flex ml-1.5">

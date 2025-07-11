@@ -84,17 +84,31 @@ const chatService = {
 
   /**
    * Mark messages as read
-   * @param {string} messageIds - Array of message IDs to mark as read
+   * @param {string|Array} messageIds - Single message ID or array of message IDs to mark as read
    * @returns {Promise<Object>} Response data
    */
   async markAsRead(messageIds) {
     try {
-      const response = await api.patch(
-        '/messages/read',
-        { messageIds },
-        { headers: getAuthHeaders() }
-      );
-      return response.data;
+      // Ensure messageIds is an array
+      const ids = Array.isArray(messageIds) ? messageIds : [messageIds];
+      
+      const response = await fetch('http://localhost:5000/api/messages/read', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ messageIds: ids }),
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to mark messages as read');
+      }
+
+      return await response.json();
     } catch (error) {
       console.error('Error marking messages as read:', error);
       if (error.response?.status === 401) {
