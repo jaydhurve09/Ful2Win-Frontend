@@ -13,7 +13,7 @@ const GameLobbyPage = () => {
   console.log("Game ID from URL:", gameId);
   // Get game data from location state or use defaults
  // const game = location.state?.game || { name: 'Snake and Ladders', category: 'Board' };
-  const gameImage = location.state?.image || snakeAndLadderImage;
+  const gameImage = location.state?.image;
   const userId = JSON.parse(localStorage.getItem("user"))?._id;
     const userName = JSON.parse(localStorage.getItem("user"))?.username;
   
@@ -21,7 +21,7 @@ const GameLobbyPage = () => {
     useEffect(() => {
       const fetchGameById = async () => {
         try {
-          const response = await api.get(`/api/games/${gameId}`);
+          const response = await api.get(`/games/${gameId}`);
           
           if (response.data && response.data.success) {
             setGame(response.data.data);

@@ -63,6 +63,7 @@ const postService = {
       if (file) {
         console.log(`[PostService][${requestId}] 📂 Processing file upload...`);
         try {
+          console.log(file);
           let fileToUpload = file;
           
           // Ensure we have a proper File object
@@ -87,7 +88,7 @@ const postService = {
             throw new Error(`Unsupported file type: ${fileToUpload.type}`);
           }
           
-          formData.append('media', fileToUpload);
+          formData.append('image', fileToUpload);
           console.log(`[PostService][${requestId}] ✅ File ready:`, {
             name: fileToUpload.name,
             type: fileToUpload.type,
@@ -106,7 +107,7 @@ const postService = {
       }
 
       // Log form data structure (safely)
-      console.log(`[PostService][${requestId}] 📋 FormData entries:`);
+    
       for (let [key, value] of formData.entries()) {
         if (value instanceof File) {
           console.log(`- ${key}: [File] ${value.name} (${(value.size / 1024).toFixed(2)}KB)`);
@@ -138,24 +139,19 @@ const postService = {
         onUploadProgress: (progressEvent) => {
           if (progressEvent.lengthComputable) {
             const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-            console.log(`[PostService][${requestId}] 📤 Upload: ${percent}%`);
+            
           }
         }
       };
 
-      console.log(`[PostService][${requestId}] 📤 Sending to /posts/create`);
+      
       const startTime = Date.now();
       
       try {
+        
         const response = await api.post('/post/create', formData, config);
         const duration = Date.now() - startTime;
         
-        console.log(`[PostService][${requestId}] ✅ Success (${duration}ms)`, {
-          status: response.status,
-          statusText: response.statusText,
-          postId: response.data?._id,
-          hasMedia: !!response.data?.media
-        });
         
         return response.data;
       } catch (error) {
