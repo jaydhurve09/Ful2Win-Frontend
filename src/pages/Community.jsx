@@ -467,6 +467,15 @@ const Community = () => {
         const response = await postService.addComment(postId, commentText);
         
         if (response) {
+          // Create a proper comment object from the response
+          const serverComment = {
+            _id: response._id || `server-${Date.now()}`,
+            content: response.content || commentText,
+            user: currentUser,
+            createdAt: response.createdAt || new Date().toISOString(),
+            ...(response.user ? { user: response.user } : {})
+          };
+          
           // Update the post with the server's response
           setPosts(prevPosts => 
             prevPosts.map(post => {
@@ -477,7 +486,7 @@ const Community = () => {
                 
                 return {
                   ...post,
-                  comments: [response, ...filteredComments],
+                  comments: [serverComment, ...filteredComments],
                   commentCount: post.commentCount || filteredComments.length + 1
                 };
               }
