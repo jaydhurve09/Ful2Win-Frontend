@@ -422,22 +422,8 @@ const Community = () => {
     try {
       // Ensure we have a valid current user
       if (!currentUser?._id) {
-        throw new Error('You must be logged in to comment');
-      }
-
-      // Get fresh user data to ensure we have the latest profile info
-      let userData;
-      try {
-        userData = await fetchUserProfile(currentUser._id);
-      } catch (error) {
-        console.error('Error fetching current user data:', error);
-        // Fallback to existing data if fetch fails
-        userData = {
-          _id: currentUser._id,
-          username: currentUser.username || 'user',
-          fullName: currentUser.fullName || currentUser.username || 'User',
-          profilePicture: currentUser.profilePicture
-        };
+        toast.error('You must be logged in to comment');
+        return;
       }
 
       // Create a temporary comment for optimistic UI
@@ -445,20 +431,25 @@ const Community = () => {
       const newComment = {
         _id: tempCommentId,
         content: commentText,
-        user: userData,
+        user: {
+          _id: currentUser._id,
+          username: currentUser.username || 'user',
+          fullName: currentUser.fullName || currentUser.username || 'User',
+          profilePicture: currentUser.profilePicture
+        },
         createdAt: new Date().toISOString(),
         isTemp: true
       };
 
-      // Optimistic UI update
+      // Optimistic UI update - add new comment at the beginning
       setPosts(prevPosts => 
         prevPosts.map(post => {
           if (post._id === postId) {
             const currentComments = Array.isArray(post.comments) ? post.comments : [];
             return {
               ...post,
-              comments: [...currentComments, newComment],
-              commentCount: (post.commentCount || currentComments.length) + 1
+              comments: [newComment, ...currentComments],
+              commentCount: (post.commentCount || 0) + 1
             };
           }
           return post;
@@ -476,34 +467,23 @@ const Community = () => {
         const response = await postService.addComment(postId, commentText);
         
         if (response) {
-          // Process the server's response to ensure we have user data
-          const processedComments = await processComments([response]);
-          const serverComment = processedComments[0];
-          
-          if (serverComment) {
-            // Update the post with the server's response
-            setPosts(prevPosts => 
-              prevPosts.map(post => {
-                if (post._id === postId) {
-                  // Remove temp comment and add the server's comment with user data
-                  const filteredComments = (post.comments || []).filter(
-                    c => !c.isTemp || c._id !== tempCommentId
-                  );
-                  
-                  return {
-                    ...post,
-                    comments: [...filteredComments, serverComment],
-                    commentCount: post.commentCount || filteredComments.length + 1
-                  };
-                }
-                return post;
-              })
-            );
-          }
-          
-          return response.data;
-        } else {
-          throw new Error('Failed to add comment: Invalid server response');
+          // Update the post with the server's response
+          setPosts(prevPosts => 
+            prevPosts.map(post => {
+              if (post._id === postId) {
+                // Remove temp comment and add the server's comment
+                const filteredComments = (post.comments || [])
+                  .filter(c => c._id !== tempCommentId);
+                
+                return {
+                  ...post,
+                  comments: [response, ...filteredComments],
+                  commentCount: post.commentCount || filteredComments.length + 1
+                };
+              }
+              return post;
+            })
+          );
         }
       } catch (apiError) {
         console.error('API Error in handleComment:', apiError);
@@ -511,20 +491,19 @@ const Community = () => {
         setPosts(prevPosts => 
           prevPosts.map(post => {
             if (post._id === postId) {
-              const filteredComments = (post.comments || []).filter(
-                comment => comment?._id !== tempCommentId
-              );
+              const filteredComments = (post.comments || [])
+                .filter(comment => comment?._id !== tempCommentId);
               
               return {
                 ...post,
                 comments: filteredComments,
-                commentCount: Math.max(0, (post.commentCount || 0) - 1)
+                commentCount: Math.max(0, (post.commentCount || 1) - 1)
               };
             }
             return post;
           })
         );
-        throw new Error(apiError.message || 'Failed to add comment');
+        toast.error(apiError.response?.data?.message || 'Failed to add comment');
       }
     } catch (error) {
       console.error('Error in handleComment:', error);

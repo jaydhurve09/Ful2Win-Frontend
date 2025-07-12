@@ -346,7 +346,11 @@ const postService = {
     });
 
     try {
-      const endpoint = `/posts/${postId}/comments`;
+      const API_BASE_URL = import.meta.env.MODE === 'development' 
+        ? 'http://localhost:5000/api' 
+        : `${import.meta.env.VITE_API_BACKEND_URL}/api`;
+      
+      const endpoint = `${API_BASE_URL}/posts/${postId}/comments`;
       const requestData = { content };
       
       console.log('[PostService] Sending comment request:', {
@@ -354,17 +358,39 @@ const postService = {
         contentPreview: content?.substring(0, 50) + (content?.length > 50 ? '...' : '')
       });
       
-      const response = await api.post(endpoint, requestData);
+      // Use fetch directly with proper headers
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(requestData),
+        credentials: 'include' // Important for cookies if using them
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const error = new Error(errorData.message || 'Failed to add comment');
+        error.response = { data: errorData };
+        throw error;
+      }
+      
+      const responseData = await response.json();
       
       console.log('[PostService] Successfully added comment:', {
         postId,
-        commentId: response.data?._id,
+        commentId: responseData?._id,
         timestamp: new Date().toISOString()
       });
       
-      return response.data;
+      return responseData;
     } catch (error) {
       console.error('Error adding comment:', error);
+      // Enhance error with more context
+      if (!error.response) {
+        error.response = { data: { message: 'Network error. Please check your connection.' } };
+      }
       throw error;
     }
   },
