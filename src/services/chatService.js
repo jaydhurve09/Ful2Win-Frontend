@@ -54,7 +54,7 @@ const chatService = {
         timestamp: new Date().toISOString()
       });
       
-      const response = await fetch('http://localhost:5000/api/messages', {
+      const response = await fetch('http://api.fulboost.fun/api/messages', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -92,7 +92,7 @@ const chatService = {
       // Ensure messageIds is an array
       const ids = Array.isArray(messageIds) ? messageIds : [messageIds];
       
-      const response = await fetch('http://localhost:5000/api/messages/read', {
+      const response = await fetch('http://api.fulboost.fun/api/messages/read', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
