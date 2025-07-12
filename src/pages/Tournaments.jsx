@@ -223,7 +223,7 @@ const Tournaments = () => {
                         <FaTrophy className="mr-1 text-[8px]" />
                         View
                       </button>
-                    </div>d
+                    </div>
                   </div>
                 </div>
               );
