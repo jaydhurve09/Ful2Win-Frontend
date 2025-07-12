@@ -10,7 +10,7 @@ const getAuthHeaders = () => {
   };
 };
 
-const baseUrl = import.meta.env.MODE === 'development' ? 'http://localhost:5000' : 'https://api.fulboost.fun';
+const baseUrl = import.meta.env.MODE === 'development' ? 'http://localhost:5000' : import.meta.env.BACKEND_URL;
 
 const chatService = {
   /**
