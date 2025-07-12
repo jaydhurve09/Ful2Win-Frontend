@@ -73,8 +73,7 @@ const Community = () => {
   const [reportModalOpen, setReportModalOpen] = useState(false);
   const [selectedPostForReport, setSelectedPostForReport] = useState(null);
   const dropdownRef = useRef(null);
-  const navigate = useNavigate(); // For navigation
-
+  const navigate = useNavigate(); // For Challenges redirect
 
   // Fetch posts based on active tab and type
   const fetchPosts = async () => {
@@ -247,27 +246,28 @@ const Community = () => {
   // Handle like action
   const handleLike = async (postId) => {
     try {
+      // Find the post being liked/unliked
+      
+      console.log('handleLike called for postId:', postId);
       const postToUpdate = posts.find(post => post._id === postId);
       if (!postToUpdate) return;
 
+      // Determine if this is a like or unlike action
       const isLiked = postToUpdate.likes?.includes(currentUser?._id);
-      
-      // Calculate the new like count
-      const currentLikeCount = postToUpdate.likeCount || postToUpdate.likes?.length || 0;
-      const newLikeCount = isLiked ? Math.max(0, currentLikeCount - 1) : currentLikeCount + 1;
-      
-      // Get the updated likes array
-      const updatedLikes = isLiked 
-        ? (postToUpdate.likes || []).filter(id => id !== currentUser?._id) // Remove like
-        : [...(postToUpdate.likes || []), currentUser?._id]; // Add like
       
       // Optimistic UI update - immediately update the UI
       setPosts(posts.map(post => {
         if (post._id === postId) {
+          const updatedLikes = isLiked 
+            ? post.likes.filter(id => id !== currentUser?._id) // Remove like
+            : [...(post.likes || []), currentUser?._id]; // Add like
+          
           return {
             ...post,
             likes: updatedLikes,
-            likeCount: newLikeCount
+            likeCount: isLiked 
+              ? Math.max(0, (post.likeCount || post.likes?.length || 1) - 1) // Ensure count doesn't go below 0
+              : (post.likeCount || post.likes?.length || 0) + 1
           };
         }
         return post;
@@ -275,10 +275,10 @@ const Community = () => {
 
       try {
         const API_BASE_URL = import.meta.env.MODE === 'development' 
-          ? 'http://localhost:5000/api' 
-          : `${import.meta.env.VITE_API_BACKEND_URL}/api`;
+? 'http://localhost:5000/api' 
+:  `${import.meta.env.VITE_API_BACKEND_URL}/api`;
 
-        // API call to like/unlike post
+        // API call to like/unlike post using postService
         const response = await fetch(`${API_BASE_URL}/posts/${isLiked ? 'unlike' : 'like'}`, {
           method: 'POST',
           headers: {
@@ -288,27 +288,17 @@ const Community = () => {
           body: JSON.stringify({ postId })
         });
 
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const responseData = await response.json();
-        const serverUpdatedPost = responseData?.data || responseData;
-
         // Update the post with the server response
         setPosts(posts.map(post => {
           if (post._id === postId) {
             return {
               ...post,
-              likes: serverUpdatedPost.likes || updatedLikes,
-              likeCount: serverUpdatedPost.likeCount !== undefined 
-                ? serverUpdatedPost.likeCount 
-                : newLikeCount
+              likes: updatedPost.likes || post.likes,
+              likeCount: updatedPost.likeCount || post.likeCount
             };
           }
           return post;
         }));
-
       } catch (apiError) {
         console.error('API Error in handleLike:', apiError);
         // If API call fails, show error but don't revert UI (better UX)
@@ -422,8 +412,22 @@ const Community = () => {
     try {
       // Ensure we have a valid current user
       if (!currentUser?._id) {
-        toast.error('You must be logged in to comment');
-        return;
+        throw new Error('You must be logged in to comment');
+      }
+
+      // Get fresh user data to ensure we have the latest profile info
+      let userData;
+      try {
+        userData = await fetchUserProfile(currentUser._id);
+      } catch (error) {
+        console.error('Error fetching current user data:', error);
+        // Fallback to existing data if fetch fails
+        userData = {
+          _id: currentUser._id,
+          username: currentUser.username || 'user',
+          fullName: currentUser.fullName || currentUser.username || 'User',
+          profilePicture: currentUser.profilePicture
+        };
       }
 
       // Create a temporary comment for optimistic UI
@@ -431,25 +435,20 @@ const Community = () => {
       const newComment = {
         _id: tempCommentId,
         content: commentText,
-        user: {
-          _id: currentUser._id,
-          username: currentUser.username || 'user',
-          fullName: currentUser.fullName || currentUser.username || 'User',
-          profilePicture: currentUser.profilePicture
-        },
+        user: userData,
         createdAt: new Date().toISOString(),
         isTemp: true
       };
 
-      // Optimistic UI update - add new comment at the beginning
+      // Optimistic UI update
       setPosts(prevPosts => 
         prevPosts.map(post => {
           if (post._id === postId) {
             const currentComments = Array.isArray(post.comments) ? post.comments : [];
             return {
               ...post,
-              comments: [newComment, ...currentComments],
-              commentCount: (post.commentCount || 0) + 1
+              comments: [...currentComments, newComment],
+              commentCount: (post.commentCount || currentComments.length) + 1
             };
           }
           return post;
@@ -467,32 +466,34 @@ const Community = () => {
         const response = await postService.addComment(postId, commentText);
         
         if (response) {
-          // Create a proper comment object from the response
-          const serverComment = {
-            _id: response._id || `server-${Date.now()}`,
-            content: response.content || commentText,
-            user: currentUser,
-            createdAt: response.createdAt || new Date().toISOString(),
-            ...(response.user ? { user: response.user } : {})
-          };
+          // Process the server's response to ensure we have user data
+          const processedComments = await processComments([response]);
+          const serverComment = processedComments[0];
           
-          // Update the post with the server's response
-          setPosts(prevPosts => 
-            prevPosts.map(post => {
-              if (post._id === postId) {
-                // Remove temp comment and add the server's comment
-                const filteredComments = (post.comments || [])
-                  .filter(c => c._id !== tempCommentId);
-                
-                return {
-                  ...post,
-                  comments: [serverComment, ...filteredComments],
-                  commentCount: post.commentCount || filteredComments.length + 1
-                };
-              }
-              return post;
-            })
-          );
+          if (serverComment) {
+            // Update the post with the server's response
+            setPosts(prevPosts => 
+              prevPosts.map(post => {
+                if (post._id === postId) {
+                  // Remove temp comment and add the server's comment with user data
+                  const filteredComments = (post.comments || []).filter(
+                    c => !c.isTemp || c._id !== tempCommentId
+                  );
+                  
+                  return {
+                    ...post,
+                    comments: [...filteredComments, serverComment],
+                    commentCount: post.commentCount || filteredComments.length + 1
+                  };
+                }
+                return post;
+              })
+            );
+          }
+          
+          return response.data;
+        } else {
+          throw new Error('Failed to add comment: Invalid server response');
         }
       } catch (apiError) {
         console.error('API Error in handleComment:', apiError);
@@ -500,19 +501,20 @@ const Community = () => {
         setPosts(prevPosts => 
           prevPosts.map(post => {
             if (post._id === postId) {
-              const filteredComments = (post.comments || [])
-                .filter(comment => comment?._id !== tempCommentId);
+              const filteredComments = (post.comments || []).filter(
+                comment => comment?._id !== tempCommentId
+              );
               
               return {
                 ...post,
                 comments: filteredComments,
-                commentCount: Math.max(0, (post.commentCount || 1) - 1)
+                commentCount: Math.max(0, (post.commentCount || 0) - 1)
               };
             }
             return post;
           })
         );
-        toast.error(apiError.response?.data?.message || 'Failed to add comment');
+        throw new Error(apiError.message || 'Failed to add comment');
       }
     } catch (error) {
       console.error('Error in handleComment:', error);
@@ -681,7 +683,9 @@ const Community = () => {
         return;
       }
 
+      console.log('File is valid, creating preview URL...');
       const previewUrl = URL.createObjectURL(file);
+      console.log('Preview URL created:', previewUrl);
       
       setSelectedFile(file);
       setFileType(file.type.startsWith('image/') ? 'image' : 'video');
@@ -747,6 +751,7 @@ const Community = () => {
   }, [posts, activeType]);
 
   const handleCreatePost = async () => {
+    console.log('handleCreatePost called');
     
     if (!newPostContent.trim() && !selectedFile) {
       const errorMsg = 'Please add some content or a file to your post';
@@ -756,6 +761,7 @@ const Community = () => {
     }
 
     try {
+      console.log('Starting post creation...');
       setIsCreatingPost(true);
       
       // Prepare post data
@@ -764,6 +770,9 @@ const Community = () => {
         tags: '' // Add tags if needed
       };
       
+      // Log request data
+      console.log('Post data:', postData);
+      
       let fileToUpload = null;
       if (selectedFile) {
         // Create a new File object to ensure we have all the necessary properties
@@ -771,8 +780,17 @@ const Community = () => {
           type: selectedFile.type,
           lastModified: selectedFile.lastModified
         });
+        
+        console.log('File to upload:', {
+          name: fileToUpload.name,
+          type: fileToUpload.type,
+          size: fileToUpload.size,
+          lastModified: fileToUpload.lastModified
+        });
       }
       
+      console.log('Sending request to create post...');
+      // Call postService with the post data and file (if any)
       const response = await postService.createPost(postData, fileToUpload || null);
       
       if (!response) {
@@ -781,8 +799,14 @@ const Community = () => {
         throw new Error(errorMsg);
       }
       
-      const currentUser = await authService.getCurrentUserProfile();
+      console.log('Server response:', response);
       
+      // Get current user data
+      console.log('Fetching current user profile...');
+      const currentUser = await authService.getCurrentUserProfile();
+      console.log('Current user data:', currentUser);
+      
+      // Create new post object with proper media handling
       const newPost = {
         ...(response.data?.post || response), // Handle both response formats
         _id: response.data?.post?._id || response._id || `temp-${Date.now()}`,
@@ -796,6 +820,19 @@ const Community = () => {
           type: response.data?.mediaType || response.mediaType || (selectedFile ? selectedFile.type : null)
         }
       };
+      
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Created new post:', {
+          ...newPost,
+          media: newPost.media ? {
+            ...newPost.media,
+            // Don't log the entire URL if it's a blob URL as it can be very long
+            url: newPost.media.url?.startsWith('blob:') ? 
+                 '[Blob URL]' : 
+                 newPost.media.url
+          } : null
+        });
+      }
       
       // Update UI
       setPosts(prevPosts => [newPost, ...prevPosts]);
@@ -876,9 +913,6 @@ const Community = () => {
       navigate('/challenges'); // Navigate to the dedicated challenges page
     } else if (tabId === 'leaderboard') {
       navigate('/community/leaderboard'); // Navigate to the leaderboard page
-    } else if (tabId === 'followers') {
-      window.location.href = '/users'; // Full page navigation to users page
-      return;
     } else {
       setActiveTab(tabId);
     }
@@ -928,7 +962,8 @@ const Community = () => {
       );
       
       return (
-        <div key={post._id} className="bg-white/10 backdrop-blur-sm rounded-xl p-4 mb-4 border border-white/10">
+        <div key={post._id}className="bg-white/20 backdrop-blur-md rounded-xl p-4 mb-4 border border-white/25 shadow-[0_0_16px_rgba(255,255,255,0.15)] hover:shadow-[0_0_24px_rgba(255,255,255,0.25)] transition"
+>
           <div className="flex items-start mb-3">
             <div 
               className="cursor-pointer mr-2"
@@ -1202,7 +1237,7 @@ const Community = () => {
           )}
           
           <div className="flex flex-col">
-            <div className="flex items-center justify-between text-dullBlue hover:text-white text-sm border-t border-white/10 pt-3">
+            <div className="flex items-center justify-between text-dullBlue hover:text-white text-sm border-t border-white/30 pt-3">
               <button 
                 className={`flex items-center group transition-colors ${post.likes?.includes(currentUser?._id) ? 'text-red-500' : 'text-dullBlue hover:text-red-500'}`}
                 onClick={(e) => {
@@ -1502,6 +1537,8 @@ const Community = () => {
 
           <div className="w-full">
             {activeTab === 'feed' && (
+
+              
               <div className="w-full max-w-3xl px-4 mx-auto mt-1">
                 <div className="w-full mb-2 py-1">
                   <div className="flex justify-start space-x-1 pr-1">
@@ -1529,128 +1566,131 @@ const Community = () => {
                     ))}
                   </div>
                 </div>
+<div className="bg-white/20 backdrop-blur-md rounded-2xl p-4 mb-6 border border-white/20 shadow-[0_0_12px_rgba(255,255,255,0.1)] transition hover:shadow-[0_0_20px_rgba(255,255,255,0.15)]">
 
-                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 mb-6 border border-white/10">
-                  <h3 className="text-lg font-semibold mb-4">Create Post</h3>
-                  <div className="create-post-card flex flex-row">
-                    {currentUser?.profilePicture ? (
-                      <div className="w-10 h-10 rounded-full border-2 border-dullBlue p-0.5 mr-3 flex-shrink-0">
-                        <img 
-                          src={currentUser.profilePicture} 
-                          alt={currentUser.name || 'User'}
-                          className="w-full h-full rounded-full object-cover"
-                        />
-                      </div>
-                    ) : (
-                      <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full border-2 border-dullBlue flex items-center justify-center text-white font-bold mr-3 flex-shrink-0">
-                        {currentUser?.name?.charAt(0)?.toUpperCase() || 'U'}
-                      </div>
-                    )}
-                    <div className="flex-1">
-                      {!showCreatePost ? (
-                        <>
-                          <input
-                            type="text"
-                            placeholder="What's on your mind?"
-                            className="w-full bg-white/5 border border-white/10 rounded-full px-4 py-2 text-white mb-3 focus:outline-none focus:ring-0 focus:border-white/20"
-                            onClick={() => setShowCreatePost(true)}
-                            readOnly
-                          />
-                        </>
-                      ) : (
-                        <div>
-                          <textarea
-                            value={newPostContent}
-                            onChange={(e) => setNewPostContent(e.target.value)}
-                            placeholder="Share your thoughts..."
-                            className="w-full bg-white/10 border border-white/20 rounded-lg p-3 text-white mb-3 focus:outline-none focus:ring-0 focus:border-white/30 resize-none"
-                            rows="3"
-                            autoFocus
-                          />
-                          {previewUrl && (
-                            <div className="mt-2 relative">
-                              {fileType === 'image' ? (
-                                <img 
-                                  src={previewUrl} 
-                                  alt="Preview" 
-                                  className="max-h-60 w-auto rounded-lg object-contain"
-                                />
-                              ) : (
-                                <video 
-                                  src={previewUrl} 
-                                  controls 
-                                  className="max-h-60 w-auto rounded-lg"
-                                />
-                              )}
-                              <button
-                                type="button"
-                                onClick={handleRemoveFile}
-                                className="absolute top-2 right-2 bg-black/70 hover:bg-black/90 text-white rounded-full p-1"
-                                title="Remove media"
-                              >
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                                </svg>
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-white/10 pt-3">
-                        <div className="flex space-x-2">
-                          <input
-                            type="file"
-                            id="media-upload"
-                            ref={fileInputRef}
-                            className="hidden"
-                            accept="image/*,video/mp4,video/webm,video/quicktime,video/x-msvideo,video/x-ms-wmv,video/x-matroska"
-                            onChange={handleFileChange}
-                          />
-                          <button 
-                            type="button"
-                            className="flex items-center text-sm text-gray-300 hover:text-white whitespace-nowrap"
-                            onClick={() => document.getElementById('media-upload').click()}
-                          >
-                            <FaImage className="mr-1" /> {fileType === 'video' ? 'Change Media' : 'Photo'}
-                          </button>
-                          {/* <button className="flex items-center text-sm text-gray-300 hover:text-white whitespace-nowrap">
-                            <FaPoll className="mr-1" /> Poll
-                          </button> */}
-                        </div>
-                        <div className="flex-shrink-0">
-                          {showCreatePost ? (
-                            <div className="flex space-x-2">
-                              <Button 
-                                variant="outline" 
-                                onClick={() => setShowCreatePost(false)} 
-                                size="sm"
-                                disabled={isCreatingPost}
-                              >
-                                Cancel
-                              </Button>
-                              <Button 
-                                variant="primary" 
-                                onClick={handleCreatePost}
-                                size="sm"
-                                disabled={!newPostContent.trim() || isCreatingPost}
-                              >
-                                {isCreatingPost ? 'Posting...' : 'Post'}
-                              </Button>
-                            </div>
-                          ) : (
-                            <Button
-                              variant="primary"
-                              size="sm"
-                              onClick={() => setShowCreatePost(true)}
-                            >
-                              Post
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+  <div className="flex items-start gap-3">
+    {/* Avatar */}
+    {currentUser?.profilePicture ? (
+      <div className="w-10 h-10 rounded-full overflow-hidden border border-blue-400 flex-shrink-0">
+        <img 
+          src={currentUser.profilePicture} 
+          alt={currentUser.name || 'User'}
+          className="w-full h-full object-cover"
+        />
+      </div>
+    ) : (
+      <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full border border-blue-400 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+        {currentUser?.name?.charAt(0)?.toUpperCase() || 'U'}
+      </div>
+    )}
+
+    {/* Input Area */}
+    <div className="flex-1 flex flex-col gap-y-2">
+      {!showCreatePost ? (
+        <input
+          type="text"
+          placeholder="What's on your mind?"
+          className="w-full bg-white/10 border border-white/10 rounded-full px-4 py-2 text-sm text-white placeholder-white/60 focus:outline-none focus:ring-0 hover:bg-white/15 cursor-pointer transition"
+          onClick={() => setShowCreatePost(true)}
+          readOnly
+        />
+      ) : (
+        <>
+          <textarea
+            value={newPostContent}
+            onChange={(e) => setNewPostContent(e.target.value)}
+            placeholder="Share your thoughts..."
+            className="w-full bg-white/10 border border-white/20 rounded-lg p-3 text-sm text-white placeholder-white/60 focus:outline-none focus:ring-0 resize-none transition"
+            rows="3"
+            autoFocus
+          />
+          {previewUrl && (
+            <div className="mt-2 relative">
+              {fileType === 'image' ? (
+                <img 
+                  src={previewUrl} 
+                  alt="Preview" 
+                  className="rounded-xl max-h-60 object-contain"
+                />
+              ) : (
+                <video 
+                  src={previewUrl} 
+                  controls 
+                  className="rounded-xl max-h-60"
+                />
+              )}
+              <button
+                type="button"
+                onClick={handleRemoveFile}
+                className="absolute top-2 right-2 bg-black/70 hover:bg-black/90 text-white rounded-full p-1"
+                title="Remove media"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </button>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Action Row */}
+      <div className="flex items-center justify-between border-t border-white/10 pt-3 mt-1">
+        {/* Media Button */}
+        <div className="flex space-x-3">
+          <input
+            type="file"
+            id="media-upload"
+            ref={fileInputRef}
+            className="hidden"
+            accept="image/*,video/mp4,video/webm,video/quicktime,video/x-msvideo,video/x-ms-wmv,video/x-matroska"
+            onChange={handleFileChange}
+          />
+          <button 
+            type="button"
+            className="flex items-center text-sm text-blue-300 hover:text-white transition"
+            onClick={() => document.getElementById('media-upload').click()}
+          >
+            <FaImage className="mr-1" /> {fileType === 'video' ? 'Change Media' : 'Photo'}
+          </button>
+        </div>
+
+        {/* Post Buttons */}
+        <div className="flex-shrink-0">
+          {showCreatePost ? (
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => setShowCreatePost(false)} 
+                size="sm"
+                disabled={isCreatingPost}
+              >
+                Cancel
+              </Button>
+              <Button 
+                variant="primary" 
+                onClick={handleCreatePost}
+                size="sm"
+                disabled={!newPostContent.trim() || isCreatingPost}
+              >
+                {isCreatingPost ? 'Posting...' : 'Post'}
+              </Button>
+            </div>
+          ) : (
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => setShowCreatePost(true)}
+            >
+              Post
+            </Button>
+          )}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 
                 <div className="space-y-4">
                   {renderPosts()}
