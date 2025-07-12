@@ -73,7 +73,8 @@ const Community = () => {
   const [reportModalOpen, setReportModalOpen] = useState(false);
   const [selectedPostForReport, setSelectedPostForReport] = useState(null);
   const dropdownRef = useRef(null);
-  const navigate = useNavigate(); // For Challenges redirect
+  const navigate = useNavigate(); // For navigation
+
 
   // Fetch posts based on active tab and type
   const fetchPosts = async () => {
@@ -913,6 +914,9 @@ const Community = () => {
       navigate('/challenges'); // Navigate to the dedicated challenges page
     } else if (tabId === 'leaderboard') {
       navigate('/community/leaderboard'); // Navigate to the leaderboard page
+    } else if (tabId === 'followers') {
+      window.location.href = '/users'; // Full page navigation to users page
+      return;
     } else {
       setActiveTab(tabId);
     }
