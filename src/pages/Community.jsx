@@ -247,28 +247,27 @@ const Community = () => {
   // Handle like action
   const handleLike = async (postId) => {
     try {
-      // Find the post being liked/unliked
-      
-      console.log('handleLike called for postId:', postId);
       const postToUpdate = posts.find(post => post._id === postId);
       if (!postToUpdate) return;
 
-      // Determine if this is a like or unlike action
       const isLiked = postToUpdate.likes?.includes(currentUser?._id);
+      
+      // Calculate the new like count
+      const currentLikeCount = postToUpdate.likeCount || postToUpdate.likes?.length || 0;
+      const newLikeCount = isLiked ? Math.max(0, currentLikeCount - 1) : currentLikeCount + 1;
+      
+      // Get the updated likes array
+      const updatedLikes = isLiked 
+        ? (postToUpdate.likes || []).filter(id => id !== currentUser?._id) // Remove like
+        : [...(postToUpdate.likes || []), currentUser?._id]; // Add like
       
       // Optimistic UI update - immediately update the UI
       setPosts(posts.map(post => {
         if (post._id === postId) {
-          const updatedLikes = isLiked 
-            ? post.likes.filter(id => id !== currentUser?._id) // Remove like
-            : [...(post.likes || []), currentUser?._id]; // Add like
-          
           return {
             ...post,
             likes: updatedLikes,
-            likeCount: isLiked 
-              ? Math.max(0, (post.likeCount || post.likes?.length || 1) - 1) // Ensure count doesn't go below 0
-              : (post.likeCount || post.likes?.length || 0) + 1
+            likeCount: newLikeCount
           };
         }
         return post;
@@ -276,10 +275,10 @@ const Community = () => {
 
       try {
         const API_BASE_URL = import.meta.env.MODE === 'development' 
-? 'http://localhost:5000/api' 
-:  `${import.meta.env.VITE_API_BACKEND_URL}/api`;
+          ? 'http://localhost:5000/api' 
+          : `${import.meta.env.VITE_API_BACKEND_URL}/api`;
 
-        // API call to like/unlike post using postService
+        // API call to like/unlike post
         const response = await fetch(`${API_BASE_URL}/posts/${isLiked ? 'unlike' : 'like'}`, {
           method: 'POST',
           headers: {
@@ -289,17 +288,27 @@ const Community = () => {
           body: JSON.stringify({ postId })
         });
 
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const responseData = await response.json();
+        const serverUpdatedPost = responseData?.data || responseData;
+
         // Update the post with the server response
         setPosts(posts.map(post => {
           if (post._id === postId) {
             return {
               ...post,
-              likes: updatedPost.likes || post.likes,
-              likeCount: updatedPost.likeCount || post.likeCount
+              likes: serverUpdatedPost.likes || updatedLikes,
+              likeCount: serverUpdatedPost.likeCount !== undefined 
+                ? serverUpdatedPost.likeCount 
+                : newLikeCount
             };
           }
           return post;
         }));
+
       } catch (apiError) {
         console.error('API Error in handleLike:', apiError);
         // If API call fails, show error but don't revert UI (better UX)
@@ -684,9 +693,7 @@ const Community = () => {
         return;
       }
 
-      console.log('File is valid, creating preview URL...');
       const previewUrl = URL.createObjectURL(file);
-      console.log('Preview URL created:', previewUrl);
       
       setSelectedFile(file);
       setFileType(file.type.startsWith('image/') ? 'image' : 'video');
@@ -752,7 +759,6 @@ const Community = () => {
   }, [posts, activeType]);
 
   const handleCreatePost = async () => {
-    console.log('handleCreatePost called');
     
     if (!newPostContent.trim() && !selectedFile) {
       const errorMsg = 'Please add some content or a file to your post';
@@ -762,7 +768,6 @@ const Community = () => {
     }
 
     try {
-      console.log('Starting post creation...');
       setIsCreatingPost(true);
       
       // Prepare post data
@@ -771,9 +776,6 @@ const Community = () => {
         tags: '' // Add tags if needed
       };
       
-      // Log request data
-      console.log('Post data:', postData);
-      
       let fileToUpload = null;
       if (selectedFile) {
         // Create a new File object to ensure we have all the necessary properties
@@ -781,17 +783,8 @@ const Community = () => {
           type: selectedFile.type,
           lastModified: selectedFile.lastModified
         });
-        
-        console.log('File to upload:', {
-          name: fileToUpload.name,
-          type: fileToUpload.type,
-          size: fileToUpload.size,
-          lastModified: fileToUpload.lastModified
-        });
       }
       
-      console.log('Sending request to create post...');
-      // Call postService with the post data and file (if any)
       const response = await postService.createPost(postData, fileToUpload || null);
       
       if (!response) {
@@ -800,14 +793,8 @@ const Community = () => {
         throw new Error(errorMsg);
       }
       
-      console.log('Server response:', response);
-      
-      // Get current user data
-      console.log('Fetching current user profile...');
       const currentUser = await authService.getCurrentUserProfile();
-      console.log('Current user data:', currentUser);
       
-      // Create new post object with proper media handling
       const newPost = {
         ...(response.data?.post || response), // Handle both response formats
         _id: response.data?.post?._id || response._id || `temp-${Date.now()}`,
@@ -821,19 +808,6 @@ const Community = () => {
           type: response.data?.mediaType || response.mediaType || (selectedFile ? selectedFile.type : null)
         }
       };
-      
-      if (process.env.NODE_ENV === 'development') {
-        console.log('Created new post:', {
-          ...newPost,
-          media: newPost.media ? {
-            ...newPost.media,
-            // Don't log the entire URL if it's a blob URL as it can be very long
-            url: newPost.media.url?.startsWith('blob:') ? 
-                 '[Blob URL]' : 
-                 newPost.media.url
-          } : null
-        });
-      }
       
       // Update UI
       setPosts(prevPosts => [newPost, ...prevPosts]);
