@@ -65,23 +65,25 @@ function FollowerPage() {
 
   return (
     <>
-      <div className="min-h-screen bg-gradient-to-b from-[#0b3fae] via-[#1555d1] to-[#2583ff] text-white pb-24 overflow-hidden">
+ <div className="relative min-h-screen pb-24 overflow-hidden text-white bg-blueGradient">
+
         <BackgroundBubbles />
         <div className="relative z-10">
           <Header />
-          <div className="pt-20 px-4 max-w-4xl mx-auto">
+          <div className="pt-1 px-4 max-w-4xl mx-auto">
             {/* Back button + Heading */}
-            <div className="flex items-center justify-center gap-3 mb-6 relative">
-              <button
-                onClick={() => navigate(-1)}
-                className="absolute left-0 text-white text-3xl px-2"
-              >
-                &#8249;
-              </button>
-              <h1 className="text-2xl sm:text-3xl font-bold text-center text-blue-100">
-                Community Members
-              </h1>
-            </div>
+  <div className="flex items-center gap-3 mb-6 px-4">
+  <button
+    onClick={() => navigate(-1)}
+    className="text-blue-100 text-4xl sm:text-[2.5rem] font-bold leading-none relative -top-1"
+  >
+    &#8249;
+  </button>
+  <h1 className="text-2xl sm:text-3xl font-bold text-blue-100">
+    Community Members
+  </h1>
+</div>
+
 
             {/* Search */}
             <div className="flex justify-center mb-6">
@@ -143,8 +145,8 @@ function FollowerPage() {
                   <div
                     key={user._id}
                     onClick={() => navigate(`/profile/${user._id}`)}
-                    className="bg-white/10 backdrop-blur-lg rounded-xl p-4 flex items-center space-x-4 hover:bg-white/20 cursor-pointer transition-colors duration-200"
-                  >
+                   className="bg-white/10 backdrop-blur-lg rounded-xl p-4 flex items-center space-x-4 hover:bg-white/20">
+
                     <img
                       src={
                         user.profilePicture ||

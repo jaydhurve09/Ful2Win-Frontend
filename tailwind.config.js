@@ -11,6 +11,7 @@ export default {
         dullBlue: "#AECBF9",
         bgColor: "#000B18",
       },
+      
       backgroundImage: {
         whiteGradient: "linear-gradient(to bottom right, #ffffff, #f0f0f0)",
         // blueGradient: "linear-gradient(to bottom, #000B18, #002B5A, #00498E)",
@@ -33,5 +34,6 @@ export default {
       },
     },
   },
+  
   plugins: [],
 }

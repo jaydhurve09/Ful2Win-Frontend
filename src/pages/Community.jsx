@@ -962,7 +962,8 @@ const Community = () => {
       );
       
       return (
-        <div key={post._id} className="bg-white/10 backdrop-blur-sm rounded-xl p-4 mb-4 border border-white/10">
+        <div key={post._id}className="bg-white/20 backdrop-blur-md rounded-xl p-4 mb-4 border border-white/25 shadow-[0_0_16px_rgba(255,255,255,0.15)] hover:shadow-[0_0_24px_rgba(255,255,255,0.25)] transition"
+>
           <div className="flex items-start mb-3">
             <div 
               className="cursor-pointer mr-2"
@@ -1236,7 +1237,7 @@ const Community = () => {
           )}
           
           <div className="flex flex-col">
-            <div className="flex items-center justify-between text-dullBlue hover:text-white text-sm border-t border-white/10 pt-3">
+            <div className="flex items-center justify-between text-dullBlue hover:text-white text-sm border-t border-white/30 pt-3">
               <button 
                 className={`flex items-center group transition-colors ${post.likes?.includes(currentUser?._id) ? 'text-red-500' : 'text-dullBlue hover:text-red-500'}`}
                 onClick={(e) => {
@@ -1536,6 +1537,8 @@ const Community = () => {
 
           <div className="w-full">
             {activeTab === 'feed' && (
+
+              
               <div className="w-full max-w-3xl px-4 mx-auto mt-1">
                 <div className="w-full mb-2 py-1">
                   <div className="flex justify-start space-x-1 pr-1">
@@ -1563,128 +1566,131 @@ const Community = () => {
                     ))}
                   </div>
                 </div>
+<div className="bg-white/20 backdrop-blur-md rounded-2xl p-4 mb-6 border border-white/20 shadow-[0_0_12px_rgba(255,255,255,0.1)] transition hover:shadow-[0_0_20px_rgba(255,255,255,0.15)]">
 
-                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 mb-6 border border-white/10">
-                  <h3 className="text-lg font-semibold mb-4">Create Post</h3>
-                  <div className="create-post-card flex flex-row">
-                    {currentUser?.profilePicture ? (
-                      <div className="w-10 h-10 rounded-full border-2 border-dullBlue p-0.5 mr-3 flex-shrink-0">
-                        <img 
-                          src={currentUser.profilePicture} 
-                          alt={currentUser.name || 'User'}
-                          className="w-full h-full rounded-full object-cover"
-                        />
-                      </div>
-                    ) : (
-                      <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full border-2 border-dullBlue flex items-center justify-center text-white font-bold mr-3 flex-shrink-0">
-                        {currentUser?.name?.charAt(0)?.toUpperCase() || 'U'}
-                      </div>
-                    )}
-                    <div className="flex-1">
-                      {!showCreatePost ? (
-                        <>
-                          <input
-                            type="text"
-                            placeholder="What's on your mind?"
-                            className="w-full bg-white/5 border border-white/10 rounded-full px-4 py-2 text-white mb-3 focus:outline-none focus:ring-0 focus:border-white/20"
-                            onClick={() => setShowCreatePost(true)}
-                            readOnly
-                          />
-                        </>
-                      ) : (
-                        <div>
-                          <textarea
-                            value={newPostContent}
-                            onChange={(e) => setNewPostContent(e.target.value)}
-                            placeholder="Share your thoughts..."
-                            className="w-full bg-white/10 border border-white/20 rounded-lg p-3 text-white mb-3 focus:outline-none focus:ring-0 focus:border-white/30 resize-none"
-                            rows="3"
-                            autoFocus
-                          />
-                          {previewUrl && (
-                            <div className="mt-2 relative">
-                              {fileType === 'image' ? (
-                                <img 
-                                  src={previewUrl} 
-                                  alt="Preview" 
-                                  className="max-h-60 w-auto rounded-lg object-contain"
-                                />
-                              ) : (
-                                <video 
-                                  src={previewUrl} 
-                                  controls 
-                                  className="max-h-60 w-auto rounded-lg"
-                                />
-                              )}
-                              <button
-                                type="button"
-                                onClick={handleRemoveFile}
-                                className="absolute top-2 right-2 bg-black/70 hover:bg-black/90 text-white rounded-full p-1"
-                                title="Remove media"
-                              >
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                                </svg>
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-white/10 pt-3">
-                        <div className="flex space-x-2">
-                          <input
-                            type="file"
-                            id="media-upload"
-                            ref={fileInputRef}
-                            className="hidden"
-                            accept="image/*,video/mp4,video/webm,video/quicktime,video/x-msvideo,video/x-ms-wmv,video/x-matroska"
-                            onChange={handleFileChange}
-                          />
-                          <button 
-                            type="button"
-                            className="flex items-center text-sm text-gray-300 hover:text-white whitespace-nowrap"
-                            onClick={() => document.getElementById('media-upload').click()}
-                          >
-                            <FaImage className="mr-1" /> {fileType === 'video' ? 'Change Media' : 'Photo'}
-                          </button>
-                          {/* <button className="flex items-center text-sm text-gray-300 hover:text-white whitespace-nowrap">
-                            <FaPoll className="mr-1" /> Poll
-                          </button> */}
-                        </div>
-                        <div className="flex-shrink-0">
-                          {showCreatePost ? (
-                            <div className="flex space-x-2">
-                              <Button 
-                                variant="outline" 
-                                onClick={() => setShowCreatePost(false)} 
-                                size="sm"
-                                disabled={isCreatingPost}
-                              >
-                                Cancel
-                              </Button>
-                              <Button 
-                                variant="primary" 
-                                onClick={handleCreatePost}
-                                size="sm"
-                                disabled={!newPostContent.trim() || isCreatingPost}
-                              >
-                                {isCreatingPost ? 'Posting...' : 'Post'}
-                              </Button>
-                            </div>
-                          ) : (
-                            <Button
-                              variant="primary"
-                              size="sm"
-                              onClick={() => setShowCreatePost(true)}
-                            >
-                              Post
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+  <div className="flex items-start gap-3">
+    {/* Avatar */}
+    {currentUser?.profilePicture ? (
+      <div className="w-10 h-10 rounded-full overflow-hidden border border-blue-400 flex-shrink-0">
+        <img 
+          src={currentUser.profilePicture} 
+          alt={currentUser.name || 'User'}
+          className="w-full h-full object-cover"
+        />
+      </div>
+    ) : (
+      <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full border border-blue-400 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+        {currentUser?.name?.charAt(0)?.toUpperCase() || 'U'}
+      </div>
+    )}
+
+    {/* Input Area */}
+    <div className="flex-1 flex flex-col gap-y-2">
+      {!showCreatePost ? (
+        <input
+          type="text"
+          placeholder="What's on your mind?"
+          className="w-full bg-white/10 border border-white/10 rounded-full px-4 py-2 text-sm text-white placeholder-white/60 focus:outline-none focus:ring-0 hover:bg-white/15 cursor-pointer transition"
+          onClick={() => setShowCreatePost(true)}
+          readOnly
+        />
+      ) : (
+        <>
+          <textarea
+            value={newPostContent}
+            onChange={(e) => setNewPostContent(e.target.value)}
+            placeholder="Share your thoughts..."
+            className="w-full bg-white/10 border border-white/20 rounded-lg p-3 text-sm text-white placeholder-white/60 focus:outline-none focus:ring-0 resize-none transition"
+            rows="3"
+            autoFocus
+          />
+          {previewUrl && (
+            <div className="mt-2 relative">
+              {fileType === 'image' ? (
+                <img 
+                  src={previewUrl} 
+                  alt="Preview" 
+                  className="rounded-xl max-h-60 object-contain"
+                />
+              ) : (
+                <video 
+                  src={previewUrl} 
+                  controls 
+                  className="rounded-xl max-h-60"
+                />
+              )}
+              <button
+                type="button"
+                onClick={handleRemoveFile}
+                className="absolute top-2 right-2 bg-black/70 hover:bg-black/90 text-white rounded-full p-1"
+                title="Remove media"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </button>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Action Row */}
+      <div className="flex items-center justify-between border-t border-white/10 pt-3 mt-1">
+        {/* Media Button */}
+        <div className="flex space-x-3">
+          <input
+            type="file"
+            id="media-upload"
+            ref={fileInputRef}
+            className="hidden"
+            accept="image/*,video/mp4,video/webm,video/quicktime,video/x-msvideo,video/x-ms-wmv,video/x-matroska"
+            onChange={handleFileChange}
+          />
+          <button 
+            type="button"
+            className="flex items-center text-sm text-blue-300 hover:text-white transition"
+            onClick={() => document.getElementById('media-upload').click()}
+          >
+            <FaImage className="mr-1" /> {fileType === 'video' ? 'Change Media' : 'Photo'}
+          </button>
+        </div>
+
+        {/* Post Buttons */}
+        <div className="flex-shrink-0">
+          {showCreatePost ? (
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => setShowCreatePost(false)} 
+                size="sm"
+                disabled={isCreatingPost}
+              >
+                Cancel
+              </Button>
+              <Button 
+                variant="primary" 
+                onClick={handleCreatePost}
+                size="sm"
+                disabled={!newPostContent.trim() || isCreatingPost}
+              >
+                {isCreatingPost ? 'Posting...' : 'Post'}
+              </Button>
+            </div>
+          ) : (
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => setShowCreatePost(true)}
+            >
+              Post
+            </Button>
+          )}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 
                 <div className="space-y-4">
                   {renderPosts()}
