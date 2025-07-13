@@ -16,11 +16,11 @@ const TrendingGames = () => {
   const [hasSecondRow, setHasSecondRow] = useState(false);
 
   const games = [
-    { id: 1, name: 'Flappy Ball', path: '/flappyball', image: flappyball },
-    { id: 2, name: 'Color Smash', path: '/colorsmash', image: colorsmash },
-    { id: 3, name: 'Match Merge', path: '/matchmerge', image: matchmerge },
-    { id: 4, name: 'Egg Catcher', path: '/eggcatcher', image: eggcatcher },
-    { id: 5, name: 'Gravity Hop', path: '/gravityhop', image: gravityhop },
+    { id: 1, name: 'Flappy Ball', path: '/games', image: flappyball },
+    { id: 2, name: 'Color Smash', path: '/games', image: colorsmash },
+    { id: 3, name: 'Match Merge', path: '/games', image: matchmerge },
+    { id: 4, name: 'Egg Catcher', path: '/games', image: eggcatcher },
+    { id: 5, name: 'Gravity Hop', path: '/games', image: gravityhop },
   ];
 
   useLayoutEffect(() => {

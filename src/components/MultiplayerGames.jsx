@@ -10,7 +10,7 @@ const MultiplayerGames = () => {
   const navigate = useNavigate();
 
   const games = [
-    { id: 1, name: 'Snake & Ladder', path: '/game-lobby', image: snakeLadder },
+    { id: 1, name: 'Snake & Ladder', path: '/comingsoon', image: snakeLadder },
     { id: 2, name: 'Blade Runner', path: '/comingsoon', image: bladeRunner },
     { id: 3, name: 'Temple Run', path: '/comingsoon', image: templeRun },
   ];
