@@ -1,11 +1,11 @@
 // src/utils/soundManager.js
-import pop from "../assets/sounds/pop.mp3";
-import coin from "../assets/sounds/coin.mp3";
-import win from "../assets/sounds/win.mp3";
-import notification from "../assets/sounds/notification.wav";
-import universalError from "../assets/sounds/universal-error.mp3";
-import click from "../assets/sounds/click.mp3";
-import profileSuccess from '../assets/sounds/profile-success.mp3';
+const pop = new URL('../assets/sounds/pop.mp3', import.meta.url).href;
+const coin = new URL('../assets/sounds/coin.mp3', import.meta.url).href;
+const win = new URL('../assets/sounds/win.mp3', import.meta.url).href;
+const notification = new URL('../assets/sounds/notification.wav', import.meta.url).href;
+const universalError = new URL('../assets/sounds/universal-error.mp3', import.meta.url).href;
+const click = new URL('../assets/sounds/click.mp3', import.meta.url).href;
+const profileSuccess = new URL('../assets/sounds/profile-success.mp3', import.meta.url).href;
 
 // Optional mute state (can be expanded with toggle UI)
 let isMuted = false;
