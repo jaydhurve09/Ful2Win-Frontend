@@ -31,6 +31,17 @@ const Home = () => {
     }
   }, []);
 
+  //sound effect added
+useEffect(() => {
+  // 🎵 Play entry sound when user lands on Home
+  window.dispatchEvent(new CustomEvent("play-sound", { detail: "pop" }));
+
+  setTimeout(() => {
+    // Optional: bell/notification sound shortly after
+    // window.dispatchEvent(new CustomEvent("play-sound", { detail: "notification" }));
+  }, 300);
+}, []); 
+
   const handleCloseSpin = () => {
     setShowSpinWheel(false);
   };
