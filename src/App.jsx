@@ -43,7 +43,7 @@ import GameOn from './components/GameOn';
 import StartScreen from './components/StartScreen';
 import {ToastContainer,toast} from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css';
-
+import SoundManager from './utils/SoundManager'; //sound effect
 
 function App() {
   const { showSplash } = useAuth();
