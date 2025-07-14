@@ -127,6 +127,7 @@ const TournamentLobby = () => {
   const [activeFilter, setActiveFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [userId, setUserId] = useState(null);
+  const [type, setType] = useState('cash'); // 'cash' or 'coin'
 
 
   const showPopup = (message) => {
@@ -324,7 +325,7 @@ const TournamentCard = ({
   status,
   endTime,
   tournamentType,
-  currentPlayers = []
+  currentPlayers = [],
 }) => {
   const progressPercent = Math.min(100, (participants.length / (maxParticipants || 1)) * 100);
   const countdown = useCountdown({ targetDate: endTime });
@@ -454,7 +455,7 @@ const TournamentCard = ({
     live: [],
     upcoming: [],
     completed: [],
-    cancelled: [],
+    
   };
 
   for (const t of filtered) {
@@ -541,8 +542,8 @@ const filteredTournaments = {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <div className="flex space-x-2 overflow-x-auto">
-            {['all', 'upcoming', 'live', 'completed', 'cancelled'].map(filter => (
+          <div className="flex space-x-2 justify-evenly overflow-x-auto">
+            {['all', 'upcoming', 'live', 'completed',].map(filter => (
               <button
                 key={filter}
                 className={`px-4 py-2 rounded-full text-sm font-medium ${
@@ -558,13 +559,25 @@ const filteredTournaments = {
           </div>
         </div>
         <div className="space-y-12">
-          {filteredTournaments.cash.length > 0 && (
+          {filteredTournaments[type]?.length > 0 && (
             <div>
-              <h2 className="text-2xl font-bold mb-2 flex items-center">
-                <FaRupeeSign className="text-yellow-500 mr-2" /> Cash Tournaments
-              </h2>
+             <div className='flex justify-between mb-4 m-2 '>
+              <h1  onClick={() => setType('cash')}
+      className={`px-4 py-2 rounded-full text-sm font-medium border ${
+        type === 'cash'
+          ? 'bg-yellow-500 text-gray-900 border-yellow-400'
+          : 'bg-gray-800/50 text-white border-gray-700'
+      }`}>Cash</h1>
+              <h1  onClick={() => setType('coins')}
+      className={`px-4 py-2 rounded-full text-sm font-medium border ${
+        type === 'coins'
+          ? 'bg-yellow-500 text-gray-900 border-yellow-400'
+          : 'bg-gray-800/50 text-white border-gray-700'
+      }`}>Coins</h1>
+
+             </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                {filteredTournaments.cash.map(tournament => (
+                {filteredTournaments[type]?.map(tournament => (
                   <TournamentCard
                     key={tournament._id}
                     id={tournament._id}
@@ -573,17 +586,18 @@ const filteredTournaments = {
                     prizePool={tournament.prizePool}
                     participants={tournament.participants || []}
                     maxParticipants={tournament.maxParticipants}
-                    imageUrl={tournament.imageUrl}
+                    imageUrl={game.assets?.thumbnail || tournament.imageUrl}
                     status={tournament.status}
                     endTime={tournament.endTime}
                     tournamentType={tournament.tournamentType}
                     currentPlayers={tournament.currentPlayers || []}
+                    
                   />
                 ))}
               </div>
             </div>
           )}
-          {filteredTournaments.coins.length > 0 && (
+         { /* {filteredTournaments.coins.length > 0 && (
             <div>
               <h2 className="text-2xl font-bold mb-4 flex items-center">
                 <FaCoins className="text-yellow-500 mr-2" /> Coins Tournaments
@@ -607,7 +621,7 @@ const filteredTournaments = {
                 ))}
               </div>
             </div>
-          )}
+          )} */}
         </div>
       </main>
       <Navbar />
