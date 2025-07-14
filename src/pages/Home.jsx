@@ -31,6 +31,33 @@ const Home = () => {
     }
   }, []);
 
+  //sound effect added
+useEffect(() => {
+  const alreadyPlayed = sessionStorage.getItem('homeIntroSoundPlayed');
+
+  if (!alreadyPlayed) {
+    const playIntroSound = () => {
+      window.dispatchEvent(new CustomEvent("play-sound", { detail: "pop" }));
+      sessionStorage.setItem('homeIntroSoundPlayed', 'true');
+
+      // Remove listener after first interaction
+      window.removeEventListener('click', playIntroSound);
+      window.removeEventListener('touchstart', playIntroSound);
+    };
+
+    // Add event listener for first user interaction
+    window.addEventListener('click', playIntroSound);
+    window.addEventListener('touchstart', playIntroSound);
+
+    // Cleanup in case component unmounts before interaction
+    return () => {
+      window.removeEventListener('click', playIntroSound);
+      window.removeEventListener('touchstart', playIntroSound);
+    };
+  }
+}, []);
+
+
   const handleCloseSpin = () => {
     setShowSpinWheel(false);
   };
