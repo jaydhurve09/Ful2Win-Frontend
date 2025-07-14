@@ -158,7 +158,7 @@ const ReferralPage = () => {
               { label: 'Total', value: stats.total },
               { label: 'Active', value: stats.active, color: 'text-green-400' },
               { label: 'Pending', value: stats.pending, color: 'text-yellow-400' },
-              { label: 'Earnings', value: `₹${stats.totalEarnings}`, icon: true },
+              { label: 'Earnings', value: `${stats.totalEarnings}`, icon: true },
             ].map(({ label, value, color, icon }, i) => (
               <div
                 key={i}
