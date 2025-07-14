@@ -25,15 +25,26 @@ const PopularGames = () => {
         backgroundImage: `url(${borderBackground})`,
         backgroundRepeat: 'no-repeat',
         backgroundSize: '100% 100%',
-        padding: '12px',
-        paddingBottom: '32px',
       }}
     >
-      <div className="max-w-screen-lg mx-auto px-3">
-        <div className="p-6 sm:p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <img src={controllerIcon} alt="icon" className="w-6 h-6" />
-            <h2 className="text-base sm:text-lg font-bold text-white whitespace-nowrap">
+      <div
+        className="max-w-full mx-auto"
+        style={{
+          paddingTop: 'clamp(20px, 3vw, 36px)',
+          paddingBottom: 'clamp(20px, 3.5vw, 36px)',
+          paddingLeft: 'clamp(45px, 7.5vw, 105px)',
+          paddingRight: 'clamp(40px, 7vw, 100px)',
+        }}
+      >
+        <div className="max-w-screen-lg mx-auto">
+          <div className="flex items-center gap-2 mb-3">
+            <img src={controllerIcon} alt="icon" className="w-5 h-5" />
+            <h2
+              className="font-bold text-white font-orbitron italic leading-tight"
+              style={{
+                fontSize: 'clamp(14px, 2.5vw, 24px)',
+              }}
+            >
               Popular Games
             </h2>
           </div>
@@ -51,18 +62,6 @@ const PopularGames = () => {
                     alt={game.name}
                     className="w-full h-full object-cover"
                   />
-                </div>
-                <div className="h-[32px] sm:h-[36px] flex items-center justify-center text-center bg-white/5 px-1">
-                  <p
-                    className="text-[10px] sm:text-[11px] font-semibold leading-tight px-1 w-full whitespace-normal break-words"
-                    style={{
-                      color: '#C6D6FF',
-                      textShadow: '0 1px 2px rgba(0, 0, 0, 0.5)',
-                      letterSpacing: '0.3px',
-                    }}
-                  >
-                    {game.name}
-                  </p>
                 </div>
               </div>
             ))}
