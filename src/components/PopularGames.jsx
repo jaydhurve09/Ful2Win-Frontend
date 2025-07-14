@@ -1,13 +1,17 @@
-import React from 'react';
+import React, { useState, useRef, useLayoutEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import controllerIcon from '../assets/controller.png';
 import poker from '../assets/poker.png';
 import ludo from '../assets/ludo.png';
 import carrom from '../assets/carrom.png';
-import borderBackground from '../assets/Border.png';
+import borderBackground from '../assets/Border1.png';
 
 const PopularGames = () => {
   const navigate = useNavigate();
+  const [showAll, setShowAll] = useState(false);
+  const gridRef = useRef(null);
+  const [rowHeight, setRowHeight] = useState(0);
+  const [hasSecondRow, setHasSecondRow] = useState(false);
 
   const games = [
     { id: 1, name: 'Poker', path: '/comingsoon', image: poker },
@@ -16,40 +20,76 @@ const PopularGames = () => {
   ];
 
   const totalColumns = 4;
-  const placeholders = totalColumns - games.length;
+  const placeholders = totalColumns - (games.length % totalColumns || totalColumns);
+
+  useLayoutEffect(() => {
+    const checkRows = () => {
+      const grid = gridRef.current;
+      if (!grid) return;
+
+      const cards = Array.from(grid.children).filter(child => child.className !== 'invisible');
+      if (cards.length < 2) return;
+
+      const firstRowTop = cards[0].getBoundingClientRect().top;
+      let secondRowTop = 0;
+
+      for (let i = 1; i < cards.length; i++) {
+        const cardTop = cards[i].getBoundingClientRect().top;
+        if (cardTop > firstRowTop + 5) {
+          secondRowTop = cardTop;
+          break;
+        }
+      }
+
+      if (secondRowTop) {
+        setRowHeight(secondRowTop - firstRowTop);
+        setHasSecondRow(true);
+      } else {
+        setRowHeight(0);
+        setHasSecondRow(false);
+      }
+    };
+
+    checkRows();
+    window.addEventListener('resize', checkRows);
+    return () => window.removeEventListener('resize', checkRows);
+  }, [games]);
 
   return (
     <section
-      className="w-full bg-cover bg-center bg-no-repeat"
+      className="w-full bg-no-repeat bg-top"
       style={{
         backgroundImage: `url(${borderBackground})`,
         backgroundRepeat: 'no-repeat',
-        backgroundSize: '100% 100%',
+        backgroundPosition: 'top',
+        backgroundSize: '100% auto',
       }}
     >
       <div
         className="max-w-full mx-auto"
         style={{
-          paddingTop: 'clamp(20px, 3vw, 36px)',
+          paddingTop: 'clamp(24px, 5vw, 56px)',
           paddingBottom: 'clamp(20px, 3.5vw, 36px)',
-          paddingLeft: 'clamp(45px, 7.5vw, 105px)',
-          paddingRight: 'clamp(40px, 7vw, 100px)',
+          paddingLeft: 'clamp(20px, 5vw, 60px)',
+          paddingRight: 'clamp(20px, 5vw, 60px)',
         }}
       >
         <div className="max-w-screen-lg mx-auto">
-          <div className="flex items-center gap-2 mb-3">
+          <div className="flex justify-center items-center gap-2 mb-3">
             <img src={controllerIcon} alt="icon" className="w-5 h-5" />
             <h2
               className="font-bold text-white font-orbitron italic leading-tight"
-              style={{
-                fontSize: 'clamp(14px, 2.5vw, 24px)',
-              }}
+              style={{ fontSize: 'clamp(12px, 2.5vw, 24px)' }}
             >
               Popular Games
             </h2>
           </div>
 
-          <div className="grid grid-cols-4 gap-2">
+          <div
+            ref={gridRef}
+            className="grid grid-cols-4 gap-2 transition-all duration-300 ease-in-out overflow-hidden"
+            style={{ maxHeight: showAll || rowHeight === 0 ? '1000px' : `${rowHeight}px` }}
+          >
             {games.map((game) => (
               <div
                 key={game.id}
@@ -57,11 +97,7 @@ const PopularGames = () => {
                 className="bg-white/10 border border-white/20 rounded-lg overflow-hidden cursor-pointer transition-transform hover:scale-105 active:scale-95"
               >
                 <div className="w-full aspect-square">
-                  <img
-                    src={game.image}
-                    alt={game.name}
-                    className="w-full h-full object-cover"
-                  />
+                  <img src={game.image} alt={game.name} className="w-full h-full object-cover" />
                 </div>
               </div>
             ))}
@@ -69,6 +105,17 @@ const PopularGames = () => {
               <div key={`placeholder-${index}`} className="invisible" />
             ))}
           </div>
+
+          {hasSecondRow && (
+            <div className="text-center leading-none mt-2">
+              <button
+                onClick={() => setShowAll(prev => !prev)}
+                className="text-white text-[10px] underline hover:text-gray-300 transition p-0 m-0"
+              >
+                {showAll ? 'See Less' : 'See More'}
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </section>

@@ -6,7 +6,7 @@ import colorsmash from '../assets/colorsmash.png';
 import matchmerge from '../assets/MatchMerge.png';
 import eggcatcher from '../assets/EggCatcher.png';
 import gravityhop from '../assets/GravityHop.png';
-import borderBackground from '../assets/Border.png';
+import borderBackground from '../assets/Border1.png';
 
 const TrendingGames = () => {
   const navigate = useNavigate();
@@ -16,17 +16,17 @@ const TrendingGames = () => {
   const [hasSecondRow, setHasSecondRow] = useState(false);
 
   const games = [
-    { id: 1, name: 'Flappy Ball', path: '/games', image: flappyball },
-    { id: 2, name: 'Color Smash', path: '/games', image: colorsmash },
-    { id: 3, name: 'Match Merge', path: '/games', image: matchmerge },
-    { id: 4, name: 'Egg Catcher', path: '/games', image: eggcatcher },
-    { id: 5, name: 'Gravity Hop', path: '/games', image: gravityhop },
+    { id: 1, name: 'Flappy Ball', path: '/flappyball', image: flappyball },
+    { id: 2, name: 'Color Smash', path: '/colorsmash', image: colorsmash },
+    { id: 3, name: 'Match Merge', path: '/matchmerge', image: matchmerge },
+    { id: 4, name: 'Egg Catcher', path: '/eggcatcher', image: eggcatcher },
+    { id: 5, name: 'Gravity Hop', path: '/gravityhop', image: gravityhop },
   ];
 
   useLayoutEffect(() => {
     const checkRows = () => {
       const grid = gridRef.current;
-      if (!grid) return;  
+      if (!grid) return;
 
       const cards = Array.from(grid.children);
       if (cards.length < 2) return;
@@ -59,30 +59,31 @@ const TrendingGames = () => {
 
   return (
     <section
-      className="w-full bg-cover bg-center bg-no-repeat"
+      className="w-full bg-no-repeat bg-top relative z-0"
       style={{
         backgroundImage: `url(${borderBackground})`,
         backgroundRepeat: 'no-repeat',
-        backgroundSize: '100% 100%',
+        backgroundPosition: 'top',
+        backgroundSize: '100% auto',
       }}
     >
       <div
-        className="max-w-full mx-auto"
+        className="max-w-full mx-auto mt-3"
         style={{
-          paddingTop: 'clamp(20px, 3vw, 36px)',
+          paddingTop: 'clamp(24px, 5vw, 56px)',
           paddingBottom: 'clamp(20px, 3.5vw, 36px)',
-          paddingLeft: 'clamp(45px, 7.5vw, 105px)',
-          paddingRight: 'clamp(40px, 7vw, 100px)',
+          paddingLeft: 'clamp(20px, 5vw, 60px)',
+          paddingRight: 'clamp(20px, 5vw, 60px)',
         }}
       >
         <div className="max-w-screen-lg mx-auto">
           {/* Header */}
-          <div className="flex items-center gap-2 mb-3">
+          <div className="flex justify-center items-center gap-2 mb-3">
             <img src={controllerIcon} alt="icon" className="w-5 h-5" />
             <h2
               className="font-bold text-white font-orbitron italic leading-tight"
               style={{
-                fontSize: 'clamp(14px, 2.5vw, 24px)',
+                fontSize: 'clamp(12px, 3vw, 24px)',
               }}
             >
               Trending Games
@@ -116,7 +117,7 @@ const TrendingGames = () => {
 
           {/* See More / See Less */}
           {hasSecondRow && (
-            <div className="text-right leading-none mt-1">
+            <div className="text-center leading-none mt-1">
               <button
                 onClick={() => setShowAll((prev) => !prev)}
                 className="text-white text-[10px] underline hover:text-gray-300 transition p-0 m-0"

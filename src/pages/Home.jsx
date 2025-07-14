@@ -31,17 +31,6 @@ const Home = () => {
     }
   }, []);
 
-  //sound effect added
-useEffect(() => {
-  // 🎵 Play entry sound when user lands on Home
-  window.dispatchEvent(new CustomEvent("play-sound", { detail: "pop" }));
-
-  setTimeout(() => {
-    // Optional: bell/notification sound shortly after
-    // window.dispatchEvent(new CustomEvent("play-sound", { detail: "notification" }));
-  }, 300);
-}, []); 
-
   const handleCloseSpin = () => {
     setShowSpinWheel(false);
   };
@@ -53,7 +42,7 @@ useEffect(() => {
       <BackgroundCircles />
       <div className="absolute inset-0 bg-gradient-to-b from-[#00bfff] to-[#000080] opacity-40 z-0" />
 
-      <div className="relative z-10 pt-12">
+      <div className="relative z-10 pt-8">
         <Header />
 
         {/* Banner */}
