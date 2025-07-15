@@ -10,6 +10,7 @@ import {
   FaCoins,
   FaArrowLeft
 } from 'react-icons/fa';
+import HowToPlay from './HowToPlay';
 import { toast } from 'react-toastify';
 import api from '../services/api';
 import axios from 'axios'
@@ -151,7 +152,7 @@ const TournamentLobby = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [userId, setUserId] = useState(null);
   const [type, setType] = useState('cash'); // 'cash' or 'coin'
-
+ const [onClose, setOnClose] = useState(false);
 
   const showPopup = (message) => {
   setModalMessage(message);
@@ -333,6 +334,7 @@ const TournamentCard = ({
   endTime,
   tournamentType,
   currentPlayers = [],
+  rules = {},
 }) => {
   const progressPercent = Math.min(100, (participants.length / (maxParticipants || 1)) * 100);
   const countdown = useCountdown({ targetDate: startTime, endTime, status },  async () => {
@@ -349,9 +351,6 @@ const TournamentCard = ({
     }
 );
   const hasJoined = currentPlayers.includes(userId);
-
-
-  
  
   return (
     <div className={`relative w-full bg-gradient-to-r from-blue-900 via-blue-700 to-blue-900 rounded-xl p-2  text-white overflow-hidden mb-[2px] shadow-md shadow-[#292828]`}> 
@@ -413,8 +412,10 @@ const TournamentCard = ({
         </div>
       </div>
       <div className="flex justify-between items-center mt-2 border-t border-white/20 pt-1 text-[10px]">
-        <div className="border px-2 py-0.5 rounded-full cursor-pointer">How to play</div>
-        <div className="border px-2 py-0.5 rounded-full cursor-pointer" onClick={() => goToLeaderboard({ gameName: game?.name, tournamentId: id })}>Leaderboard</div>
+        <div className="border px-2 py-0.5 pt-2 pb-2 rounded-full cursor-pointer"
+        onClick={() => setOnClose(true)}
+        >How to play</div>
+        <div className="border px-2 py-0.5 pt-2 pb-2 rounded-full cursor-pointer" onClick={() => goToLeaderboard({ gameName: game?.name, tournamentId: id })}>Leaderboard</div>
       </div>
     </div>
   );
@@ -609,7 +610,8 @@ const filteredTournaments = {
       }`}>Coins</h1>
 
              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+             {onClose?(<HowToPlay rules={game.rules} onClose={() => setOnClose(false)} />):(
+             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                 {filteredTournaments[type]?.map(tournament => (
                   <TournamentCard
                     key={tournament._id}
@@ -625,10 +627,11 @@ const filteredTournaments = {
                     endTime={tournament.endTime}
                     tournamentType={tournament.tournamentType}
                     currentPlayers={tournament.currentPlayers || []}
+                    rules={game.rules || {}}
                     
                   />
                 ))}
-              </div>
+              </div>)}
             </div>
           )}
        
