@@ -19,6 +19,10 @@ import { toast } from "react-toastify";
 import authService from "../services/authService";
 import CachedImage from "../components/CachedImage";
 
+import winIcon from "../assets/win2.png";
+import kycIcon from "../assets/kyc7.png";
+{/* added 2 import  function for images*/}
+
 const ProfileScreen = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -169,17 +173,20 @@ const ProfileScreen = () => {
       label: "Coins",
       value: userStats.coins.toLocaleString(),
     },
-    {
-      icon: (
-        <img
-          src="./assets/win2.png"
-          alt="Wins"
-          className="w-5 h-5 object-contain"
-        />
-      ),
-      label: "Wins",
-      value: userStats.wins.toLocaleString(),
-    },
+  {
+  icon: (
+    <img
+      src={winIcon}
+      alt="Wins"
+      className="w-5 h-5 object-contain"
+    />
+  ),
+  label: "Wins",
+  value: userStats.wins.toLocaleString(),
+}
+,
+
+
     {
       icon: <IoMdPerson className="text-purple-500" />,
       label: "Followers",
@@ -196,7 +203,8 @@ const ProfileScreen = () => {
 
   const profileActions = [
     { icon: <FiShare2 className="text-blue-600" />, text: "Referrals", action: "referrals" },
-    { icon: <CachedImage src="./assets/kyc7.png" alt="KYC" className="w-5 h-5" />, text: "KYC Status", action: "kyc" },
+    { icon: <CachedImage src={kycIcon} alt="KYC" className="w-5 h-5" />, text: "KYC Status", action: "kyc" },
+
     { icon: <FiHeadphones className="text-blue-600" />, text: "Support", action: "support" },
     { icon: <FiLogOut className="text-red-500" />, text: "Log Out", action: "logout", isDanger: true },
   ];
@@ -271,9 +279,14 @@ const ProfileScreen = () => {
         </div>
 
         {/* Stats Grid with Glassmorphism */}
-        <div className="grid grid-cols-2 gap-3 mb-4 mt-4">
+     {/*   <div className="grid grid-cols-2 gap-3 mb-4 mt-4"> */}
+         <div className="grid grid-cols-2 gap-2 mt-2"> {/* new code */}
+         
           {stats.map((stat, i) => (
-            <div key={i} className="bg-white/10 backdrop-blur-md p-4 rounded-xl flex items-center space-x-3 shadow-sm border border-white/20">
+         
+         <div key={i} className="bg-white/10 backdrop-blur-md p-3 rounded-xl flex items-center space-x-2.5 shadow-sm border border-white/20"> {/*new change*/ }
+
+
               <div className="w-10 h-10 bg-gray-100 border rounded-full flex items-center justify-center">
                 {stat.icon}
               </div>
@@ -288,18 +301,20 @@ const ProfileScreen = () => {
         </div>
 
         {/* Actions List with Glassmorphism */}
-        <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-4 mb-20">
+       <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-4 mt-3 mb-20">
+
           {profileActions.map((item, idx, array) => (
             <React.Fragment key={item.action}>
               <button
                 onClick={() => handleProfileAction(item.action)}
-                className={`w-full flex items-center p-4 rounded-xl transition-all group ${
-                  item.isDanger ? "hover:bg-red-100/10" : "hover:bg-white/10"
-                }`}
-              >
-                <div className={`w-10 h-10 flex items-center justify-center mr-3 rounded-full ${
-                  item.isDanger ? "bg-red-50" : "bg-blue-50"
-                }`}>
+                className={`w-full flex items-center p-3 rounded-xl transition-all group ${
+  item.isDanger ? "hover:bg-red-100/10" : "hover:bg-white/10"
+}`} >
+
+               <div className={`w-9 h-9 flex items-center justify-center mr-2 rounded-full ${
+  item.isDanger ? "bg-red-50" : "bg-blue-50"
+}`}>
+
                   {item.icon}
                 </div>
                 <div className={`flex-1 text-left font-medium ${item.isDanger ? "text-red-600" : "text-white"}`}>
@@ -307,7 +322,7 @@ const ProfileScreen = () => {
                 </div>
                 <div className="text-white/70 text-lg">&gt;</div>
               </button>
-              {idx < array.length - 1 && <div className="w-full h-px my-2 bg-white/20" />}
+              {idx < array.length - 1 && <div className="w-full h-px my-1.5 bg-white/20" />}
             </React.Fragment>
           ))}
         </div>
