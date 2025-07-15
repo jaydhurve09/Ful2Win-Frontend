@@ -5,6 +5,7 @@ import snakeLadder from '../assets/snake-and-ladder.png';
 import bladeRunner from '../assets/blade-runner.png';
 import templeRun from '../assets/temple-run.png';
 import borderBackground from '../assets/Border1.png';
+import CachedImage from './CachedImage';
 
 const MultiplayerGames = () => {
   const navigate = useNavigate();
@@ -76,7 +77,7 @@ const MultiplayerGames = () => {
       >
         <div className="max-w-screen-lg mx-auto">
           <div className="flex justify-center items-center gap-2 mb-3">
-            <img src={controllerIcon} alt="icon" className="w-5 h-5" />
+            <CachedImage src={controllerIcon} alt="icon" className="w-5 h-5" />
             <h2
               className="font-bold text-white font-orbitron italic leading-tight"
               style={{ fontSize: 'clamp(12px, 2.5vw, 24px)' }}
@@ -97,7 +98,7 @@ const MultiplayerGames = () => {
                 className="bg-white/10 border border-white/20 rounded-lg overflow-hidden cursor-pointer transition-transform hover:scale-105 active:scale-95"
               >
                 <div className="w-full aspect-square">
-                  <img src={game.image} alt={game.name} className="w-full h-full object-cover" />
+                  <CachedImage src={game.image} alt={game.name} className="w-full h-full object-cover" />
                 </div>
               </div>
             ))}

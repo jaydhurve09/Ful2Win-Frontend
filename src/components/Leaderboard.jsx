@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { FaArrowLeft } from 'react-icons/fa';
+import CachedImage from './CachedImage';
 import Header from '../components/Header';
 import Navbar from '../components/Navbar';
 import BackgroundBubbles from '../components/BackgroundBubbles';
@@ -153,7 +154,7 @@ const [prizeBreakup, setPrizeBreakup] = useState([]);
         {/* Profile Image + Username + Rank Badge */}
         <div className="flex items-center gap-3 w-4/12 relative">
           <div className="w-9 h-9 rounded-full overflow-hidden border border-white/20 bg-white/10">
-            <img
+            <CachedImage
               src={
                 player.avatar ||
                 player.profileImage ||

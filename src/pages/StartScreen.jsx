@@ -1,6 +1,7 @@
 import React from 'react';
 import BackgroundBubbles from './BackgroundBubbles';
-import logo from '../assets/logo.png'; // adjust path if needed
+import logo from '../assets/logo.png';
+import CachedImage from '../components/CachedImage'; // adjust path if needed
 
 const StartScreen = () => {
   return (
@@ -15,7 +16,7 @@ const StartScreen = () => {
       {/* Logo and tagline container */}
       <div className="relative z-10 flex flex-col items-center text-center">
         {/* Animated Logo */}
-        <img
+        <CachedImage
           src={logo}
           alt="Ful2Win Logo"
           className="w-48 h-auto animate-bounce-slow"

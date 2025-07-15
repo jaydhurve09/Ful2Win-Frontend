@@ -17,15 +17,18 @@ import Account from "../components/Account";
 import { useAuth } from "../contexts/AuthContext";
 import { toast } from "react-toastify";
 import authService from "../services/authService";
+import CachedImage from "../components/CachedImage";
 
 const ProfileScreen = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { logout } = useAuth();
+  const { user, isAuthenticated } = useAuth();
+
 
   const [activeSection, setActiveSection] = useState("profile");
   const [currentUser, setCurrentUser] = useState(null);
   const [profilePictureUrl, setProfilePictureUrl] = useState("");
+  const [isLoadingPicture, setIsLoadingPicture] = useState(true);
   const [userStats, setUserStats] = useState({
     balance: 0,
     coins: 0,
@@ -63,24 +66,27 @@ const ProfileScreen = () => {
   };
 
   useEffect(() => {
-    if (!currentUser?._id) {
+    if (!user?._id) {
       setProfilePictureUrl("");
+      setIsLoadingPicture(false);
       return;
     }
-    const picUrl = getProfilePictureUrl(currentUser.profilePicture);
+
+    // Get profile picture URL
+    const picUrl = getProfilePictureUrl(user.profilePicture);
     setProfilePictureUrl(picUrl || "");
-  }, [currentUser]);
+    setIsLoadingPicture(false);
+  }, [user]);
 
   const refreshUserData = useCallback(async () => {
-    if (!currentUser?._id) return;
+    if (!user?._id) return;
     try {
       const response = await authService.getCurrentUserProfile();
       if (response) {
-        localStorage.setItem("user", JSON.stringify(response));
-        setCurrentUser((prev) => ({
-          ...prev,
-          ...response,
-        }));
+        // Update cached profile picture in auth context
+        const { updateAuthState } = useAuth();
+        updateAuthState(response, true);
+        
         setUserStats({
           balance: response.balance || 0,
           coins: response.coins || 0,
@@ -190,7 +196,7 @@ const ProfileScreen = () => {
 
   const profileActions = [
     { icon: <FiShare2 className="text-blue-600" />, text: "Referrals", action: "referrals" },
-    { icon: <img src="./assets/kyc7.png" alt="KYC" className="w-5 h-5" />, text: "KYC Status", action: "kyc" },
+    { icon: <CachedImage src="./assets/kyc7.png" alt="KYC" className="w-5 h-5" />, text: "KYC Status", action: "kyc" },
     { icon: <FiHeadphones className="text-blue-600" />, text: "Support", action: "support" },
     { icon: <FiLogOut className="text-red-500" />, text: "Log Out", action: "logout", isDanger: true },
   ];
@@ -220,7 +226,7 @@ const ProfileScreen = () => {
             <div className="relative group w-20 h-20">
               <div className="w-full h-full rounded-full overflow-hidden border-2 border-dullBlue bg-gray-100 flex items-center justify-center">
                 {profilePictureUrl ? (
-                  <img src={profilePictureUrl} alt="Profile" className="w-full h-full object-cover" />
+                  <CachedImage src={profilePictureUrl} alt="Profile" className="w-full h-full object-cover" />
                 ) : (
                   <FiUser className="text-dullBlue text-3xl" />
                 )}

@@ -6,19 +6,21 @@ import 'react-toastify/dist/ReactToastify.css';
 // Helper function to get stored auth data
 const getStoredAuthData = () => {
   if (typeof window === 'undefined') {
-    return { token: null, user: null };
+    return { token: null, user: null, profilePicture: null };
   }
   
   try {
     const token = localStorage.getItem('token');
     const user = localStorage.getItem('user');
+    const profilePicture = localStorage.getItem('profilePicture');
     return {
       token,
-      user: user ? JSON.parse(user) : null
+      user: user ? JSON.parse(user) : null,
+      profilePicture: profilePicture || null
     };
   } catch (error) {
     console.error('Error reading auth data from storage:', error);
-    return { token: null, user: null };
+    return { token: null, user: null, profilePicture: null };
   }
 };
 
@@ -28,6 +30,7 @@ const AuthContext = createContext({
   isLoading: true,
   showSplash: false,
   error: null,
+  profilePicture: null,
   login: async () => {},
   logout: () => {},
   updateUser: () => {},
@@ -40,6 +43,7 @@ export const AuthProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [showSplash, setShowSplash] = useState(false);
   const [error, setError] = useState(null);
+  const [profilePicture, setProfilePicture] = useState(null);
   const navigate = useNavigate();
 
   // Helper function to update auth state and storage
@@ -49,8 +53,12 @@ export const AuthProvider = ({ children }) => {
     
     if (authenticated && userData) {
       localStorage.setItem('user', JSON.stringify(userData));
+      if (userData.profilePicture) {
+        localStorage.setItem('profilePicture', userData.profilePicture);
+      }
     } else {
       localStorage.removeItem('user');
+      localStorage.removeItem('profilePicture');
     }
   }, []);
 
@@ -60,15 +68,17 @@ export const AuthProvider = ({ children }) => {
       setIsLoading(true);
       setError(null);
       
-      const { token, user: storedUser } = getStoredAuthData();
+      const { token, user: storedUser, profilePicture: storedProfilePicture } = getStoredAuthData();
       
       if (!token) {
         updateAuthState(null, false);
+        setProfilePicture(null);
         setIsLoading(false);
         return false;
       }
       if (storedUser) {
         updateAuthState(storedUser, true);
+        setProfilePicture(storedProfilePicture);
         setIsLoading(false);
         return true;
       }
@@ -79,6 +89,7 @@ export const AuthProvider = ({ children }) => {
           // Support both {data: user} and direct user object
           const userObj = response.data || response;
           updateAuthState(userObj, true);
+          setProfilePicture(userObj.profilePicture);
           setIsLoading(false);
           return true;
         }
@@ -87,14 +98,16 @@ export const AuthProvider = ({ children }) => {
         console.error('Token validation failed:', error);
         authService.clearAuthData();
         updateAuthState(null, false);
+        setProfilePicture(null);
         setIsLoading(false);
         return false;
       }
     } catch (error) {
-console.error('Error checking auth state:', error);
+      console.error('Error checking auth state:', error);
       setError(error);
       authService.clearAuthData();
       updateAuthState(null, false);
+      setProfilePicture(null);
       return false;
     } finally {
       setIsLoading(false);
@@ -181,6 +194,7 @@ console.error('Error checking auth state:', error);
       
       // Clear any remaining state
       setError(null);
+      setProfilePicture(null);
       
       // Return success to indicate logout completed
       return { success: true };
@@ -240,6 +254,7 @@ console.error('Error checking auth state:', error);
         isLoading,
         showSplash,
         error,
+        profilePicture,
         login,
         logout,
         updateUser,

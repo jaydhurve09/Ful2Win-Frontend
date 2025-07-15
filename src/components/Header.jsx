@@ -10,10 +10,12 @@ import defaultProfile from '../assets/default-profile.jpg';
 import { useAuth } from '../contexts/AuthContext';
 import authService from '../services/authService';
 import { toast } from 'react-toastify';
+import { useImageContext } from '../context/ImageContext';
+import CachedImage from './CachedImage';
 
 const Header = () => {
   const navigate = useNavigate();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, profilePicture: cachedProfilePicture } = useAuth();
   const [profilePicture, setProfilePicture] = useState(defaultProfile);
   const [balance, setBalance] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
@@ -90,15 +92,15 @@ const Header = () => {
     };
   }, [refreshBalance]);
 
-  // Fetch user profile data only when authenticated
+  // Use cached profile picture from auth context
+  useEffect(() => {
+    if (isAuthenticated && cachedProfilePicture) {
+      setProfilePicture(cachedProfilePicture);
+    }
+  }, [isAuthenticated, cachedProfilePicture]);
+
   useEffect(() => {
     const fetchUserProfile = async () => {
-      // Only proceed if user is authenticated
-      const token = localStorage.getItem('token');
-      if (!token) {
-        return; // Exit if no token is found
-      }
-      
       try {
         const userData = await authService.getCurrentUserProfile();
         if (userData?.profilePicture) {
@@ -169,14 +171,15 @@ const Header = () => {
               className="w-10 h-10 rounded-full overflow-hidden ml-2 border-2 border-dullBlue hover:opacity-90 transition-opacity"
             >
               {profilePicture ? (
-                <img 
+                <CachedImage 
                   src={profilePicture} 
                   alt="Profile" 
                   className="w-full h-full object-cover"
-                  onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.src = defaultProfile;
-                  }}
+                  fallback={
+                    <div className="w-full h-full bg-yellow-500 flex items-center justify-center">
+                      <IoPerson className="text-black" />
+                    </div>
+                  }
                 />
               ) : (
                 <div className="w-full h-full bg-yellow-500 flex items-center justify-center">

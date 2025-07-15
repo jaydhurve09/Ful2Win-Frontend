@@ -7,6 +7,7 @@ import matchmerge from '../assets/MatchMerge.png';
 import eggcatcher from '../assets/EggCatcher.png';
 import gravityhop from '../assets/GravityHop.png';
 import borderBackground from '../assets/Border1.png';
+import CachedImage from './CachedImage';
 
 const TrendingGames = () => {
   const navigate = useNavigate();
@@ -16,11 +17,11 @@ const TrendingGames = () => {
   const [hasSecondRow, setHasSecondRow] = useState(false);
 
   const games = [
-    { id: 1, name: 'Flappy Ball', path: '/flappyball', image: flappyball },
-    { id: 2, name: 'Color Smash', path: '/colorsmash', image: colorsmash },
-    { id: 3, name: 'Match Merge', path: '/matchmerge', image: matchmerge },
-    { id: 4, name: 'Egg Catcher', path: '/eggcatcher', image: eggcatcher },
-    { id: 5, name: 'Gravity Hop', path: '/gravityhop', image: gravityhop },
+    { id: 1, name: 'Flappy Ball', path: '/games', image: flappyball },
+    { id: 2, name: 'Color Smash', path: '/games', image: colorsmash },
+    { id: 3, name: 'Match Merge', path: '/games', image: matchmerge },
+    { id: 4, name: 'Egg Catcher', path: '/games', image: eggcatcher },
+    { id: 5, name: 'Gravity Hop', path: '/games', image: gravityhop },
   ];
 
   useLayoutEffect(() => {
@@ -79,7 +80,7 @@ const TrendingGames = () => {
         <div className="max-w-screen-lg mx-auto">
           {/* Header */}
           <div className="flex justify-center items-center gap-2 mb-3">
-            <img src={controllerIcon} alt="icon" className="w-5 h-5" />
+            <CachedImage src={controllerIcon} alt="icon" className="w-5 h-5" />
             <h2
               className="font-bold text-white font-orbitron italic leading-tight"
               style={{
@@ -105,11 +106,7 @@ const TrendingGames = () => {
                 className="bg-white/10 border border-white/20 rounded-lg overflow-hidden cursor-pointer transition-transform hover:scale-105 active:scale-95"
               >
                 <div className="w-full aspect-square">
-                  <img
-                    src={game.image}
-                    alt={game.name}
-                    className="w-full h-full object-cover"
-                  />
+                  <CachedImage src={game.image} alt={game.name} className="w-full h-full object-cover" />
                 </div>
               </div>
             ))}

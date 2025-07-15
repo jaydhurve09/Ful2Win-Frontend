@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaSearch, FaStar, FaGamepad } from 'react-icons/fa';
+import CachedImage from '../components/CachedImage';
 import { motion, AnimatePresence } from 'framer-motion';
 import Header from '../components/Header';
 import Navbar from '../components/Navbar';
@@ -225,7 +226,7 @@ const Games = () => {
                       }}
                     >
                       <div className="aspect-square bg-gray-900 relative overflow-hidden">
-                        <img
+                        <CachedImage
                           src={game.assets?.thumbnail || defaultGameImage}
                           alt={game.displayName || game.name || 'Game'}
                           className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
