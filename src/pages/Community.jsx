@@ -713,7 +713,6 @@ const Community = () => {
     { id: 'all', label: 'All' },
     { id: 'popular', label: 'Popular', icon: <FiStar className="mr-1" /> },
     { id: 'recent', label: 'Recent', icon: <FiClock className="mr-1" /> },
-    { id: 'discussions', label: 'Discussions', icon: <FiMessageCircle className="mr-1" /> },
   ];
 
   // Filter and sort posts based on active tab
@@ -928,7 +927,7 @@ const Community = () => {
       );
       
       return (
-        <div key={post._id} className="bg-white/10 backdrop-blur-sm rounded-xl p-4 mb-4 border border-white/10">
+        <div key={post._id} className="bg-blue-700 rounded-xl p-4 mb-1 border border-blue-800 opacity-80 ">
           <div className="flex items-start mb-3">
             <div 
               className="cursor-pointer mr-2"
@@ -1448,7 +1447,7 @@ const Community = () => {
   }, []);
 
   return (
-    <div className="relative min-h-screen pb-24 overflow-hidden text-white bg-blueGradient">
+    <div className="relative min-h-screen pb-24 overflow-hidden text-white bg-white">
       <BackgroundBubbles />
       {viewingProfile && (
         <CommunityProfile
@@ -1484,7 +1483,7 @@ const Community = () => {
                       key={tab.id}
                       variant={activeTab === tab.id ? 'primary' : 'gradient'}
                       onClick={() => handleTabChange(tab.id)}
-                      className={`rounded-full ${activeTab === tab.id ? 'px-3 py-1.5' : 'p-2.5'} flex items-center justify-center`}
+                      className={`w-full rounded-full ${activeTab === tab.id ? 'px-3 py-1.5' : 'p-2.5'} flex items-center justify-center`}
                       title={tab.label}
                     >
                       {React.cloneElement(tab.icon, { 
@@ -1504,7 +1503,7 @@ const Community = () => {
             {activeTab === 'feed' && (
               <div className="w-full max-w-3xl px-4 mx-auto mt-1">
                 <div className="w-full mb-2 py-1">
-                  <div className="flex justify-start space-x-1 pr-1">
+                  <div className="flex justify-center space-x-1 pr-1">
                     {typeTabs.map((tab) => (
                       <Button
                         key={tab.id}
@@ -1530,7 +1529,7 @@ const Community = () => {
                   </div>
                 </div>
 
-                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 mb-6 border border-white/10">
+                <div className="bg-blue-700 backdrop-blur-sm rounded-xl p-4 mb-4 border border-white/10 opacity-90">
                   <h3 className="text-lg font-semibold mb-4">Create Post</h3>
                   <div className="create-post-card flex flex-row">
                     {currentUser?.profilePicture ? (
