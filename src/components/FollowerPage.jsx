@@ -66,7 +66,7 @@ function FollowerPage() {
 
   return (
     <>
-      <div className="min-h-screen bg-gradient-to-b from-[#0b3fae] via-[#1555d1] to-[#2583ff] text-white pb-24 overflow-hidden">
+      <div className="min-h-screen w-full bg-gradient-to-b from-[#0b3fae] via-[#1555d1] to-[#2583ff] text-white pb-24 overflow-hidden">
         <BackgroundBubbles />
         <div className="relative z-10 w-full">
           <Header />
