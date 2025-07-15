@@ -16,10 +16,14 @@ import axios from 'axios'
 import Header from './Header';
 import BackgroundBubbles from './BackgroundBubbles';
 import Navbar from './Navbar';
+ const API_BASE_URL = import.meta.env.MODE === 'development' 
+          ? 'http://localhost:5000/api' 
+          : `${import.meta.env.VITE_API_BACKEND_URL}/api`;
 
 // Countdown timer hook (keep backend logic, but update for new layout)
 const useCountdown = ({ targetDate, endTime, status }, onStart, onComplete) => {
   const [timeLeft, setTimeLeft] = useState('');
+  //const [endTime, setEndTime] = useState('');
 
   useEffect(() => {
     if (!targetDate) return;
@@ -27,14 +31,33 @@ const useCountdown = ({ targetDate, endTime, status }, onStart, onComplete) => {
     const updateCountdown = () => {
       const now = new Date().getTime();
       const target = new Date(targetDate).getTime();
+      const end = new Date(endTime).getTime();
       const distance = target - now;
-      if (distance <= 0) {
-        setTimeLeft('00:00');
+      const tend = end - now;
+      if(distance <0 && status == 'upcoming') {
+          onStart?.(); 
+          return;
+
+      }
+      if ( tend <0 && status === 'live') {
+        onComplete?.(); // Mark as completed if passed endTime by 10+ seconds
         return;
       }
+if(status === 'completed') {
+        setTimeLeft('00:00');
+      } else if (status === 'live') {
+         const minutes = Math.floor((tend % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((tend % (1000 * 60)) / 1000);
+    
+      setTimeLeft(`${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
+
+      }else{
+
       const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
       const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
       setTimeLeft(`${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
+      }
     };
     updateCountdown();
     const timer = setInterval(updateCountdown, 1000);
@@ -143,7 +166,7 @@ const [confirmModal, setConfirmModal] = useState({
   try {
     const token = localStorage.getItem('token');
     const response = await fetch(
-      `${import.meta.env.VITE_API_BACKEND_URL}/api/tournaments/${tournamentId}/status`,
+      `${API_BASE_URL}/tournaments/${tournamentId}/status`,
       {
         method: 'PUT',
         headers: {
@@ -238,7 +261,7 @@ const handleRegisterTournament = async (tournamentId) => {
 
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_API_BACKEND_URL}/api/tournaments/${tournamentId}/register`,
+        `${API_BASE_URL}/tournaments/${tournamentId}/register`,
         {
           method: 'POST',
           headers: {
@@ -257,20 +280,14 @@ const handleRegisterTournament = async (tournamentId) => {
       }
 
       toast.success('Successfully registered for the tournament!');
+       handleViewTournament(tournamentId);
       // Add any success handling here (e.g., update UI state)
     } catch (error) {
       console.error('Registration error:', error);
       toast.error(error.message || 'Failed to register for tournament');
-    }
-
-    if (response.data.success) {
-      toast.success('Registered successfully!');
-      // ✅ Navigate to the game page
-      handleViewTournament(tournamentId);
-    } else {
-      toast.error(response.data.message || 'Registration failed');
       return;
     }
+
   } catch (error) {
     console.error('Registration error:', error);
     
@@ -295,17 +312,6 @@ const handleRegisterTournament = async (tournamentId) => {
 
     const isCoinTournament = tournament.tournamentType === 'coin';
     
-    // Show confirmation dialog first
-    
-    //  const isConfirmed = window.confirm(
-    //   `Register for ${tournament.name}?\n\n` +
-    //    `Entry Fee: ${formatPrizeString(tournament.entryFee || 0, isCoinTournament)}\n` +
-    //    `Prize Pool: ${formatPrizeString(tournament.prizePool || 0, isCoinTournament)}`
-      
-    //  );
-
-    // if (isConfirmed) {
-    //   console.log('Tournament confirmed:', { userId, gameId, tournamentId });
       
     navigate(`/gameOn/${gameId}/${tournamentId}`);
    // }
@@ -318,6 +324,7 @@ const TournamentCard = ({
   id,
   name,
   entryFee,
+  startTime,
   prizePool,
   participants = [],
   maxParticipants,
@@ -328,18 +335,33 @@ const TournamentCard = ({
   currentPlayers = [],
 }) => {
   const progressPercent = Math.min(100, (participants.length / (maxParticipants || 1)) * 100);
-  const countdown = useCountdown({ targetDate: endTime });
-  const hasJoined = currentPlayers?.some(p =>
-    typeof p === 'string' ? p === userId : p?.userId === userId
-  );
+  const countdown = useCountdown({ targetDate: startTime, endTime, status },  async () => {
+      const success = await setTournamentStatus(id, 'live');
+      
+        fetchGameAndTournaments(); // re-fetch to show updated status
+      
+    },
+    async () => {
+      await setTournamentStatus(id, 'completed');
+    
+      fetchGameAndTournaments();
+      
+    }
+);
+  const hasJoined = currentPlayers.includes(userId);
 
+
+  
+ 
   return (
     <div className={`relative w-full bg-gradient-to-r from-blue-900 via-blue-700 to-blue-900 rounded-xl p-2  text-white overflow-hidden mb-[2px] shadow-md shadow-[#292828]`}> 
       <div className={`absolute top-1 left-1 px-1.5 py-0.5 rounded text-[10px] font-bold ${status === 'live' ? 'bg-yellow-500 text-black' : status === 'completed' ? 'bg-gray-400 text-gray-900' : 'bg-yellow-500 text-black'}`}> 
         {status === 'live' ? 'LIVE' : status === 'completed' ? 'COMPLETED' : status.toUpperCase()} 
       </div>
-      <div className="absolute top-1 right-1 text-[10px]">
-        Ends in: <span className="font-bold">{countdown || '00:00'}</span>
+      <div className="absolute top-1 right-1 text-[10px]">{
+        status === 'live' ? 'Ends in' : status === 'completed' ? 'Ended on' : 'Starts on'
+      }
+        <span className="font-bold">{countdown || '00:00'}</span>
       </div>
       <div className="flex gap-2 items-center mt-4">
         <img
@@ -365,17 +387,28 @@ const TournamentCard = ({
         </div>
         <div className="ml-1 flex flex-col items-end">
           <button
-            className={`bg-green-500 hover:bg-green-600 text-black font-bold px-3 py-1 rounded-full text-xs whitespace-nowrap mb-1 ${hasJoined || status === 'completed' ? 'opacity-50 cursor-not-allowed bg-gray-400 text-gray-700' : ''}`}
+            className={`bg-green-500 hover:bg-green-600 text-black font-bold px-3 py-1 rounded-full text-xs whitespace-nowrap mb-1 ${ status === 'completed' ? 'opacity-50 cursor-not-allowed bg-gray-400 text-gray-700' : ''}`}
             onClick={() => {
+               console.log('Clicked register for tournament:', hasJoined && status !== 'live');
               if (!hasJoined && status === 'live') {
                 setConfirmModal({ visible: true, tournament: tournaments.find(t => t._id === id || t.id === id) });
               } else if (hasJoined && status === 'live') {
                 handleViewTournament(id);
               }
+             
             }}
-            disabled={hasJoined || status !== 'live'}
+            disabled={ status !== 'live'}
           >
-            <div>{tournamentType === 'coin' ? <FaCoins className="inline mr-1" /> : <FaRupeeSign className="inline mr-1" />} {entryFee}</div>
+            <div>{tournamentType === 'coin' ? <FaCoins className="inline mr-1" /> : <FaRupeeSign className="inline mr-1" />}{
+  status === 'live'
+    ? hasJoined
+      ? 'Play'
+      : ` ${entryFee}`
+    : status === 'completed'
+    ? 'Completed'
+    : 'Upcoming'
+}
+</div>
           </button>
         </div>
       </div>
@@ -527,7 +560,7 @@ const filteredTournaments = {
           >
             <FaArrowLeft className="text-xl" />
           </button>
-          <h1 className="text-3xl font-bold">
+          <h1 className="text-3xl font-bold italic">
             {game?.displayName || game?.name || 'Tournaments'}
           </h1>
         </div>
@@ -563,13 +596,13 @@ const filteredTournaments = {
             <div>
              <div className='flex justify-between mb-4 m-2 '>
               <h1  onClick={() => setType('cash')}
-      className={`px-4 py-2 rounded-full text-sm font-medium border ${
+      className={`px-4 py-2 flex items-center justify-center mr-2 w-full rounded-full text-sm font-medium border ${
         type === 'cash'
           ? 'bg-yellow-500 text-gray-900 border-yellow-400'
           : 'bg-gray-800/50 text-white border-gray-700'
       }`}>Cash</h1>
               <h1  onClick={() => setType('coins')}
-      className={`px-4 py-2 rounded-full text-sm font-medium border ${
+      className={`px-4 py-2 flex items-center w-full ml-2 rounded-full text-sm font-medium border justify-center ${
         type === 'coins'
           ? 'bg-yellow-500 text-gray-900 border-yellow-400'
           : 'bg-gray-800/50 text-white border-gray-700'
@@ -588,6 +621,7 @@ const filteredTournaments = {
                     maxParticipants={tournament.maxParticipants}
                     imageUrl={game.assets?.thumbnail || tournament.imageUrl}
                     status={tournament.status}
+                    startTime={tournament.startTime}
                     endTime={tournament.endTime}
                     tournamentType={tournament.tournamentType}
                     currentPlayers={tournament.currentPlayers || []}
@@ -597,31 +631,7 @@ const filteredTournaments = {
               </div>
             </div>
           )}
-         { /* {filteredTournaments.coins.length > 0 && (
-            <div>
-              <h2 className="text-2xl font-bold mb-4 flex items-center">
-                <FaCoins className="text-yellow-500 mr-2" /> Coins Tournaments
-              </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredTournaments.coins.map(tournament => (
-                  <TournamentCard
-                    key={tournament._id}
-                    id={tournament._id}
-                    name={tournament.name}
-                    entryFee={tournament.entryFee}
-                    prizePool={tournament.prizePool}
-                    participants={tournament.participants || []}
-                    maxParticipants={tournament.maxParticipants}
-                    imageUrl={tournament.imageUrl}
-                    status={tournament.status}
-                    endTime={tournament.endTime}
-                    tournamentType={tournament.tournamentType}
-                    currentPlayers={tournament.currentPlayers || []}
-                  />
-                ))}
-              </div>
-            </div>
-          )} */}
+       
         </div>
       </main>
       <Navbar />

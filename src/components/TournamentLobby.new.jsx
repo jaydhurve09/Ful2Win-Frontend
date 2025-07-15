@@ -268,7 +268,7 @@ const TournamentLobby = () => {
         <div className="grid grid-cols-2 gap-4 mb-4">
           <div className="flex items-center">
             <FaRupeeSign className="text-yellow-400 mr-2" />
-            <span>Entry: {formatPrize(entryFee || 0, mode === 'coin')}</span>
+            <span>Entry Fee: {formatPrize(entryFee || 0, mode === 'coin')}</span>
           </div>
           <div className="flex items-center">
             <FaTrophy className="text-yellow-400 mr-2" />

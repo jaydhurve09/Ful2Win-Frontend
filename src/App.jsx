@@ -44,6 +44,7 @@ import StartScreen from './components/StartScreen';
 import {ToastContainer,toast} from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css';
 import { playSound, toggleMute, getMuteStatus } from './utils/soundManager'; //sound effect
+import HowToPlay from './components/HowToPlay';
 
 function App() {
   const { showSplash } = useAuth();
@@ -109,6 +110,7 @@ function App() {
               <Route path="/gameOn/:gameId/:tournamentId" element={<GameOn />} />
               <Route path="/comingsoon" element={<ComingSoon />} />
               <Route path="/startscreen" element={<StartScreen />} />
+              <Route path="/h" element={<HowToPlay />} />
             </Route>
             
             {/* 404 - Not Found */}
