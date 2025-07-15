@@ -166,7 +166,7 @@ const ProfileScreen = () => {
     {
       icon: (
         <img
-          src="/src/assets/win2.png"
+          src="./assets/win2.png"
           alt="Wins"
           className="w-5 h-5 object-contain"
         />
