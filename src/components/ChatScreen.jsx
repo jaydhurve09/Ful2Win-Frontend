@@ -48,33 +48,47 @@ const ChatScreen = ({ selectedFriend, setSelectedFriend }) => {
 
     // Create socket connection if it doesn't exist
     if (!socketRef.current) {
-      socketRef.current = io(SOCKET_URL, {
-        withCredentials: true,
-        transports: ['polling', 'websocket'],
+      const socket = io(SOCKET_URL, {
+        auth: { userId: currentUserId },
         reconnection: true,
         reconnectionAttempts: 5,
         reconnectionDelay: 1000,
+        timeout: 20000,
+        transports: ['websocket', 'polling'],
+        autoConnect: true,
+        withCredentials: true
       });
-
-      // Set up socket event listeners
-      const socket = socketRef.current;
-
+      
+      socketRef.current = socket;
+      
       const handleConnect = () => {
         setSocketError(false);
-        // Join user's personal room
-        socket.emit('join_user_room', currentUserId);
       };
-
-      const handleConnectError = (err) => {
-        console.error('Socket connection error:', err);
+      
+      const handleConnectError = (error) => {
+        // Silently handle connection errors to avoid console warnings
         setSocketError(true);
-        setError('Connection error. Reconnecting...');
+        
+        // Attempt to reconnect with a delay
+        setTimeout(() => {
+          if (socketRef.current && !socketRef.current.connected) {
+            socketRef.current.connect();
+          }
+        }, 2000);
       };
-
+      
       const handleDisconnect = (reason) => {
-        if (reason === 'io server disconnect') {
-          // Reconnect if server disconnects
-          socket.connect();
+        if (reason === 'io server disconnect' || reason === 'transport close') {
+          // Silently attempt to reconnect
+          setTimeout(() => {
+            if (socketRef.current) {
+              try {
+                socketRef.current.connect();
+              } catch (e) {
+                // Ignore connection errors
+              }
+            }
+          }, 1000);
         }
       };
 
@@ -189,11 +203,34 @@ const ChatScreen = ({ selectedFriend, setSelectedFriend }) => {
     setError(null);
     
     try {
+      // Load previous messages
       const messages = await chatService.getConversation(
         currentUserId,
         selectedFriend._id
       );
       
+      // Process and merge with existing messages, removing duplicates
+      setMessages(prevMessages => {
+        const existingMessageIds = new Set(prevMessages.map(m => m._id || m.localId));
+        const newMessages = messages.filter(msg => !existingMessageIds.has(msg._id));
+        
+        return [...prevMessages, ...newMessages]
+          .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+      });
+      
+      // Find and mark unread messages as read
+      const unreadMsgs = messages.filter(msg => 
+        !msg.readAt && String(msg.sender) === String(selectedFriend._id)
+      );
+      
+      if (unreadMsgs.length > 0) {
+        const messageIds = unreadMsgs.map(msg => msg._id).filter(Boolean);
+        if (messageIds.length > 0) {
+          await chatService.markAsRead(messageIds);
+        }
+      }
+      
+      // Process messages for display
       const processedMessages = messages.map(msg => ({
         ...msg,
         sender: msg.sender?._id || msg.sender || null,

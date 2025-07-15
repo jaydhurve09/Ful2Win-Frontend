@@ -23,19 +23,20 @@ function FollowerPage() {
       const currentUser = await authService.getCurrentUserProfile();
       if (!currentUser) throw new Error('Not authenticated');
 
-      const res = await api.get('/users/community');
-      const list = Array.isArray(res.data)
-        ? res.data
-        : Array.isArray(res.data?.users)
-          ? res.data.users
-          : [];
-
-      const others = list.filter((u) => u._id !== currentUser._id);
+      // Use the same endpoint as Challenges page to get all users
+      const response = await api.get('/challenges/users');
+      const allUsers = Array.isArray(response.data?.users) ? response.data.users : [];
+      
+      // Filter out the current user and ensure we have valid user objects
+      const others = allUsers.filter(user => 
+        user && user._id && user._id !== currentUser._id
+      );
+      
       setUsers(others);
       setFilteredUsers(others);
     } catch (err) {
-      console.error(err);
-      toast.error('Unable to load community members');
+      console.error('Error fetching users:', err);
+      toast.error('Unable to load users. Please try again.');
       setUsers([]);
       setFilteredUsers([]);
     } finally {
