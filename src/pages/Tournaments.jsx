@@ -6,6 +6,7 @@ import Navbar from '../components/Navbar';
 import BackgroundBubbles from '../components/BackgroundBubbles';
 import { toast } from 'react-toastify';
 import api from '../services/api';
+import ShineButton from '../components/ui/ShineButton';
 
 const Tournaments = () => {
   const navigate = useNavigate();
@@ -213,16 +214,16 @@ const Tournaments = () => {
                         <FaUsers className="mr-1 text-yellow-500 text-[8px] flex-shrink-0" />
                         <span className="truncate">{formatPlayerCount(game.activePlayers || 0, game.maxPlayers || 0)}</span>
                       </div>
-                      <button
-                        className={`bg-yellow-500 hover:bg-yellow-400 text-gray-900 font-semibold text-[9px] rounded flex items-center transition-colors w-full sm:w-auto justify-center mt-1 sm:mt-0 ${game.tournamentCount > 0 ? 'px-2 py-1' : 'px-1.5 py-0.5'}`}
+                      <ShineButton
+                        className={`text-gray-900 font-semibold text-[9px] rounded flex items-center w-full sm:w-auto justify-center mt-1 sm:mt-0 ${game.tournamentCount > 0 ? 'px-1 py-0.5' : 'px-1.5 py-0.5'}`}
                         onClick={(e) => {
                           e.stopPropagation();
                           handleViewGameTournaments(gameId);
                         }}
                       >
-                        <FaTrophy className="mr-1 text-[8px]" />
+                        <FaTrophy className="mr-1 text-2" />
                         View
-                      </button>
+                      </ShineButton>
                     </div>
                   </div>
                 </div>

@@ -6,6 +6,7 @@ import BackgroundBubbles from '../components/BackgroundBubbles';
 
 
 import Button from '../components/Button';
+import ShineButton from '../components/ui/ShineButton';
 import CommunityProfile from '../components/CommunityProfile';
 import ChatScreen from '../components/ChatScreen';
 import Challenges from '../components/Challenges';
@@ -1314,12 +1315,12 @@ const Community = () => {
                   onKeyPress={(e) => e.key === 'Enter' && handleComment(post._id)}
                   autoFocus={showCommentInput === post._id}
                 />
-                <button 
-                  className="bg-blue-500 hover:bg-blue-600 text-dullBlue hover:text-white px-3 py-2 rounded-r-lg text-sm font-medium transition-colors"
+                <ShineButton
+                  className="px-3 py-2 text-sm font-medium rounded-r-lg transition-colors"
                   onClick={() => handleComment(post._id)}
                 >
                   Post
-                </button>
+                </ShineButton>
               </div>
             )}
 

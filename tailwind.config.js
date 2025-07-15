@@ -5,6 +5,18 @@ export default {
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
+    extend: {
+      keyframes: {
+        shine: {
+          '0%': { transform: 'translateX(-100%) skewX(-15deg)', opacity: '0.6' },
+          '20%': { transform: 'translateX(100%) skewX(-15deg)', opacity: '0.6' },
+          '100%': { transform: 'translateX(100%) skewX(-15deg)', opacity: '0' },
+        },
+      },
+      animation: {
+        'shine': 'shine 2s ease-in-out infinite',
+      },
+    },
     fontFamily: {
       sans: [
         'Inter',
