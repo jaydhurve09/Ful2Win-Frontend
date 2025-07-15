@@ -11,6 +11,7 @@ import SpinWheelScreen from '../components/SpinWheelScreen';
 import BackgroundBubbles from '../components/BackgroundBubbles';
 import BackgroundCircles from '../components/BackgroundCircles';
 import SpinIcon from '../assets/SpinIcon.png';
+import SteppedDivider from '../components/SteppedDivider';
 
 const Home = () => {
   const { isAuthenticated } = useAuth();
@@ -95,7 +96,9 @@ useEffect(() => {
         <div className="w-full">
           <div className="max-w-screen-lg mx-auto px-0">
             <TrendingGames />
+            <SteppedDivider className="my-6" thickness="4" />
             <MultiplayerGames />
+            <SteppedDivider className="my-6" thickness="4" />
             <PopularGames />
           </div>
         </div>
