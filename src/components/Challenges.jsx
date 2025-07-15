@@ -4,7 +4,8 @@ import Navbar from '../components/Navbar';
 import BackgroundBubbles from '../components/BackgroundBubbles';
 import { useNavigate } from 'react-router-dom';
 import { FiArrowLeft } from 'react-icons/fi';
-import { FaSearch, FaSpinner } from 'react-icons/fa';
+import { FaSpinner } from 'react-icons/fa';
+import ShineButton from './ui/ShineButton';
 import { toast } from 'react-toastify';
 import api from '../services/api';
 
@@ -316,10 +317,10 @@ const Challenges = () => {
                   rows="3"
                 />
 
-                <button
+                <ShineButton
                   type="submit"
                   disabled={submitting}
-                  className="w-full bg-blue-600 text-white py-2 mt-4 rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                  className="w-full bg-blue-600 text-white py-2 mt-4 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                 >
                   {submitting ? (
                     <>
@@ -329,7 +330,7 @@ const Challenges = () => {
                   ) : (
                     'Send Challenge'
                   )}
-                </button>
+                </ShineButton>
               </form>
             </div>
           </div>
