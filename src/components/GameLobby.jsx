@@ -128,9 +128,9 @@ const navigate = useNavigate();
               </button>
               
               {/* Wallet Balance */}
-              <div className="absolute top-4 left-4 bg-black/50 backdrop-blur-sm px-3 py-1.5 rounded-full text-sm font-medium text-white">
+              {/* <div className="absolute top-4 left-4 bg-black/50 backdrop-blur-sm px-3 py-1.5 rounded-full text-sm font-medium text-white">
                 Balance: ₹{walletBalance.toLocaleString()}
-              </div>
+              </div> */}
               
               {/* Game Info */}
               <div className="absolute bottom-4 left-4 right-4">
@@ -143,7 +143,7 @@ const navigate = useNavigate();
                     />
                   </div>
                   <div>
-                    <h1 className="text-xl sm:text-2xl font-bold text-white shadow-black shadow-2xl">{gameTitle}</h1>
+                    <h1 className="text-xl sm:text-2xl font-bold text-white shadow-black shadow-2xl capitalize">{gameTitle}</h1>
                     <div className="flex items-center gap-2 text-sm text-white mt-1 shadow-black shadow-2xl">
                       <span>{gameCategory}</span>
                       <span>•</span>

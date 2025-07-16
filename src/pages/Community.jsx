@@ -928,7 +928,7 @@ const Community = () => {
       );
       
       return (
-        <div key={post._id} className="bg-blue-700 rounded-xl p-4 mb-1 border border-blue-800 opacity-80 ">
+        <div key={post._id} className="bg-white rounded-xl p-4 mb-4 border border-gray-200 shadow-md hover:shadow-lg transition-shadow duration-300">
           <div className="flex items-start mb-3">
             <div 
               className="cursor-pointer mr-2"
@@ -941,12 +941,12 @@ const Community = () => {
                 <h4 className="font-semibold mr-2">
                   {userName}
                 </h4>
-                <span className="text-xs text-dullBlue" title={new Date(post.createdAt).toLocaleString()}>
+                <span className="text-xs text-blue-400" title={new Date(post.createdAt).toLocaleString()}>
                   {formatTimeAgo(post.createdAt)}
                   {post.isEdited && ' • Edited'}
                 </span>
               </div>
-              <p className="text-sm text-dullBlue">
+              <p className="text-sm text-blue-400">
                 @{userUsername}
               </p>
             </div>
@@ -1202,9 +1202,9 @@ const Community = () => {
           )}
           
           <div className="flex flex-col">
-            <div className="flex items-center justify-between text-dullBlue hover:text-white text-sm border-t border-white/10 pt-3">
+            <div className="flex items-center justify-between text-gray-500 text-sm border-t border-gray-100 pt-3 mt-2">
               <button 
-                className={`flex items-center group transition-colors ${post.likes?.includes(currentUser?._id) ? 'text-red-500' : 'text-dullBlue hover:text-red-500'}`}
+                className={`flex items-center group transition-colors ${post.likes?.includes(currentUser?._id) ? 'text-red-500' : 'text-gray-600 hover:text-red-500'}`}
                 onClick={(e) => {
                   e.stopPropagation();
                   handleLike(post._id);
@@ -1221,7 +1221,7 @@ const Community = () => {
               </button>
               <div className="flex items-center">
                 <button 
-                  className={`flex items-center ${showComments[post._id] ? 'text-blue-400' : 'hover:text-white'}`}
+                  className={`flex items-center ${showComments[post._id] ? 'text-blue-500' : 'text-gray-600 hover:text-blue-600'}`}
                   onClick={(e) => {
                     e.stopPropagation();
                     // Toggle comments visibility and reset showAllComments to false
@@ -1260,7 +1260,7 @@ const Community = () => {
                 </button>
               </div>
               <button 
-                className="flex items-center text-dullBlue hover:text-white"
+                className="flex items-center text-gray-600 hover:text-blue-600"
                 onClick={async (e) => {
                   e.stopPropagation();
                   try {
@@ -1309,7 +1309,7 @@ const Community = () => {
                 <input
                   type="text"
                   placeholder="Write a comment..."
-                  className="flex-1 bg-white/10 border border-white/20 rounded-l-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-white/50"
+                  className="flex-1 bg-white border border-gray-200 rounded-l-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                   value={commentInputs[post._id] || ''}
                   onChange={(e) => setCommentInputs({...commentInputs, [post._id]: e.target.value})}
                   onKeyPress={(e) => e.key === 'Enter' && handleComment(post._id)}
@@ -1327,7 +1327,7 @@ const Community = () => {
             {/* Comments list - Only show if comments exist and the section is toggled */}
             {showComments[post._id] && (post.comments?.length > 0 || showCommentInput === post._id) && (
               <div className="mt-3 space-y-3 max-h-60 overflow-y-auto pr-2">
-                <div className="flex justify-between items-center text-sm font-medium text-gray-400 border-b border-white/10 pb-1">
+                <div className="flex justify-between items-center text-sm font-medium text-gray-500 border-b border-gray-100 pb-1">
                   <span>Comments</span>
                   <span className="text-xs">{post.commentCount || post.comments?.length} total</span>
                 </div>
@@ -1351,7 +1351,7 @@ const Community = () => {
                     const commentId = comment._id || `comment-${Date.now()}-${idx}`;
                     
                     return (
-                      <div key={commentId} className="bg-white/5 rounded-lg p-3 text-sm">
+                      <div key={commentId} className="bg-gray-50 rounded-lg p-3 text-sm border border-gray-100">
                         <div className="flex items-start gap-2">
                           <div className="flex-shrink-0">
                             <div 
@@ -1373,7 +1373,7 @@ const Community = () => {
                                   }}
                                 />
                               ) : null}
-                              <div className={`w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-medium ${
+                              <div className={`w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-medium border border-blue-200 ${
                                 user?.profilePicture ? 'hidden' : 'flex'
                               }`}>
                                 {user?.username?.charAt(0)?.toUpperCase() || 'U'}
@@ -1391,11 +1391,11 @@ const Community = () => {
                               >
                                 {user?.username || 'User'}
                               </span>
-                              <span className="text-xs text-gray-400" title={new Date(createdAt).toLocaleString()}>
+                              <span className="text-xs text-gray-500" title={new Date(createdAt).toLocaleString()}>
                                 {formatTimeAgo(createdAt)}
                               </span>
                             </div>
-                            <p className="mt-0.5 text-gray-200 break-words">
+                            <p className="mt-0.5 text-gray-700 break-words">
                               {content}
                             </p>
                           </div>
@@ -1448,7 +1448,7 @@ const Community = () => {
   }, []);
 
   return (
-    <div className="relative min-h-screen pb-24 overflow-hidden text-white bg-white">
+    <div className="relative min-h-screen pb-24 overflow-hidden text-gray-800 bg-gray-200">
       <BackgroundBubbles />
       {viewingProfile && (
         <CommunityProfile
@@ -1462,7 +1462,7 @@ const Community = () => {
           <Header />
 
           <div className="pt-20 md:pt-0 w-full flex justify-center">
-            <div className="w-full max-w-3xl px-4">
+            <div className="w-full max-w-3xl px-2">
               <div className="hidden md:flex gap-2 mb-2 overflow-x-auto py-1 justify-end pr-1">
                 {communityTabs.map((tab) => (
                   <Button
@@ -1482,7 +1482,7 @@ const Community = () => {
                   {communityTabs.map((tab) => (
                     <Button
                       key={tab.id}
-                      variant={activeTab === tab.id ? 'primary' : 'gradient'}
+                      variant={activeTab === tab.id ? 'active' : 'gradient'}
                       onClick={() => handleTabChange(tab.id)}
                       className={`w-full rounded-full ${activeTab === tab.id ? 'px-3 py-1.5' : 'p-2.5'} flex items-center justify-center`}
                       title={tab.label}
@@ -1508,7 +1508,7 @@ const Community = () => {
                     {typeTabs.map((tab) => (
                       <Button
                         key={tab.id}
-                        variant={activeType === tab.id ? 'primary' : 'outline'}
+                        variant={activeType === tab.id ? 'primary' : 'gradient'}
                         onClick={() => setActiveType(tab.id)}
                         className={`rounded-full text-sm ${activeType === tab.id ? 'px-3 py-1.5' : 'p-2.5'} flex items-center justify-center`}
                         title={tab.label}
@@ -1530,11 +1530,11 @@ const Community = () => {
                   </div>
                 </div>
 
-                <div className="bg-blue-700 backdrop-blur-sm rounded-xl p-4 mb-4 border border-white/10 opacity-90">
-                  <h3 className="text-lg font-semibold mb-4">Create Post</h3>
+                <div className="bg-gray-100 rounded-xl p-4 mb-4 border border-gray-200 shadow-lg">
+                  <h3 className="text-lg font-semibold mb-4 text-gray-800">Create Post</h3>
                   <div className="create-post-card flex flex-row">
                     {currentUser?.profilePicture ? (
-                      <div className="w-10 h-10 rounded-full border-2 border-dullBlue p-0.5 mr-3 flex-shrink-0">
+                      <div className="w-10 h-10 rounded-full border-2 border-blue-400 p-0.5 mr-3 flex-shrink-0">
                         <img 
                           src={currentUser.profilePicture} 
                           alt={currentUser.name || 'User'}
@@ -1552,7 +1552,7 @@ const Community = () => {
                           <input
                             type="text"
                             placeholder="What's on your mind?"
-                            className="w-full bg-white/5 border border-white/10 rounded-full px-4 py-2 text-white mb-3 focus:outline-none focus:ring-0 focus:border-white/20"
+                            className="w-full bg-gray-100 border border-blue-400 rounded-full px-4 py-2 text-gray-800 mb-3 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                             onClick={() => setShowCreatePost(true)}
                             readOnly
                           />
@@ -1563,7 +1563,7 @@ const Community = () => {
                             value={newPostContent}
                             onChange={(e) => setNewPostContent(e.target.value)}
                             placeholder="Share your thoughts..."
-                            className="w-full bg-white/10 border border-white/20 rounded-lg p-3 text-white mb-3 focus:outline-none focus:ring-0 focus:border-white/30 resize-none"
+                            className="w-full bg-gray-200 border border-gray-200 rounded-lg p-3 text-gray-800 mb-3 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none shadow-sm"
                             rows="3"
                             autoFocus
                           />
@@ -1608,10 +1608,10 @@ const Community = () => {
                           />
                           <button 
                             type="button"
-                            className="flex items-center text-sm text-gray-300 hover:text-white whitespace-nowrap"
+                            className="flex items-center text-sm text-gray-600 hover:text-blue-600 whitespace-nowrap"
                             onClick={() => document.getElementById('media-upload').click()}
                           >
-                            <FaImage className="mr-1" /> {fileType === 'video' ? 'Change Media' : 'Photo'}
+                            <FaImage className="mr-1 text-blue-400" /> {fileType === 'video' ? 'Change Media' : 'Photo'}
                           </button>
                           {/* <button className="flex items-center text-sm text-gray-300 hover:text-white whitespace-nowrap">
                             <FaPoll className="mr-1" /> Poll
@@ -1646,7 +1646,7 @@ const Community = () => {
                   </div>
                 </div>
 
-                <div className="space-y-4">
+                <div className="space-y-4 px-1">
                   {renderPosts()}
                 </div>
               </div>
@@ -1696,7 +1696,7 @@ const Community = () => {
         <div className="fixed inset-0 z-[100] overflow-y-auto">
           <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
             <div 
-              className="fixed inset-0 bg-black/80 transition-opacity"
+              className="fixed inset-0 bg-black/50 transition-opacity"
               onClick={(e) => {
                 e.stopPropagation();
                 setViewingProfile(null);
@@ -1705,7 +1705,7 @@ const Community = () => {
             ></div>
             <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
             <div 
-              className="inline-block align-bottom bg-gray-900 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg w-full"
+              className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg w-full"
               onClick={(e) => e.stopPropagation()}
             >
               <CommunityProfile 

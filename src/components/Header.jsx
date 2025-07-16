@@ -200,7 +200,7 @@ const Header = () => {
             {/* Wallet */}
             <div
               onClick={() => navigate('/wallet')}
-              className="flex items-center bg-active px-0.5 py-0.5 rounded-full cursor-pointer hover:opacity-90 transition"
+              className="flex justify-center items-center bg-active p-1 rounded-full cursor-pointer hover:opacity-90 transition"
             >
               <IoMdWallet className=" rounded-full text-gray-800 text-sm mr-1.5" />
               {isLoading ? (

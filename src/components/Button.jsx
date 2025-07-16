@@ -14,9 +14,9 @@ const Button = ({
   const baseStyles = 'font-semibold rounded-lg transition-all duration-200 ease-in-out';
   
   const variants = {
-    primary: 'bg-active hover:bg-white text-black',
+    primary: 'bg-active hover:bg-neonBlueGradient text-black',
     secondary: 'bg-blue-600 hover:bg-blue-700 text-white',
-    gradient: 'bg-neonBlueGradient text-white hover:bg-whiteGradient hover:text-black',
+    gradient: 'bg-neonBlueGradient text-white hover:bg-neonBlueGradient hover:text-white',
     outline: 'border-2 border-active hover:bg-active hover:text-black text-active',
   };
 
