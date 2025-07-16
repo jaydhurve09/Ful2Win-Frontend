@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Header from '../components/Header';
 import Navbar from '../components/Navbar';
 import BackgroundBubbles from '../components/BackgroundBubbles';
+import { NeonGradientCard } from '../components/ui-components/neon-gradient-card';
 import { useNavigate } from 'react-router-dom';
 import { FiArrowLeft } from 'react-icons/fi';
 import { FaSpinner } from 'react-icons/fa';
@@ -219,9 +220,9 @@ const Challenges = () => {
           </button>
         </div>
 
-        <div className="px-4 max-w-2xl mx-auto space-y-6">
+        <div className="px-6 max-w-2xl mx-auto space-y-6">
           {/* Challenge Form */}
-          <div className="bg-white rounded-xl shadow-md p-4">
+          <NeonGradientCard className="max-w-sm items-center justify-center text-center p-4 opacity-90">
             <div className="text-black">
               <div
                 onClick={() => setIsFormOpen(!isFormOpen)}
@@ -248,7 +249,7 @@ const Challenges = () => {
                       setShowUserSuggestions(e.target.value.length > 0);
                     }}
                     onFocus={() => setShowUserSuggestions(friendName.length > 0)}
-                    className="w-full p-2 border rounded"
+                    className="w-full p-2 border rounded-lg"
                   />
                   {showUserSuggestions && filteredUsers.length > 0 && (
                     <ul className="absolute w-full bg-white border rounded mt-1 z-10 text-sm max-h-40 overflow-y-auto">
@@ -283,7 +284,7 @@ const Challenges = () => {
                       setShowGameSuggestions(e.target.value.length > 0);
                     }}
                     onFocus={() => setShowGameSuggestions(gameInput.length > 0)}
-                    className="w-full p-2 border rounded"
+                    className="w-full p-2 border rounded-lg"
                   />
                   {showGameSuggestions && filteredGames.length > 0 && (
                     <ul className="absolute w-full bg-white border rounded mt-1 z-10 text-sm max-h-40 overflow-y-auto">
@@ -313,7 +314,7 @@ const Challenges = () => {
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   maxLength={200}
-                  className="w-full p-2 border rounded mt-3 resize-none"
+                  className="w-full p-2 border rounded-lg mt-3 resize-none"
                   rows="3"
                 />
 
@@ -333,7 +334,7 @@ const Challenges = () => {
                 </ShineButton>
               </form>
             </div>
-          </div>
+          </NeonGradientCard>
 
           {/* Incoming Invites */}
           {incomingInvites.length > 0 && (

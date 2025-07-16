@@ -1530,7 +1530,7 @@ const Community = () => {
                   </div>
                 </div>
 
-                <div className="bg-gray-100 rounded-xl p-4 mb-4 border border-gray-200 shadow-lg">
+                <div className="bg-gray-100 rounded-xl p-4 mb-8 border border-gray-200 shadow-lg">
                   <h3 className="text-lg font-semibold mb-4 text-gray-800">Create Post</h3>
                   <div className="create-post-card flex flex-row">
                     {currentUser?.profilePicture ? (
