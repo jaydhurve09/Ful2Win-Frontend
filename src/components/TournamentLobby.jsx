@@ -554,7 +554,7 @@ const filteredTournaments = {
       <BackgroundBubbles />
       <Header />
       <main className="container mx-auto px-2 pt-24 pb-20 relative z-10">
-        <div className="flex items-center mb-8">
+        <div className="flex items-center mb-4">
           <button
             onClick={() => navigate(-1)}
             className="mr-4 p-2 rounded-full hover:bg-gray-800/50"

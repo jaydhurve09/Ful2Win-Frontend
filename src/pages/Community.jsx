@@ -1638,13 +1638,7 @@ const Community = () => {
                               </Button>
                             </div>
                           ) : (
-                            <Button
-                              variant="primary"
-                              size="sm"
-                              onClick={() => setShowCreatePost(true)}
-                            >
-                              Post
-                            </Button>
+                           <p></p>
                           )}
                         </div>
                       </div>
