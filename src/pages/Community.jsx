@@ -1508,7 +1508,7 @@ const Community = () => {
                     {typeTabs.map((tab) => (
                       <Button
                         key={tab.id}
-                        variant={activeType === tab.id ? 'gradient' : 'primary'}
+                        variant={activeType === tab.id ? 'primary' : 'gradient'}
                         onClick={() => setActiveType(tab.id)}
                         className={`rounded-full text-sm ${activeType === tab.id ? 'px-3 py-1.5' : 'p-2.5'} flex items-center justify-center`}
                         title={tab.label}
