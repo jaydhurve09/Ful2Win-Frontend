@@ -1484,7 +1484,7 @@ const Community = () => {
                       key={tab.id}
                       variant={activeTab === tab.id ? 'active' : 'gradient'}
                       onClick={() => handleTabChange(tab.id)}
-                      className={`w-full rounded-full ${activeTab === tab.id ? 'px-3 py-1.5' : 'p-2.5'} flex items-center justify-center`}
+                      className={`w-full rounded-full shadow-lg shadow-gray-700 ${activeTab === tab.id ? 'px-3 py-1.5' : 'p-2.5'} flex items-center justify-center`}
                       title={tab.label}
                     >
                       {React.cloneElement(tab.icon, { 
@@ -1510,7 +1510,7 @@ const Community = () => {
                         key={tab.id}
                         variant={activeType === tab.id ? 'primary' : 'gradient'}
                         onClick={() => setActiveType(tab.id)}
-                        className={`rounded-full text-sm ${activeType === tab.id ? 'px-3 py-1.5' : 'p-2.5'} flex items-center justify-center`}
+                        className={`rounded-full shadow-md shadow-gray-700 text-sm ${activeType === tab.id ? 'px-3 py-1.5' : 'p-2.5'} flex items-center justify-center`}
                         title={tab.label}
                       >
                         {tab.icon ? (
@@ -1530,7 +1530,7 @@ const Community = () => {
                   </div>
                 </div>
 
-                <div className="bg-gray-100 rounded-xl p-4 mb-4 border border-gray-200 shadow-lg">
+                <div className="bg-gray-100 rounded-xl p-4 mb-8 border border-gray-200 shadow-lg">
                   <h3 className="text-lg font-semibold mb-4 text-gray-800">Create Post</h3>
                   <div className="create-post-card flex flex-row">
                     {currentUser?.profilePicture ? (
@@ -1597,7 +1597,8 @@ const Community = () => {
                         </div>
                       )}
                       <div className="flex flex-wrap items-center justify-between gap-2 border-t border-white/10 pt-3">
-                        <div className="flex space-x-2">
+                        {showCreatePost ? (
+                          <div className="flex space-x-2">
                           <input
                             type="file"
                             id="media-upload"
@@ -1613,10 +1614,11 @@ const Community = () => {
                           >
                             <FaImage className="mr-1 text-blue-400" /> {fileType === 'video' ? 'Change Media' : 'Photo'}
                           </button>
+                          </div>): (<p> </p>)}
                           {/* <button className="flex items-center text-sm text-gray-300 hover:text-white whitespace-nowrap">
                             <FaPoll className="mr-1" /> Poll
                           </button> */}
-                        </div>
+                        
                         <div className="flex-shrink-0">
                           {showCreatePost ? (
                             <div className="flex space-x-2">
@@ -1638,13 +1640,14 @@ const Community = () => {
                               </Button>
                             </div>
                           ) : (
-                            <Button
-                              variant="primary"
-                              size="sm"
-                              onClick={() => setShowCreatePost(true)}
-                            >
-                              Post
-                            </Button>
+                            <p> </p>
+                            // <Button
+                            //   variant="primary"
+                            //   size="sm"
+                            //   onClick={() => setShowCreatePost(true)}
+                            // >
+                            //   Post
+                            // </Button>
                           )}
                         </div>
                       </div>

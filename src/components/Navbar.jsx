@@ -7,30 +7,52 @@ const Navbar = () => {
 
     // Define base navigation items (without wallet)
   const baseNavItems = [
-    { path: '/', icon: <FaHome />, label: 'Home' },
-    { path: '/games', icon: <FaGamepad />, label: 'Games' },
-    { path: '/tournaments', icon: <FaTrophy />, label: 'Tournaments' },
-    { path: '/community', icon: <FaUsers />, label: 'Community' },
-    { path: '/profile', icon: <FaUser />, label: 'Profile' },
+    { path: '/', icon: <FaHome />, label: 'Home', priority: 1 },
+    { path: '/games', icon: <FaGamepad />, label: 'Games', priority: 2 },
+    { path: '/tournaments', icon: <FaTrophy />, label: 'Tournaments', priority: 3 },
+    { path: '/community', icon: <FaUsers />, label: 'Community', priority: 4 },
+    { path: '/profile', icon: <FaUser />, label: 'Profile', priority: 5 },
   ];
-
-  // Add wallet to nav items only when on wallet page, and remove Tournaments to maintain layout
-  const navItems = location.pathname.startsWith('/wallet')
+  
+  // Add wallet to nav items only when on wallet page, replacing the lowest priority item
+  const allNavItems = location.pathname.startsWith('/wallet')
     ? [
-        ...baseNavItems.slice(0, 2), // First 2 items (Home, Games)
-        { path: '/wallet', icon: <FaWallet />, label: 'Wallet' },
-        ...baseNavItems.slice(3) // Last 2 items (Community, Profile)
-      ]
+        ...baseNavItems.slice(0, -1), // All items except the last one
+        { path: '/wallet', icon: <FaWallet />, label: 'Wallet', priority: 4.5 } // Insert with priority between 4 and 5
+      ].sort((a, b) => a.priority - b.priority) // Re-sort to maintain order
     : baseNavItems;
 
+  // Always show exactly 5 icons:
+  // - Current active route (if in navbar)
+  // - First 4 highest priority items (excluding current route)
   const currentPath = location.pathname;
+  const currentItem = allNavItems.find(item => item.path === currentPath);
+  
+  // Get items excluding current one, sorted by priority
+  const otherItems = allNavItems
+    .filter(item => item.path !== currentPath)
+    .sort((a, b) => a.priority - b.priority);
+  
+  // Take first 4 highest priority items
+  const topItems = otherItems.slice(0, 4);
+  
+  // Combine current item (if in navbar) with top items, then sort by original order
+  let navItems = currentItem 
+    ? [currentItem, ...topItems]
+    : [...topItems, allNavItems[allNavItems.length - 1]]; // If current route not in navbar, ensure we have 5 items
+    
+  // Ensure we have exactly 5 items
+  navItems = navItems.slice(0, 5);
+  
+  // Sort items to maintain consistent order based on priority
+  navItems.sort((a, b) => a.priority - b.priority);
 
   const activeIndex = navItems.findIndex(item => item.path === currentPath);
   const activeItem = navItems[activeIndex] || navItems[2];
 
   const visibleItems = navItems.filter((_, index) => index !== activeIndex);
   const leftItems = visibleItems.slice(0, 2);
-  const rightItems = visibleItems.slice(2);
+  const rightItems = visibleItems.slice(2, 4); // Ensure we only take 4 items total for 5 with active
 
   return (
     <>

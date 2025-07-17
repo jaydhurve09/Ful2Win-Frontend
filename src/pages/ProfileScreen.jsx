@@ -26,8 +26,7 @@ import kycIcon from "../assets/kyc7.png";
 const ProfileScreen = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, isAuthenticated } = useAuth();
-
+  const { user, isAuthenticated, logout } = useAuth();
 
   const [activeSection, setActiveSection] = useState("profile");
   const [currentUser, setCurrentUser] = useState(null);

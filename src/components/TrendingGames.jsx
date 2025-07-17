@@ -3,23 +3,57 @@ import { useNavigate } from 'react-router-dom';
 import flappyball from '../assets/Flappy-Ball.png';
 import colorsmash from '../assets/colorsmash.png';
 import matchmerge from '../assets/MatchMerge.png';
-import eggcatcher from '../assets/EggCatcher.png';
-import gravityhop from '../assets/GravityHop.png';
+import eggcatcher from '../assets/eggcatcher.png';
+import gravityhop from '../assets/gravityhop.png';
+import api from '../services/api.js'; // Assuming you have an api.js file for API calls
 
 const TrendingGames = () => {
   const navigate = useNavigate();
   const [expanded, setExpanded] = useState(false);
   const [showButton, setShowButton] = useState(false);
   const [rowHeight, setRowHeight] = useState(null);
-  const gridRef = useRef(null); 
+  const [games, setGames] = useState([]);
+  const gridRef = useRef(null);
 
-  const games = [
-    { id: 1, name: 'Flappy Ball', path: '/games', image: flappyball },
-    { id: 2, name: 'Color Smash', path: '/games', image: colorsmash },
-    { id: 3, name: 'Match Merge', path: '/games', image: matchmerge },
-    { id: 4, name: 'Egg Catcher', path: '/games', image: eggcatcher },
-    { id: 5, name: 'Gravity Hop', path: '/games', image: gravityhop },
-  ];
+  // const games = [
+  //   { id: 1, name: 'Flappy Ball', path: '/games', image: flappyball },
+  //   { id: 2, name: 'Color Smash', path: '/games', image: colorsmash },
+  //   { id: 3, name: 'Match Merge', path: '/games', image: matchmerge },
+  //   { id: 4, name: 'Egg Catcher', path: '/games', image: eggcatcher },
+  //   { id: 5, name: 'Gravity Hop', path: '/games', image: gravityhop },
+  // ];
+ const fetchGames = async () => {
+      try {
+        
+        const response = await api.get('/games', {
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          },
+          withCredentials: true,
+        });
+
+        let gamesData = [];
+        if (response.data?.success !== undefined) {
+          gamesData = Array.isArray(response.data.data) ? response.data.data : [];
+        } else if (Array.isArray(response.data)) {
+          gamesData = response.data;
+        } else if (response.data?.games) {
+          gamesData = Array.isArray(response.data.games) ? response.data.games : [];
+        }
+
+        setGames(gamesData);
+      } catch (err) {
+        let errorMsg = 'Failed to load games. Please try again later.';
+        if (err.response?.data?.error) {
+          errorMsg = `Server error: ${err.response.data.error}`;
+        } else if (err.message) {
+          errorMsg = `Error: ${err.message}`;
+        }
+       console.log(errorMsg);
+        setGames([]);
+      } 
+    };
 
   useEffect(() => {
     const checkWrapAndRowHeight = () => {
@@ -40,7 +74,7 @@ const TrendingGames = () => {
 
       setShowButton(rows.length > 1);
     };
-
+   fetchGames();
     checkWrapAndRowHeight();
     window.addEventListener('resize', checkWrapAndRowHeight);
     return () => window.removeEventListener('resize', checkWrapAndRowHeight);
@@ -65,15 +99,15 @@ const TrendingGames = () => {
         >
           {games.map((game) => (
             <div
-              key={game.id}
-              onClick={() => navigate(game.path)}
+              key={game._id}
+              onClick={() => navigate(`/game-lobby/${game._id}`)}
               className="bg-white/10 rounded-lg overflow-hidden cursor-pointer transition-transform hover:scale-105 active:scale-95 relative"
               style={{ border: '3px solid #AECBF9' }}
             >
               <div className="shine-overlay"></div>
               <div className="w-full aspect-square">
                 <img
-                  src={game.image}
+                  src={game.assets?.thumbnail || game.image}
                   alt={game.name}
                   className="w-full h-full object-cover"
                 />
