@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import flappyball from '../assets/Flappy-Ball.png';
 import colorsmash from '../assets/colorsmash.png';
 import matchmerge from '../assets/MatchMerge.png';
-import eggcatcher from '../assets/eggcatcher.png';
-import gravityhop from '../assets/gravityhop.png';
+import eggcatcher from '../assets/EggCatcher.png';
+import gravityhop from '../assets/GravityHop.png';
 import api from '../services/api.js'; // Assuming you have an api.js file for API calls
 
 const TrendingGames = () => {
