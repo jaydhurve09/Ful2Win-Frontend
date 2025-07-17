@@ -1640,7 +1640,6 @@ const Community = () => {
                               </Button>
                             </div>
                           ) : (
-<<<<<<< HEAD
                             <p> </p>
                             // <Button
                             //   variant="primary"
@@ -1649,9 +1648,6 @@ const Community = () => {
                             // >
                             //   Post
                             // </Button>
-=======
-                           <p></p>
->>>>>>> 19bf53fc4cc84d5dea0f96d9e5d0684fff2deab1
                           )}
                         </div>
                       </div>
