@@ -357,48 +357,72 @@ const Account = () => {
         return;
       }
 
-      // Prepare FormData with just the file (avoid sending potentially invalid text fields)
-      // const toastId = tast.loading('Uploading imaoge...');
+      // Create FormData and append the file
+      const toastId = toast.loading('Uploading image...');
       const formDataToSend = new FormData();
+      formDataToSend.append('profilePicture', file);
 
-      // Append only the file – other text fields are handled by the main profile form
-      if (file instanceof File) {
-        formDataToSend.append('profilePicture', file);
-      }
+      try {
+        // Log the FormData for debugging
+        console.log('Sending FormData with file:', file.name, 'size:', file.size);
 
-      // Debug log (without printing file content)
-      for (let [key, value] of formDataToSend.entries()) {
-        console.log('FormData entry', key, value);
-      }
+        // Make the API call with isFormData flag set to true
+        const response = await authService.updateUserProfile(user._id, formDataToSend, true);
+        
+        // Handle different response formats
+        const responseData = response?.data || response;
+        const updatedUser = responseData?.user || responseData?.data || responseData;
+        const newProfilePicture = updatedUser?.profilePicture || updatedUser?.data?.profilePicture;
 
-      const response = await authService.updateUserProfile(user._id, formDataToSend, true);
-      const updatedUser = response?.data?.user || response?.user || response;
-      const newProfilePicture = updatedUser?.profilePicture;
+        if (!newProfilePicture) {
+          console.error('No profile picture URL in response:', response);
+          throw new Error('Failed to update profile picture. Please try again.');
+        }
 
-      if (!newProfilePicture) {
-        throw new Error('No profile picture URL in response');
-      }
-
-      const previewUrl = URL.createObjectURL(file);
-      setFormData(prev => ({
-        ...prev,
-        profilePicture: newProfilePicture,
-        profilePicturePreview: previewUrl
-      }));
-      updateUser({
-        ...user,
-        profilePicture: newProfilePicture
+        // Create a preview URL for the new image
+        const previewUrl = URL.createObjectURL(file);
+        
+        // Update form data with new picture
+        setFormData(prev => ({
+          ...prev,
+          profilePicture: newProfilePicture,
+          profilePicturePreview: previewUrl
+        }));
+        
+        // Update user context with new picture
+        updateUser({
+          ...user,
+          profilePicture: newProfilePicture
+        });
+        
+        // Update local storage
+        const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+        localStorage.setItem('user', JSON.stringify({
+          ...currentUser,
+          profilePicture: newProfilePicture
+        }));
+        
+        // Update the profile picture in localStorage for immediate UI update
+        if (newProfilePicture) {
+          localStorage.setItem('profilePicture', newProfilePicture);
+        }
+        
+        // Show success message
+        toast.dismiss(toastId);
+        toast.success('Profile picture updated successfully!', {
+          autoClose: 3000,
+          position: 'top-center',
+          closeButton: true,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          theme: 'colored'
       });
-      toast.dismiss(toastId);
-      toast.success('Profile picture updated successfully!', {
-        autoClose: 3000,
-        position: 'top-center',
-        closeButton: true,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        theme: 'colored'
-      });
+      } catch (error) {
+        console.error('Error updating profile picture:', error);
+        toast.dismiss(toastId);
+        toast.error(error.message || 'Failed to update profile picture');
+      }
       return () => {
         if (previewUrl) URL.revokeObjectURL(previewUrl);
       };
