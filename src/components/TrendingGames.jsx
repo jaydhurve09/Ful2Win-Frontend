@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import flappyball from '../assets/Flappy-Ball.png';
 import colorsmash from '../assets/colorsmash.png';
 import matchmerge from '../assets/MatchMerge.png';
-import eggcatcher from '../assets/eggcatcher.png';
+import eggcatcher from '../assets/EggCatcher.png';
 import gravityhop from '../assets/gravityhop.png';
 
 const TrendingGames = () => {
