@@ -367,13 +367,6 @@ const Account = () => {
     const toastId = toast.loading('Uploading image...');
     const formData = new FormData();
     
-    // Log file details for debugging
-    console.log('File to upload:', {
-      name: file.name,
-      type: file.type,
-      size: file.size,
-      lastModified: file.lastModified
-    });
     
     // Use 'profilePicture' as the field name to match the backend's multer configuration
     formData.append('profilePicture', file);
@@ -382,11 +375,6 @@ const Account = () => {
     formData.append('fullName', formData.fullName || user.fullName || '');
     formData.append('email', formData.email || user.email || '');
     formData.append('phoneNumber', formData.phoneNumber || user.phoneNumber || '');
-    
-    // Log FormData contents (for debugging)
-    for (let [key, value] of formData.entries()) {
-      console.log('FormData entry:', key, value);
-    }
     
     try {
       // Create a custom config for the request
@@ -406,10 +394,8 @@ const Account = () => {
         }
       };
 
-      console.log('Sending request to update profile picture...');
       // Make the request directly using axios to ensure proper headers
       const response = await api.put(`/users/profile/${user._id}`, formData, config);
-      console.log('Profile picture update response:', response);
       
       // Get the response data
       const responseData = response?.data || {};
@@ -424,10 +410,8 @@ const Account = () => {
                           responseData?.profilePicture ||
                           user.profilePicture;
       
-      console.log('New profile picture URL:', cloudinaryUrl);
       
       if (!cloudinaryUrl) {
-        console.error('No profile picture URL in response:', responseData);
         throw new Error('No profile picture URL in the response');
       }
       
