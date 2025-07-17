@@ -11,7 +11,7 @@ const TrendingGames = () => {
   const [expanded, setExpanded] = useState(false);
   const [showButton, setShowButton] = useState(false);
   const [rowHeight, setRowHeight] = useState(null);
-  const gridRef = useRef(null);
+  const gridRef = useRef(null); 
 
   const games = [
     { id: 1, name: 'Flappy Ball', path: '/games', image: flappyball },
