@@ -1,129 +1,131 @@
-import React, { useState, useRef, useLayoutEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import controllerIcon from '../assets/game.png';
 import flappyball from '../assets/Flappy-Ball.png';
 import colorsmash from '../assets/colorsmash.png';
 import matchmerge from '../assets/MatchMerge.png';
-import eggcatcher from '../assets/EggCatcher.png';
-import gravityhop from '../assets/GravityHop.png';
-import borderBackground from '../assets/Border1.png';
-import CachedImage from './CachedImage';
+import eggcatcher from '../assets/eggcatcher.png';
+import gravityhop from '../assets/gravityhop.png';
+import api from '../services/api.js'; // Assuming you have an api.js file for API calls
 
 const TrendingGames = () => {
   const navigate = useNavigate();
-  const [showAll, setShowAll] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  const [showButton, setShowButton] = useState(false);
+  const [rowHeight, setRowHeight] = useState(null);
+  const [games, setGames] = useState([]);
   const gridRef = useRef(null);
-  const [rowHeight, setRowHeight] = useState(0);
-  const [hasSecondRow, setHasSecondRow] = useState(false);
 
-  const games = [
-    { id: 1, name: 'Flappy Ball', path: '/games', image: flappyball },
-    { id: 2, name: 'Color Smash', path: '/games', image: colorsmash },
-    { id: 3, name: 'Match Merge', path: '/games', image: matchmerge },
-    { id: 4, name: 'Egg Catcher', path: '/games', image: eggcatcher },
-    { id: 5, name: 'Gravity Hop', path: '/games', image: gravityhop },
-  ];
+  // const games = [
+  //   { id: 1, name: 'Flappy Ball', path: '/games', image: flappyball },
+  //   { id: 2, name: 'Color Smash', path: '/games', image: colorsmash },
+  //   { id: 3, name: 'Match Merge', path: '/games', image: matchmerge },
+  //   { id: 4, name: 'Egg Catcher', path: '/games', image: eggcatcher },
+  //   { id: 5, name: 'Gravity Hop', path: '/games', image: gravityhop },
+  // ];
+ const fetchGames = async () => {
+      try {
+        
+        const response = await api.get('/games', {
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          },
+          withCredentials: true,
+        });
 
-  useLayoutEffect(() => {
-    const checkRows = () => {
-      const grid = gridRef.current;
-      if (!grid) return;
-
-      const cards = Array.from(grid.children);
-      if (cards.length < 2) return;
-
-      const firstRowTop = cards[0].getBoundingClientRect().top;
-      let secondRowTop = 0;
-
-      for (let i = 1; i < cards.length; i++) {
-        const cardTop = cards[i].getBoundingClientRect().top;
-        if (cardTop > firstRowTop + 5) {
-          secondRowTop = cardTop;
-          break;
+        let gamesData = [];
+        if (response.data?.success !== undefined) {
+          gamesData = Array.isArray(response.data.data) ? response.data.data : [];
+        } else if (Array.isArray(response.data)) {
+          gamesData = response.data;
+        } else if (response.data?.games) {
+          gamesData = Array.isArray(response.data.games) ? response.data.games : [];
         }
-      }
 
-      if (secondRowTop) {
-        const rowHeight = secondRowTop - firstRowTop;
-        setRowHeight(rowHeight);
-        setHasSecondRow(true);
-      } else {
-        setRowHeight(0);
-        setHasSecondRow(false);
-      }
+        setGames(gamesData);
+      } catch (err) {
+        let errorMsg = 'Failed to load games. Please try again later.';
+        if (err.response?.data?.error) {
+          errorMsg = `Server error: ${err.response.data.error}`;
+        } else if (err.message) {
+          errorMsg = `Error: ${err.message}`;
+        }
+       console.log(errorMsg);
+        setGames([]);
+      } 
     };
 
-    checkRows();
-    window.addEventListener('resize', checkRows);
-    return () => window.removeEventListener('resize', checkRows);
-  }, [games]);
+  useEffect(() => {
+    const checkWrapAndRowHeight = () => {
+      if (!gridRef.current) return;
+
+      const children = Array.from(gridRef.current.children);
+      if (!children.length) return;
+
+      const firstRowTop = children[0].getBoundingClientRect().top;
+      const rowTops = children.map(child => child.getBoundingClientRect().top);
+      const rows = [...new Set(rowTops)];
+
+      const firstRowHeight =
+        children[0].getBoundingClientRect().bottom -
+        children[0].getBoundingClientRect().top;
+
+      setRowHeight(firstRowHeight + 12); // 12px = gap-3
+
+      setShowButton(rows.length > 1);
+    };
+   fetchGames();
+    checkWrapAndRowHeight();
+    window.addEventListener('resize', checkWrapAndRowHeight);
+    return () => window.removeEventListener('resize', checkWrapAndRowHeight);
+  }, []);
 
   return (
     <section
-      className="w-full bg-no-repeat bg-top relative z-0"
+      className="w-full text-white px-4 flex items-start justify-start rounded-tr-[32px]"
       style={{
-        backgroundImage: `url(${borderBackground})`,
-        backgroundRepeat: 'no-repeat',
-        backgroundPosition: 'top',
-        backgroundSize: '100% auto',
+        minHeight: '140px',
+        paddingBottom: '40px',
+        background: 'linear-gradient(to bottom,rgba(32, 28, 70, 0.75) 50%, rgba(37, 33, 79, 0.34) 75%, rgba(48, 43, 99, 0) 100%)',
       }}
     >
-      <div
-        className="max-w-full mx-auto mt-3"
-        style={{
-          paddingTop: 'clamp(24px, 5vw, 56px)',
-          paddingBottom: 'clamp(20px, 3.5vw, 36px)',
-          paddingLeft: 'clamp(20px, 5vw, 60px)',
-          paddingRight: 'clamp(20px, 5vw, 60px)',
-        }}
-      >
-        <div className="max-w-screen-lg mx-auto">
-          {/* Header */}
-          <div className="flex justify-center items-center gap-2 mb-3">
-            <CachedImage src={controllerIcon} alt="icon" className="w-5 h-5" />
-            <h2
-              className="font-bold text-white font-orbitron italic leading-tight"
-              style={{
-                fontSize: 'clamp(12px, 3vw, 24px)',
-              }}
+      <div className="w-full pt-4">
+        <div
+          ref={gridRef}
+          className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7 xl:grid-cols-8 gap-3 transition-all duration-300 overflow-hidden"
+          style={{
+            maxHeight: !expanded && rowHeight ? `${rowHeight}px` : 'none',
+          }}
+        >
+          {games.map((game) => (
+            <div
+              key={game._id}
+              onClick={() => navigate(`/game-lobby/${game._id}`)}
+              className="bg-white/10 rounded-lg overflow-hidden cursor-pointer transition-transform hover:scale-105 active:scale-95 relative"
+              style={{ border: '3px solid #AECBF9' }}
             >
-              Trending Games
-            </h2>
-          </div>
-
-          {/* Game Grid */}
-          <div
-            ref={gridRef}
-            className="grid grid-cols-4 sm:grid-cols-5 gap-2 transition-all duration-300 ease-in-out overflow-hidden"
-            style={{
-              maxHeight: showAll || rowHeight === 0 ? '1000px' : `${rowHeight}px`,
-            }}
-          >
-            {games.map((game) => (
-              <div
-                key={game.id}
-                onClick={() => navigate(game.path)}
-                className="bg-white/10 border border-white/20 rounded-lg overflow-hidden cursor-pointer transition-transform hover:scale-105 active:scale-95"
-              >
-                <div className="w-full aspect-square">
-                  <CachedImage src={game.image} alt={game.name} className="w-full h-full object-cover" />
-                </div>
+              <div className="shine-overlay"></div>
+              <div className="w-full aspect-square">
+                <img
+                  src={game.assets?.thumbnail || game.image}
+                  alt={game.name}
+                  className="w-full h-full object-cover"
+                />
               </div>
-            ))}
-          </div>
-
-          {/* See More / See Less */}
-          {hasSecondRow && (
-            <div className="text-center leading-none mt-1">
-              <button
-                onClick={() => setShowAll((prev) => !prev)}
-                className="text-white text-[10px] underline hover:text-gray-300 transition p-0 m-0"
-              >
-                {showAll ? 'See Less' : 'See More'}
-              </button>
             </div>
-          )}
+          ))}
         </div>
+
+        {showButton && (
+          <div className="mt-0 flex justify-end">
+            <button
+              onClick={() => setExpanded(!expanded)}
+              className="text-[10px] text-white/80 underline hover:text-white transition"
+            >
+              {expanded ? 'See Less' : 'See More'}
+            </button>
+          </div>
+        )}
       </div>
     </section>
   );

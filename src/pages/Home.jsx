@@ -11,15 +11,13 @@ import SpinWheelScreen from '../components/SpinWheelScreen';
 import BackgroundBubbles from '../components/BackgroundBubbles';
 import BackgroundCircles from '../components/BackgroundCircles';
 import SpinIcon from '../assets/SpinIcon.png';
-import SteppedDivider from '../components/SteppedDivider';
+import controllerIcon from '../assets/controller.png';
+import multiplayerIcon from '../assets/Multiplayer.png';
+import gameIcon from '../assets/game.png';
 
 const Home = () => {
   const { isAuthenticated } = useAuth();
   const [showSpinWheel, setShowSpinWheel] = useState(false);
-
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
 
   useEffect(() => {
     const alreadyShown = sessionStorage.getItem('spinShownAfterLogin');
@@ -32,40 +30,54 @@ const Home = () => {
     }
   }, []);
 
-  //sound effect added
-useEffect(() => {
-  const alreadyPlayed = sessionStorage.getItem('homeIntroSoundPlayed');
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
 
-  if (!alreadyPlayed) {
-    const playIntroSound = () => {
-      window.dispatchEvent(new CustomEvent("play-sound", { detail: "pop" }));
-      sessionStorage.setItem('homeIntroSoundPlayed', 'true');
+  const handleCloseSpin = () => setShowSpinWheel(false);
 
-      // Remove listener after first interaction
-      window.removeEventListener('click', playIntroSound);
-      window.removeEventListener('touchstart', playIntroSound);
-    };
-
-    // Add event listener for first user interaction
-    window.addEventListener('click', playIntroSound);
-    window.addEventListener('touchstart', playIntroSound);
-
-    // Cleanup in case component unmounts before interaction
-    return () => {
-      window.removeEventListener('click', playIntroSound);
-      window.removeEventListener('touchstart', playIntroSound);
-    };
-  }
-}, []);
-
-
-  const handleCloseSpin = () => {
-    setShowSpinWheel(false);
-  };
+  const SectionTitle = ({ icon, title, gradient }) => (
+    <div
+      className="inline-flex items-center gap-2 py-1 pl-2 pr-3 -mb-1 ml-0"
+      style={{
+        background: gradient,
+        borderTopRightRadius: '32px',
+        borderTopLeftRadius: '0px',
+        borderBottomLeftRadius: '0px',
+        borderBottomRightRadius: '0px',
+      }}
+    >
+      <img src={icon} alt="icon" className="w-4 h-4" />
+      <h2 className="font-bold text-white font-orbitron italic text-sm sm:text-base md:text-lg lg:text-xl">
+        {title}
+      </h2>
+    </div>
+  );
 
   return (
-    <div className="relative min-h-screen pb-24 overflow-hidden text-white">
-      {/* Background visuals */}
+    <div className="relative min-h-screen pb-16 overflow-hidden text-white">
+      {/* Shine animation */}
+      <style>{`
+        @keyframes shine {
+          0% { left: -100%; }
+          12.3% { left: 100%; }
+          100% { left: 100%; }
+        }
+
+        .shine-overlay {
+          position: absolute;
+          top: 0;
+          left: -100%;
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(120deg, transparent, rgba(255,255,255,0.2), transparent);
+          animation: shine 5.7s ease-in-out infinite;
+          pointer-events: none;
+        }
+
+        .shine-container {
+          position: relative;
+        }
+      `}</style>
+
       <BackgroundBubbles />
       <BackgroundCircles />
       <div className="absolute inset-0 bg-gradient-to-b from-[#00bfff] to-[#000080] opacity-40 z-0" />
@@ -73,17 +85,14 @@ useEffect(() => {
       <div className="relative z-10 pt-8">
         <Header />
 
-        {/* Banner */}
-        <div className="px-3">
+        {/* Banner with margin below */}
+        <div className="px-3 mb-6">
           <Banner />
         </div>
 
         {/* Spin Button */}
         <div className="fixed bottom-16 right-0 z-20">
-          <button
-            onClick={() => setShowSpinWheel(true)}
-            className="p-2 focus:outline-none"
-          >
+          <button onClick={() => setShowSpinWheel(true)} className="p-2">
             <img
               src={SpinIcon}
               alt="Spin Wheel"
@@ -92,14 +101,37 @@ useEffect(() => {
           </button>
         </div>
 
-        {/* Content Sections */}
+        {/* Content */}
         <div className="w-full">
-          <div className="max-w-screen-lg mx-auto px-0">
+          <div className="max-w-screen-lg mx-auto">
+
+            {/* Trending */}
+            <SectionTitle
+              icon={gameIcon}
+              title="Trending Games"
+              gradient="linear-gradient(to bottom, #E0CA00, #D98D00)"
+            />
             <TrendingGames />
-            <SteppedDivider className="my-6" thickness="4" />
-            <MultiplayerGames />
-            <SteppedDivider className="my-6" thickness="4" />
-            <PopularGames />
+
+            {/* Multiplayer with overlap */}
+            <div className="-mt-10">
+              <SectionTitle
+                icon={multiplayerIcon}
+                title="Multiplayer Games"
+                gradient="linear-gradient(to bottom, #00C9FF, #005BBA)"
+              />
+              <MultiplayerGames />
+            </div>
+
+            {/* Popular with overlap */}
+            <div className="-mt-10">
+              <SectionTitle
+                icon={controllerIcon}
+                title="Popular Games"
+                gradient="linear-gradient(to bottom, #B721FF, #700A72)"
+              />
+              <PopularGames />
+            </div>
           </div>
         </div>
       </div>

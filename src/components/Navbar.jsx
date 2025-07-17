@@ -1,11 +1,12 @@
 import React from 'react';
 import { useLocation, Link } from 'react-router-dom';
-import { FaHome, FaGamepad, FaTrophy, FaUsers, FaUser } from 'react-icons/fa';
+import { FaHome, FaGamepad, FaTrophy, FaUsers, FaUser, FaWallet } from 'react-icons/fa';
 
 const Navbar = () => {
   const location = useLocation();
 
-  const navItems = [
+    // Define base navigation items (without wallet)
+  const baseNavItems = [
     { path: '/', icon: <FaHome />, label: 'Home' },
     { path: '/games', icon: <FaGamepad />, label: 'Games' },
     { path: '/tournaments', icon: <FaTrophy />, label: 'Tournaments' },
@@ -13,11 +14,23 @@ const Navbar = () => {
     { path: '/profile', icon: <FaUser />, label: 'Profile' },
   ];
 
-  const activeIndex = navItems.findIndex(item => item.path === location.pathname);
+  // Add wallet to nav items only when on wallet page, and remove Tournaments to maintain layout
+  const navItems = location.pathname.startsWith('/wallet')
+    ? [
+        ...baseNavItems.slice(0, 2), // First 2 items (Home, Games)
+        { path: '/wallet', icon: <FaWallet />, label: 'Wallet' },
+        ...baseNavItems.slice(3) // Last 2 items (Community, Profile)
+      ]
+    : baseNavItems;
+
+  const currentPath = location.pathname;
+
+  const activeIndex = navItems.findIndex(item => item.path === currentPath);
   const activeItem = navItems[activeIndex] || navItems[2];
 
-  const leftItems = navItems.filter((_, index) => index !== activeIndex).slice(0, 2);
-  const rightItems = navItems.filter((_, index) => index !== activeIndex).slice(2);
+  const visibleItems = navItems.filter((_, index) => index !== activeIndex);
+  const leftItems = visibleItems.slice(0, 2);
+  const rightItems = visibleItems.slice(2);
 
   return (
     <>
@@ -36,12 +49,12 @@ const Navbar = () => {
                   key={item.path}
                   to={item.path}
                   className={`flex flex-col items-center justify-end pb-3 md:pb-4 ${
-                    location.pathname === item.path ? 'text-yellow-400' : ''
+                    currentPath === item.path ? 'text-yellow-400' : ''
                   }`}
                 >
                   {React.cloneElement(item.icon, {
                     className: `text-xl md:text-2xl ${
-                      location.pathname === item.path ? 'text-yellow-400' : ''
+                      currentPath === item.path ? 'text-yellow-400' : ''
                     }`,
                   })}
                 </Link>
