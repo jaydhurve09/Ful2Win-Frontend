@@ -9,6 +9,37 @@ import authService from '../services/authService';
 import api from '../services/api';
 
 const CommunityLeaderboard = () => {
+  // Add the animation styles to the document head
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes shiny {
+        0% { transform: translateX(-100%) rotate(45deg); }
+        100% { transform: translateX(100%) rotate(45deg); }
+      }
+      .shiny-border {
+        position: relative;
+        overflow: hidden;
+      }
+      .shiny-border::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(45deg, 
+          transparent, 
+          rgba(191, 219, 254, 0.5), 
+          transparent
+        );
+        animation: shiny 2s infinite linear;
+        pointer-events: none;
+        z-index: 1;
+      }`;
+    document.head.appendChild(style);
+    return () => document.head.removeChild(style);
+  }, []);
   const [leaderboard, setLeaderboard] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('wins'); // 'wins' or 'coins'
@@ -119,14 +150,26 @@ const CommunityLeaderboard = () => {
     return (
       <div
         key={`${user._id}-${index}`}
-        className={`flex items-center p-4 rounded-lg ${
+        className={`relative flex items-center p-4 rounded-xl shiny-border ${
           isCurrentUser 
-            ? 'ring-2 ring-yellow-400 bg-yellow-500/10' 
+            ? 'bg-blue-800/40' 
             : isTop3 
-              ? 'bg-gradient-to-r from-yellow-500/10 to-yellow-500/5' 
-              : 'bg-white/5 hover:bg-white/10'
-        } transition-all`}
+              ? 'bg-gradient-to-r from-blue-800/40 to-blue-900/30' 
+              : 'bg-blue-900/30 hover:bg-blue-800/40'
+        } transition-all overflow-hidden backdrop-blur-sm`}
+        style={{
+          position: 'relative',
+          background: `linear-gradient(135deg, rgba(30, 64, 175, 0.3) 0%, rgba(30, 58, 138, 0.4) 100%)`,
+          boxShadow: '0 4px 20px -5px rgba(0, 0, 0, 0.3), inset 0 0 15px rgba(96, 165, 250, 0.2)',
+          border: '1px solid rgba(96, 165, 250, 0.2)',
+        }}
       >
+        <div className="absolute inset-0 opacity-30" style={{
+          background: 'linear-gradient(45deg, transparent, rgba(96, 165, 250, 0.3), transparent)',
+          animation: 'shiny 3s infinite linear',
+          zIndex: 1,
+          pointerEvents: 'none'
+        }}></div>
         <div className="w-8 flex-shrink-0 text-center">
           {isTop3 ? (
             <FaTrophy className={`${trophyColors[index]} text-xl mx-auto`} />
@@ -189,9 +232,12 @@ const CommunityLeaderboard = () => {
 
   return (
     <div className="min-h-screen bg-blueGradient py-16 text-white overflow-hidden relative">
+      <div className="absolute inset-0 bg-gradient-to-b from-blue-900/30 to-blue-900/0"></div>
+      <div className="absolute inset-0 bg-gradient-to-r from-blue-900/20 to-blue-900/0"></div>
       <BackgroundBubbles />
       <Header />
-      <main className="container mx-auto px-4 py-8 relative z-10">
+      <div className="absolute inset-0 shadow-[inset_0_0_100px_rgba(0,0,0,0.3)] pointer-events-none"></div>
+      <main className="container mx-auto px-4 py-8 relative z-10 bg-blue-900/20 backdrop-blur-sm rounded-2xl shadow-2xl border border-blue-700/20">
         <div className="flex items-center mb-6">
           <button
             onClick={() => navigate(-1)}
@@ -203,26 +249,6 @@ const CommunityLeaderboard = () => {
           <h1 className="text-3xl font-bold">Community Leaderboard</h1>
         </div>
 
-        {/* Time Range Selector - Temporarily hidden until backend supports it */}
-        <div className="flex justify-center mb-6 space-x-4 opacity-50 cursor-not-allowed" title="Coming soon">
-          {['all', 'monthly', 'weekly'].map((range) => (
-            <button
-              key={range}
-              disabled
-              className="px-4 py-2 rounded-lg bg-white/5 text-white/50"
-            >
-              {range.charAt(0).toUpperCase() + range.slice(1)}
-            </button>
-          ))}
-          <button
-            onClick={() => setTimeRange('all')}
-            className={`px-4 py-2 rounded-lg ${
-              timeRange === 'all' ? 'bg-yellow-500 text-black' : 'bg-white/10 hover:bg-white/20'
-            } transition-colors`}
-          >
-            All Time
-          </button>
-        </div>
 
         {/* Tabs */}
         <div className="flex justify-center mb-6 border-b border-white/10">
@@ -251,7 +277,7 @@ const CommunityLeaderboard = () => {
         </div>
 
         {/* Leaderboard Content */}
-        <div className="bg-white/5 backdrop-blur-md rounded-xl p-6 max-w-3xl mx-auto">
+        <div className="bg-gradient-to-br from-blue-800/30 to-blue-900/40 backdrop-blur-md rounded-2xl p-6 max-w-3xl mx-auto shadow-xl border border-blue-700/30">
           {isLoading ? (
             <div className="flex justify-center py-12">
               <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-yellow-400"></div>
@@ -279,3 +305,7 @@ const CommunityLeaderboard = () => {
 };
 
 export default CommunityLeaderboard;
+
+
+
+

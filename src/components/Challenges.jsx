@@ -338,43 +338,107 @@ const Challenges = () => {
 
           {/* Incoming Invites */}
           {incomingInvites.length > 0 && (
-            <div className="bg-white rounded-xl shadow-md p-4">
-              <div className="text-black">
-                <h2 className="text-lg font-semibold mb-3 text-red-700">Incoming Invites</h2>
-                {incomingInvites.map((invite) => (
-                  console.log(invite),
-                  <div key={invite._id} className="flex justify-between items-center mb-3 p-3 border rounded">
-                    <div className="flex items-center gap-3">
-                      <img
-                        src={invite.challenger.profilePicture || `https://ui-avatars.com/api/?name=${encodeURIComponent(invite.challenger.fullName)}`}
-                        alt={invite.challenger.fullName}
-                        className="w-10 h-10 rounded-full"
-                      />
-                      <div>
-                        <p className="font-semibold">{invite.challenger.fullName}</p>
-                        <p className="text-sm text-gray-600">{invite.game.displayName}</p>
-                        {invite.message && (
-                          <p className="text-xs text-gray-500 mt-1">"{invite.message}"</p>
-                        )}
+            <div className="glass-effect bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-5 border border-white/20 overflow-hidden relative">
+              <div className="absolute inset-0 bg-gradient-to-br from-red-100/30 to-red-200/20 rounded-2xl opacity-30"></div>
+              <div className="relative z-10">
+                <h2 className="text-xl font-bold mb-4 text-red-700 flex items-center">
+                  <span className="relative inline-flex mr-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                  </span>
+                  Incoming Invites
+                </h2>
+                <div className="space-y-3">
+                  {incomingInvites.map((invite) => (
+                    <div 
+                      key={invite._id} 
+                      className="glass-card group relative p-4 rounded-xl bg-white/80 backdrop-blur-sm border border-white/30 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
+                    >
+                      <div className="flex justify-between items-start gap-4">
+                        <div className="flex items-start gap-3">
+                          <div className="relative">
+                            <img
+                              src={invite.challenger.profilePicture || `https://ui-avatars.com/api/?name=${encodeURIComponent(invite.challenger.fullName)}`}
+                              alt={invite.challenger.fullName}
+                              className="w-12 h-12 rounded-full border-2 border-white shadow-md"
+                            />
+                            <span className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></span>
+                          </div>
+                          <div>
+                            <p className="font-bold text-gray-800">{invite.challenger.fullName}</p>
+                            <p className="text-sm text-gray-600 flex items-center">
+                              <span className="w-2 h-2 bg-blue-500 rounded-full mr-1.5"></span>
+                              {invite.game.displayName}
+                            </p>
+                            {invite.message && (
+                              <p className="text-sm text-gray-700 mt-1.5 px-3 py-2 bg-white/50 rounded-lg border-l-2 border-red-400">
+                                "{invite.message}"
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex flex-col gap-2 min-w-[120px]">
+                          <button
+                            onClick={() => handleAcceptInvite(invite._id, invite.game._id)}
+                            className="glass-button bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:shadow-lg hover:shadow-green-200/50 transition-all duration-200 flex items-center justify-center gap-1.5"
+                          >
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            Accept
+                          </button>
+                          <button
+                            onClick={() => handleRejectInvite(invite._id)}
+                            className="glass-button bg-gradient-to-r from-red-500 to-red-600 text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:shadow-lg hover:shadow-red-200/50 transition-all duration-200 flex items-center justify-center gap-1.5"
+                          >
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                            Reject
+                          </button>
+                        </div>
+                      </div>
+                      <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
                       </div>
                     </div>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => handleAcceptInvite(invite._id, invite.game._id)}
-                        className="bg-green-100 text-green-700 px-3 py-1 rounded hover:bg-green-200 text-sm"
-                      >
-                        Accept
-                      </button>
-                      <button
-                        onClick={() => handleRejectInvite(invite._id)}
-                        className="bg-red-100 text-red-600 px-3 py-1 rounded hover:bg-red-200 text-sm"
-                      >
-                        Reject
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
+              <style jsx>{`
+                .glass-effect {
+                  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+                  backdrop-filter: blur(8px);
+                  -webkit-backdrop-filter: blur(8px);
+                }
+                .glass-card {
+                  transition: all 0.3s ease;
+                }
+                .glass-card:hover {
+                  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.95),
+                              inset 0 -1px 1px rgba(0, 0, 0, 0.15),
+                              0 0 30px 2px rgba(220, 220, 220, 0.7);
+                }
+                .glass-button {
+                  position: relative;
+                  overflow: hidden;
+                  transition: all 0.3s ease;
+                }
+                .glass-button::after {
+                  content: '';
+                  position: absolute;
+                  top: 0;
+                  left: 0;
+                  right: 0;
+                  bottom: 0;
+                  background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+                  transform: translateX(-100%);
+                  transition: transform 0.6s ease;
+                }
+                .glass-button:hover::after {
+                  transform: translateX(100%);
+                }
+              `}</style>
             </div>
           )}
 

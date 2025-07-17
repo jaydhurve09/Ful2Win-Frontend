@@ -478,7 +478,7 @@ const ChatScreen = ({ selectedFriend, setSelectedFriend }) => {
       {selectedFriend ? (
         <div className="w-full h-full flex flex-col">
           {/* Header */}
-          <div className="h-16 bg-blueHorizontalGradient border-b border-blue-400/30 flex items-center px-4 shadow-sm text-white">
+          <div className="h-20 bg-blueHorizontalGradient border-b border-blue-400/30 flex items-center px-6 shadow-md text-white">
             <button 
               onClick={() => setSelectedFriend(null)} 
               className="p-2 rounded-full hover:bg-white/20 mr-3 transition-colors"
@@ -512,8 +512,12 @@ const ChatScreen = ({ selectedFriend, setSelectedFriend }) => {
 
           {/* Messages */}
           <div 
-            className="flex-1 overflow-y-auto p-4 space-y-3 bg-blueGradient"
-            style={{ backgroundImage: 'linear-gradient(rgba(0,0,0,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.02) 1px, transparent 1px)', backgroundSize: '20px 20px' }}
+            className="flex-1 overflow-y-auto px-6 py-4 space-y-4 bg-blueGradient"
+            style={{ 
+              backgroundImage: 'linear-gradient(rgba(0,0,0,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.02) 1px, transparent 1px)', 
+              backgroundSize: '24px 24px',
+              scrollPadding: '1rem'
+            }}
           >
             {loading ? (
               <div className="flex justify-center items-center h-full">
@@ -556,13 +560,13 @@ const ChatScreen = ({ selectedFriend, setSelectedFriend }) => {
                   return (
                     <div 
                       key={messageKey}
-                      className={`flex ${isSent ? 'justify-end' : 'justify-start'}`}
+                      className={`flex ${isSent ? 'justify-end' : 'justify-start'} mb-1 last:mb-0`}
                     >
-                      <div className={`relative max-w-[85%] lg:max-w-[65%] xl:max-w-[50%] px-4 py-2.5 rounded-2xl ${
+                      <div className={`relative max-w-[85%] lg:max-w-[65%] xl:max-w-[50%] px-5 py-3 rounded-2xl ${
                         isSent 
-                          ? 'bg-blue-500 text-white rounded-br-sm' 
-                          : 'bg-dullBlue text-gray-900 rounded-bl-sm shadow-sm'
-                      } ${isOptimistic ? 'opacity-80' : ''} ${isFailed ? 'ring-1 ring-red-300' : ''}`}>
+                          ? 'bg-blue-600 text-white rounded-br-sm shadow-md' 
+                          : 'bg-white text-gray-900 rounded-bl-sm shadow-sm'
+                      } ${isOptimistic ? 'opacity-90' : ''} ${isFailed ? 'ring-1 ring-red-300' : ''} transition-all duration-200 ease-in-out`}>
                         <div className="text-sm leading-relaxed break-words">
                           {msg.content || '[No content]'}
                         </div>
@@ -618,8 +622,8 @@ const ChatScreen = ({ selectedFriend, setSelectedFriend }) => {
           </div>
 
           {/* Message Input */}
-          <div className="p-2 w-screen bg-blueHorizontalGradient border-t border-blue-400/30">
-            <div className="relative flex items-center bg-gray-50 rounded-full px-4 py-2 shadow-inner">
+          <div className="p-4 w-full bg-blueHorizontalGradient border-t border-blue-400/30">
+            <div className="relative flex items-center bg-white/90 backdrop-blur-sm rounded-full px-6 py-3 shadow-lg border border-blue-100/50">
               {/* <button 
                 className="p-2 text-gray-500 hover:text-gray-700 rounded-full hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-100"
                 aria-label="Add attachment"
@@ -635,16 +639,16 @@ const ChatScreen = ({ selectedFriend, setSelectedFriend }) => {
                 onChange={handleInputChange}
                 onKeyDown={handleKeyPress}
                 placeholder="Type a message..."
-                className="flex-1 bg-transparent border-0 focus:ring-0 text-gray-800 placeholder-gray-400 px-3 py-[2px] focus:outline-none"
+                className="flex-1 bg-transparent border-0 focus:ring-0 text-gray-800 placeholder-gray-500 px-3 py-1 focus:outline-none text-base"
                 disabled={sending}
                 aria-label="Type your message"
               />
               <button
                 onClick={sendMessage}
                 disabled={!message.trim() || sending}
-                className={`p-2 rounded-full transition-all duration-200 ${
+                className={`p-2.5 rounded-full transition-all duration-200 ${
                   message.trim() && !sending
-                    ? 'bg-indigo-500 text-white hover:bg-indigo-600 transform hover:scale-105'
+                    ? 'bg-indigo-600 text-white hover:bg-indigo-700 transform hover:scale-105 shadow-md'
                     : 'text-gray-400 cursor-not-allowed'
                 }`}
                 aria-label="Send message"
@@ -661,7 +665,7 @@ const ChatScreen = ({ selectedFriend, setSelectedFriend }) => {
             </div>
             
             {isTyping && (
-              <div className="absolute bottom-20 left-6 bg-white text-gray-700 text-xs font-medium px-3 py-1.5 rounded-full shadow-md flex items-center">
+              <div className="absolute bottom-24 left-8 bg-white text-gray-700 text-sm font-medium px-4 py-2 rounded-full shadow-lg flex items-center">
                 <span className="flex space-x-1 mr-2">
                   <span className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
                   <span className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
