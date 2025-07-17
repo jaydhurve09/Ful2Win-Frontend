@@ -4,7 +4,7 @@ import flappyball from '../assets/Flappy-Ball.png';
 import colorsmash from '../assets/colorsmash.png';
 import matchmerge from '../assets/MatchMerge.png';
 import eggcatcher from '../assets/EggCatcher.png';
-import gravityhop from '../assets/gravityhop.png';
+import gravityhop from '../assets/GravityHop.png';
 
 const TrendingGames = () => {
   const navigate = useNavigate();
