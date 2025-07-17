@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useRef, useContext, useCallback } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import api from '../services/api';
 import { 
   FiUser, FiMail, FiLock, FiEye, FiEyeOff, FiCamera, 
   FiCalendar, FiGlobe, FiEdit2, FiSave, FiX 
 } from 'react-icons/fi';
 import { FaTrophy, FaGamepad, FaRupeeSign } from 'react-icons/fa';
-import { useAuth } from '../contexts/AuthContext';
 import authService from '../services/authService';
 import Header from './Header';
 import Navbar from './Navbar';
@@ -24,6 +25,7 @@ countries.registerLocale(enLocale);
 const Account = () => {
   const { user, updateUser, isAuthenticated, checkAuthState } = useAuth();
   const navigate = useNavigate();
+  const [forceUpdate, setForceUpdate] = useState(false);
   
   // Remove the redundant auth check as ProtectedRoute already handles this
   
@@ -89,8 +91,8 @@ const Account = () => {
     const initializeForm = () => {
       try {
         if (!user) {
-          // If user is null/undefined, set empty form and skip
-          setFormData({
+          // If user is null/undefined, set empty form and enable edit mode
+          const emptyForm = {
             username: '',
             fullName: '',
             phoneNumber: '',
@@ -102,11 +104,16 @@ const Account = () => {
             profilePicture: '',
             password: '',
             confirmPassword: ''
-          });
-          setOriginalData(null);
-          setIsLoading(false);
+          };
+          if (isMounted) {
+            setFormData(emptyForm);
+            setOriginalData(emptyForm);
+            setIsLoading(false);
+            setIsEditing(true); // Enable edit mode for new users
+          }
           return;
         }
+        
         const userData = {
           username: user.username || '',
           fullName: user.fullName || '',
@@ -120,10 +127,15 @@ const Account = () => {
           password: '',
           confirmPassword: ''
         };
+        
         if (isMounted) {
           setFormData(userData);
           setOriginalData(userData);
           setIsLoading(false);
+          // If user doesn't have a profile picture, enable edit mode
+          if (!user.profilePicture) {
+            setIsEditing(true);
+          }
         }
       } catch (error) {
         console.error('Error initializing account form:', error);
@@ -336,109 +348,144 @@ const Account = () => {
 
   // Handle file upload with preview and Cloudinary upload
   const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Check if file is an image
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select a valid image file (JPEG, PNG, GIF, or WebP)');
+      return;
+    }
+
+    // Validate file size (5MB max)
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      toast.error('Image size should be less than 5MB');
+      return;
+    }
+
+    const toastId = toast.loading('Uploading image...');
+    const formData = new FormData();
+    
+    // Log file details for debugging
+    console.log('File to upload:', {
+      name: file.name,
+      type: file.type,
+      size: file.size,
+      lastModified: file.lastModified
+    });
+    
+    // Use 'profilePicture' as the field name to match the backend's multer configuration
+    formData.append('profilePicture', file);
+    
+    // Add any other user data that might be required
+    formData.append('fullName', formData.fullName || user.fullName || '');
+    formData.append('email', formData.email || user.email || '');
+    formData.append('phoneNumber', formData.phoneNumber || user.phoneNumber || '');
+    
+    // Log FormData contents (for debugging)
+    for (let [key, value] of formData.entries()) {
+      console.log('FormData entry:', key, value);
+    }
+    
     try {
-      const file = e.target.files[0];
-      if (!file) return;
-
-      // Reset file input value to allow selecting the same file again
-      e.target.value = '';
-
-      // Validate file type
-      const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-      if (!validTypes.includes(file.type)) {
-        toast.error('Please select a valid image file (JPEG, PNG, GIF, or WebP)');
-        return;
-      }
-
-      // Validate file size (5MB max)
-      const maxSize = 5 * 1024 * 1024; // 5MB
-      if (file.size > maxSize) {
-        toast.error('Image size should be less than 5MB');
-        return;
-      }
-
-      // Create FormData and append the file
-      const toastId = toast.loading('Uploading image...');
-      const formDataToSend = new FormData();
-      formDataToSend.append('profilePicture', file);
-
-      try {
-        // Log the FormData for debugging
-        console.log('Sending FormData with file:', file.name, 'size:', file.size);
-
-        // Make the API call with isFormData flag set to true
-        const response = await authService.updateUserProfile(user._id, formDataToSend, true);
-        
-        // Handle different response formats
-        const responseData = response?.data || response;
-        const updatedUser = responseData?.user || responseData?.data || responseData;
-        const newProfilePicture = updatedUser?.profilePicture || updatedUser?.data?.profilePicture;
-
-        if (!newProfilePicture) {
-          console.error('No profile picture URL in response:', response);
-          throw new Error('Failed to update profile picture. Please try again.');
+      // Create a custom config for the request
+      const config = {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'X-Requested-With': 'XMLHttpRequest',
+          'Accept': 'application/json'
+        },
+        withCredentials: true,
+        timeout: 30000, // 30 seconds timeout
+        transformRequest: (data, headers) => {
+          // Let the browser set the Content-Type with boundary
+          delete headers['Content-Type'];
+          return data;
         }
-
-        // Create a preview URL for the new image
-        const previewUrl = URL.createObjectURL(file);
-        
-        // Update form data with new picture
-        setFormData(prev => ({
-          ...prev,
-          profilePicture: newProfilePicture,
-          profilePicturePreview: previewUrl
-        }));
-        
-        // Update user context with new picture
-        updateUser({
-          ...user,
-          profilePicture: newProfilePicture
-        });
-        
-        // Update local storage
-        const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-        localStorage.setItem('user', JSON.stringify({
-          ...currentUser,
-          profilePicture: newProfilePicture
-        }));
-        
-        // Update the profile picture in localStorage for immediate UI update
-        if (newProfilePicture) {
-          localStorage.setItem('profilePicture', newProfilePicture);
-        }
-        
-        // Show success message
-        toast.dismiss(toastId);
-        toast.success('Profile picture updated successfully!', {
-          autoClose: 3000,
-          position: 'top-center',
-          closeButton: true,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          theme: 'colored'
-      });
-      } catch (error) {
-        console.error('Error updating profile picture:', error);
-        toast.dismiss(toastId);
-        toast.error(error.message || 'Failed to update profile picture');
-      }
-      return () => {
-        if (previewUrl) URL.revokeObjectURL(previewUrl);
       };
-    } catch (error) {
-      console.error('Error uploading profile picture:', error);
-      let errorMessage = 'Failed to upload profile picture. ';
-      if (error.response) {
-        if (error.response.data && error.response.data.message) {
-          errorMessage += error.response.data.message;
-        }
-      } else if (error.request) {
-        errorMessage += 'No response from server. Please check your connection.';
-      } else {
-        errorMessage = error.message || 'An unexpected error occurred';
+
+      console.log('Sending request to update profile picture...');
+      // Make the request directly using axios to ensure proper headers
+      const response = await api.put(`/users/profile/${user._id}`, formData, config);
+      console.log('Profile picture update response:', response);
+      
+      // Get the response data
+      const responseData = response?.data || {};
+      
+      if (!responseData.success) {
+        throw new Error(responseData.message || 'Failed to update profile picture');
       }
-      toast.error(errorMessage, { autoClose: 5000 });
+      
+      // Get the new profile picture URL from the response
+      const cloudinaryUrl = responseData?.profileUpdate?.newUrl || 
+                          responseData?.user?.profilePicture || 
+                          responseData?.profilePicture ||
+                          user.profilePicture;
+      
+      console.log('New profile picture URL:', cloudinaryUrl);
+      
+      if (!cloudinaryUrl) {
+        console.error('No profile picture URL in response:', responseData);
+        throw new Error('No profile picture URL in the response');
+      }
+      
+      // Get the full updated user data
+      const updatedUser = responseData.user || user;
+      
+      // Create updated user object with new profile picture
+      const updatedUserData = {
+        ...user,
+        profilePicture: cloudinaryUrl,
+        ...(responseData.user || {}) // Include any other updated user data
+      };
+      
+      // Update the user context with the new data
+      updateUser(updatedUserData);
+      
+      // Update local storage with the new user data
+      localStorage.setItem('user', JSON.stringify(updatedUserData));
+      
+      // Update form data with the new values
+      setFormData(prev => ({
+        ...prev,
+        profilePicture: cloudinaryUrl,
+        profilePicturePreview: cloudinaryUrl,
+        ...(responseData.user || {}) // Include any other updated user data
+      }));
+      
+      // Force a re-render by updating state
+      setForceUpdate(prev => !prev);
+      
+      toast.dismiss(toastId);
+      toast.success('Profile picture updated successfully!', {
+        position: 'top-center',
+        autoClose: 3000,
+        closeButton: true
+      });
+      
+    } catch (error) {
+      console.error('Error updating profile picture:', error);
+      toast.dismiss(toastId);
+      
+      // Revert to the previous profile picture on error
+      setFormData(prev => ({
+        ...prev,
+        profilePicture: user.profilePicture,
+        profilePicturePreview: user.profilePicture
+      }));
+      
+      toast.error(error.response?.data?.message || error.message || 'Failed to update profile picture', {
+        position: 'top-center',
+        autoClose: 3000,
+        closeButton: true
+      });
+    } finally {
+      // Reset the file input
+      if (e.target) {
+        e.target.value = '';
+      }
     }
   };
 
@@ -537,36 +584,44 @@ const Account = () => {
                 
                 <div className="md:col-span-2 flex flex-col items-center">
                   <div className="relative group">
-                    <img
-                      src={formData.profilePicture || defaultProfile}
-                      alt="Profile"
-                      className="w-32 h-32 rounded-full object-cover border-4 border-blue-400"
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = defaultProfile;
-                      }}
-                    />
-                    {isEditing && (
-                      <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                        <label className={`relative cursor-pointer p-2 bg-blue-500 rounded-full ${isSubmitting ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-600'} transition-colors`}>
-                          {isSubmitting ? (
-                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                          ) : (
-                            <>
-                              <FiCamera className="text-white text-xl" />
-                              <input
-                                type="file"
-                                name="profilePicture"
-                                accept="image/*"
-                                onChange={handleFileChange}
-                                ref={fileInputRef}
-                                className="hidden"
-                                disabled={isSubmitting}
-                              />
-                            </>
-                          )}
-                        </label>
-                      </div>
+                    <div className="relative w-32 h-32">
+                      <img
+                        src={formData.profilePicture || defaultProfile}
+                        alt="Profile"
+                        className="w-full h-full rounded-full object-cover border-4 border-blue-400"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = defaultProfile;
+                        }}
+                      />
+                      {/* Always show the upload button if no picture is set or if in edit mode */}
+                      {(!formData.profilePicture || isEditing) && (
+                        <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                          <label className={`relative cursor-pointer p-2 bg-blue-500 rounded-full ${isSubmitting ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-600'} transition-colors`}>
+                            {isSubmitting ? (
+                              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            ) : (
+                              <>
+                                <FiCamera className="text-white text-xl" />
+                                <input
+                                  type="file"
+                                  name="profilePicture"
+                                  accept="image/*"
+                                  onChange={handleFileChange}
+                                  ref={fileInputRef}
+                                  className="hidden"
+                                  disabled={isSubmitting}
+                                />
+                              </>
+                            )}
+                          </label>
+                        </div>
+                      )}
+                    </div>
+                    {!formData.profilePicture && isEditing && (
+                      <p className="text-center text-sm text-yellow-300 mt-2">
+                        Add a profile picture
+                      </p>
                     )}
                   </div>
                 </div>
