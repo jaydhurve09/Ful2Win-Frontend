@@ -1,68 +1,58 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { FaHome, FaGamepad, FaTrophy, FaUsers, FaUser, FaWallet } from 'react-icons/fa';
 
 const Navbar = () => {
   const location = useLocation();
 
-  // Define all possible navigation items
-  const allNavItems = [
-    { path: '/', icon: <FaHome />, label: 'Home' },
-    { path: '/games', icon: <FaGamepad />, label: 'Games' },
-    { path: '/tournaments', icon: <FaTrophy />, label: 'Tournaments' },
-    { path: '/wallet', icon: <FaWallet />, label: 'Wallet' },
-    { path: '/community', icon: <FaUsers />, label: 'Community' },
-    { path: '/profile', icon: <FaUser />, label: 'Profile' },
+    // Define base navigation items (without wallet)
+  const baseNavItems = [
+    { path: '/', icon: <FaHome />, label: 'Home', priority: 1 },
+    { path: '/games', icon: <FaGamepad />, label: 'Games', priority: 2 },
+    { path: '/tournaments', icon: <FaTrophy />, label: 'Tournaments', priority: 3 },
+    { path: '/community', icon: <FaUsers />, label: 'Community', priority: 4 },
+    { path: '/profile', icon: <FaUser />, label: 'Profile', priority: 5 },
   ];
+  
+  // Add wallet to nav items only when on wallet page, replacing the lowest priority item
+  const allNavItems = location.pathname.startsWith('/wallet')
+    ? [
+        ...baseNavItems.slice(0, -1), // All items except the last one
+        { path: '/wallet', icon: <FaWallet />, label: 'Wallet', priority: 4.5 } // Insert with priority between 4 and 5
+      ].sort((a, b) => a.priority - b.priority) // Re-sort to maintain order
+    : baseNavItems;
 
-  // Get current path and find active item
+  // Always show exactly 5 icons:
+  // - Current active route (if in navbar)
+  // - First 4 highest priority items (excluding current route)
   const currentPath = location.pathname;
-  const activeIndex = allNavItems.findIndex(item => currentPath.startsWith(item.path));
-  const activeItem = allNavItems[activeIndex >= 0 ? activeIndex : 0];
+  const currentItem = allNavItems.find(item => item.path === currentPath);
+  
+  // Get items excluding current one, sorted by priority
+  const otherItems = allNavItems
+    .filter(item => item.path !== currentPath)
+    .sort((a, b) => a.priority - b.priority);
+  
+  // Take first 4 highest priority items
+  const topItems = otherItems.slice(0, 4);
+  
+  // Combine current item (if in navbar) with top items, then sort by original order
+  let navItems = currentItem 
+    ? [currentItem, ...topItems]
+    : [...topItems, allNavItems[allNavItems.length - 1]]; // If current route not in navbar, ensure we have 5 items
+    
+  // Ensure we have exactly 5 items
+  navItems = navItems.slice(0, 5);
+  
+  // Sort items to maintain consistent order based on priority
+  navItems.sort((a, b) => a.priority - b.priority);
 
-  // Always show exactly 5 items: 2 before active, active, and 2 after
-  const navItems = useMemo(() => {
-    const result = [];
-    const activePos = Math.min(Math.max(2, activeIndex), allNavItems.length - 3);
-    
-    // Add items before active
-    for (let i = Math.max(0, activePos - 2); i < activePos; i++) {
-      if (i >= 0 && i < allNavItems.length) {
-        result.push(allNavItems[i]);
-      }
-    }
-    
-    // Add active item
-    if (activeIndex >= 0) {
-      result.push(allNavItems[activeIndex]);
-    }
-    
-    // Add items after active
-    const remaining = 5 - result.length;
-    for (let i = 1; i <= remaining; i++) {
-      const nextIndex = activeIndex + i;
-      if (nextIndex < allNavItems.length) {
-        result.push(allNavItems[nextIndex]);
-      }
-    }
-    
-    // If we still don't have 5 items, add more from the start
-    if (result.length < 5) {
-      for (let i = 0; i < 5 - result.length; i++) {
-        if (i < allNavItems.length) {
-          result.unshift(allNavItems[i]);
-        }
-      }
-    }
-    
-    return result.slice(0, 5); // Ensure exactly 5 items
-  }, [currentPath]);
+  const activeIndex = navItems.findIndex(item => item.path === currentPath);
+  const activeItem = navItems[activeIndex] || navItems[2];
 
-  // Get visible items (all except active)
-  const visibleItems = navItems.filter(item => item.path !== activeItem.path);
-  const activeItemIndex = navItems.findIndex(item => item.path === activeItem.path);
-  const leftItems = visibleItems.slice(0, activeItemIndex);
-  const rightItems = visibleItems.slice(activeItemIndex);
+  const visibleItems = navItems.filter((_, index) => index !== activeIndex);
+  const leftItems = visibleItems.slice(0, 2);
+  const rightItems = visibleItems.slice(2, 4); // Ensure we only take 4 items total for 5 with active
 
   return (
     <>
