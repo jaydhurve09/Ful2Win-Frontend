@@ -45,6 +45,7 @@ import {ToastContainer,toast} from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css';
 import { playSound, toggleMute, getMuteStatus } from './utils/soundManager'; //sound effect
 import HowToPlay from './components/HowToPlay';
+import ScoreCard from './components/ScoreCard';
 
 function App() {
   const { showSplash } = useAuth();
@@ -110,6 +111,9 @@ function App() {
               <Route path="/gameOn/:gameId/:tournamentId" element={<GameOn />} />
               <Route path="/comingsoon" element={<ComingSoon />} />
               <Route path="/startscreen" element={<StartScreen />} />
+              
+
+              {/* Game routes */}
               
             </Route>
             
