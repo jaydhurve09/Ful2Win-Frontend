@@ -99,6 +99,43 @@ const navigate = useNavigate();
         exit={{ opacity: 0 }}
         className="fixed inset-0 z-50 overflow-y-auto"
       >
+        <style>{`
+          @keyframes shine {
+            0% { background-position: -100% 0; }
+            50% { background-position: 100% 0; }
+            100% { background-position: -100% 0; }
+          }
+
+          .flashy-button {
+            background: linear-gradient(45deg, #ff00cc, #4158d0);
+            background-size: 400% 400%;
+            animation: gradient 10s ease infinite;
+            position: relative;
+            overflow: hidden;
+          }
+
+          .flashy-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+              90deg,
+              transparent,
+              rgba(255, 255, 255, 0.2),
+              transparent
+            );
+            animation: shine 2s infinite;
+          }
+
+          @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+          }
+        `}</style>
         {/* Background with blur */}
         <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={handleClose} />
         
@@ -115,7 +152,7 @@ const navigate = useNavigate();
               <img
                 src={gameImage}
                 alt={gameTitle}
-                className="w-full h-[92%] opacity-10"
+                className="w-full h-[92%] opacity-50"
               />
               <div className="absolute inset-0 bg-gradient-to-b from-black/5 to-transparent h-1/2 animate-pulse" />
               
@@ -164,14 +201,55 @@ const navigate = useNavigate();
               <div className="space-y-3 sm:space-y-4">
                 <h2 className="text-lg font-semibold text-white mb-2 sm:text-xl">Game Modes</h2>
                 
-                <GameModeCard
-                  title="Tournament"
-                  description="Compete for big prizes"
-                  entryFee={getEntryFee('tournament')}
+                {/* Tournament Card with Glass-Shiny Effect */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="relative rounded-xl p-4 border border-gray-400/50 hover:border-dullBlue cursor-pointer hover:shadow-lg glass-effect transition-all sm:w-full"
+                  style={{
+                    '--shine-color': 'linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)',
+                    '--shine-animation': 'shine 2s infinite'
+                  }}
                   onClick={() => handleGameModeSelect('tournament')}
-                  className="sm:w-full"
-                />
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-active">Tournament</h3>
+                      <p className="text-sm text-gray-300 mt-1">Compete for big prizes</p>
+                    </div>
+                    <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/5 to-transparent animate-shine" />
+                    <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/10 to-transparent" />
+                    <button 
+                      className="w-24 h-12 bg-gradient-to-r from-blue-600 to-blue-800 rounded-lg font-medium text-white transition-colors flex flex-col items-center justify-center relative overflow-hidden"
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shine" />
+                      <span className="text-xs">Entry</span>
+                      <span className="text-xs font-semibold">{getEntryFee('tournament')}</span>
+                    </button>
+                  </div>
+                </motion.div>
+                <style>{`
+                  .glass-effect {
+                    background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+                    backdrop-filter: blur(10px);
+                    border: 1px solid rgba(255,255,255,0.1);
+                  }
 
+                  @keyframes shine {
+                    0% { background-position: -100% 0; }
+                    50% { background-position: 100% 0; }
+                    100% { background-position: -100% 0; }
+                  }
+
+                  .glass-effect::before {
+                    content: '';
+                    position: absolute;
+                    inset: 0;
+                    background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+                    animation: shine 2s infinite;
+                  }
+                `}</style>
+                
                 <GameModeCard
                   title="Classic"
                   description="Play with 2-4 players"

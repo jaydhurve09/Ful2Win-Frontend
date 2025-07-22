@@ -133,18 +133,9 @@ function FollowerPage() {
                   </div>
 
           <div className="pt-10 px-2 sm:px-4 md:px-8  mb-2 w-full max-w-6xl mx-auto">
-            {/* Back button + Heading */}
-            <div className="flex items-center justify-center gap-3 mb-2 relative">
-              <button
-                onClick={() => navigate(-1)}
-                className="absolute left-0 text-gray-900 text-3xl px-2"
-              >
-                &#8249;
-              </button>
-              <h1 className="w-full text-2xl sm:text-3xl md:text-4xl font-bold text-center text-black whitespace-nowrap truncate" style={{letterSpacing: '1px'}}>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center text-black whitespace-nowrap truncate mb-4" style={{letterSpacing: '1px'}}>
                 Community Members
               </h1>
-            </div>
 
             {/* Search */}
             <div className="flex justify-center mb-2">

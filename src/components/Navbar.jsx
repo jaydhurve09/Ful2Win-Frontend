@@ -10,7 +10,7 @@ const Navbar = () => {
     { path: '/', icon: <FaHome />, label: 'Home', priority: 1 },
     { path: '/games', icon: <FaGamepad />, label: 'Games', priority: 2 },
     { path: '/tournaments', icon: <FaTrophy />, label: 'Tournaments', priority: 3 },
-    { path: '/community', icon: <FaUsers />, label: 'Community', priority: 4 },
+    { path: '/community' , icon: <FaUsers />, label: 'Community', priority: 4 },
     { path: '/profile', icon: <FaUser />, label: 'Profile', priority: 5 },
   ];
   
@@ -48,7 +48,10 @@ const Navbar = () => {
   navItems.sort((a, b) => a.priority - b.priority);
 
   const activeIndex = navItems.findIndex(item => item.path === currentPath);
-  const activeItem = navItems[activeIndex] || navItems[2];
+  // If no active route or route not in navbar, make community active by default
+  const activeItem = activeIndex !== -1 
+    ? navItems[activeIndex]
+    : navItems.find(item => item.path === '/community') || navItems[2];
 
   const visibleItems = navItems.filter((_, index) => index !== activeIndex);
   const leftItems = visibleItems.slice(0, 2);
