@@ -102,35 +102,37 @@ const Home = () => {
         </div>
 
         {/* Content */}
-        <div className="w-full">
+        <div className="w-full px-3">
           <div className="max-w-screen-lg mx-auto">
 
             {/* Trending */}
-            <SectionTitle
-              icon={gameIcon}
-              title="Trending Games"
-              gradient="linear-gradient(to bottom, #E0CA00, #D98D00)"
-            />
-            <TrendingGames />
+            <div className="mb-1">
+              <SectionTitle
+                icon={gameIcon}
+                title="Trending Games"
+                gradient="linear-gradient(to bottom, #E0CA00, #D98D00)"
+              />
+              <TrendingGames className="mt-3" />
+            </div>
 
-            {/* Multiplayer with overlap */}
-            <div className="-mt-10">
+            {/* Multiplayer */}
+            <div className="mb-2">
               <SectionTitle
                 icon={multiplayerIcon}
                 title="Multiplayer Games"
                 gradient="linear-gradient(to bottom, #00C9FF, #005BBA)"
               />
-              <MultiplayerGames />
+              <MultiplayerGames className="mt-3" />
             </div>
 
-            {/* Popular with overlap */}
-            <div className="-mt-10">
+            {/* Popular */}
+            <div className="mb-1">
               <SectionTitle
                 icon={controllerIcon}
                 title="Popular Games"
                 gradient="linear-gradient(to bottom, #B721FF, #700A72)"
               />
-              <PopularGames />
+              <PopularGames className="mt-3" />
             </div>
           </div>
         </div>

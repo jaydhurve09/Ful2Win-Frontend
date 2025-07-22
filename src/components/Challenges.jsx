@@ -9,8 +9,12 @@ import { FaSpinner } from 'react-icons/fa';
 import ShineButton from './ui/ShineButton';
 import { toast } from 'react-toastify';
 import api from '../services/api';
+import { FiHome, FiMessageSquare, FiAward } from 'react-icons/fi';
+import { RiSwordLine } from 'react-icons/ri';
+import Button from '../components/Button';
 
 const Challenges = () => {
+  const [activeTab, setActiveTab] = useState('challenges');
   const [isFormOpen, setIsFormOpen] = useState(true);
   const [friendName, setFriendName] = useState('');
   const [gameInput, setGameInput] = useState('');
@@ -32,6 +36,13 @@ const Challenges = () => {
     fetchGames();
     fetchChallenges();
   }, []);
+
+  const communityTabs = [
+    { id: 'feed', label: 'Feed', icon: <FiHome className="mr-1" /> },
+    { id: 'followers', label: 'Followers', icon: <FiMessageSquare className="mr-1" /> },
+    { id: 'challenges', label: 'Challenges', icon: <RiSwordLine className="mr-1" /> },
+    { id: 'leaderboard', label: 'Leaderboard', icon: <FiAward className="mr-1" /> },
+  ];
 
   const fetchUsers = async () => {
     try {
@@ -158,6 +169,20 @@ const Challenges = () => {
       toast.error('Failed to cancel challenge');
     }
   };
+  
+  
+  const handleTabChange = (tabId) => {
+    if (tabId === 'challenges') {
+      navigate('/challenges'); // Navigate to the dedicated challenges page
+    } else if (tabId === 'leaderboard') {
+      navigate('/community/leaderboard'); // Navigate to the leaderboard page
+    } else if (tabId === 'followers') {
+      window.location.href = '/users'; // Full page navigation to users page
+      return;
+    } else {
+      setActiveTab(tabId);
+    }
+  };
 
   const handleAcceptInvite = async (challengeId , gameId) => {
     try {
@@ -210,17 +235,48 @@ const Challenges = () => {
       <div className="relative z-10">
         <Header />
 
-        {/* Back Button styled like Support Page */}
-        <div className="pt-16 px-4 max-w-2xl mx-auto flex items-center mb-2">
-          <button
-            onClick={() => navigate(-1)}
-            className="text-blue-400 hover:text-blue-500 text-lg font-semibold flex items-center"
-          >
-            <FiArrowLeft size={40} className="mr-1" />
-          </button>
-        </div>
+        <div className="pt-20 md:pt-0 w-full flex justify-center">
+                    <div className="w-full max-w-3xl px-2">
+                      <div className="hidden md:flex gap-2 mb-2 overflow-x-auto py-1 justify-end pr-1">
+                        {communityTabs.map((tab) => (
+                          <Button
+                            key={tab.id}
+                            variant={activeTab === tab.id ? 'primary' : 'gradient'}
+                            onClick={() => handleTabChange(tab.id)}
+                            className="rounded-full px-4 py-2 flex items-center whitespace-nowrap text-sm"
+                          >
+                            {React.cloneElement(tab.icon, { className: 'mr-1.5' })}
+                            {tab.label}
+                          </Button>
+                        ))}
+                      </div>
+        
+                      <div className="flex md:hidden w-full mb-2 py-1 px-1">
+                        <div className="w-full flex justify-start space-x-1 pr-1">
+                          {communityTabs.map((tab) => (
+                            <Button
+                              key={tab.id}
+                              variant={activeTab === tab.id ? 'active' : 'gradient'}
+                              onClick={() => handleTabChange(tab.id)}
+                              className={`w-full rounded-full shadow-lg shadow-gray-700 ${activeTab === tab.id ? 'px-3 py-1.5' : 'p-2.5'} flex items-center justify-center`}
+                              title={tab.label}
+                            >
+                              {React.cloneElement(tab.icon, { 
+                                className: `text-sm ${activeTab === tab.id ? 'mr-1' : ''}` 
+                              })}
+                              {activeTab === tab.id && (
+                                <span className="text-xs ml-0.5">{tab.label}</span>
+                              )}
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+        
+  
 
-        <div className="px-6 max-w-2xl mx-auto space-y-6">
+        <div className="px-6 max-w-2xl mx-auto mt-5 space-y-6">
           {/* Challenge Form */}
           <NeonGradientCard className="max-w-sm items-center justify-center text-center p-4 opacity-90">
             <div className="text-black">

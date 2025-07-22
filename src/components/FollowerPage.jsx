@@ -6,10 +6,13 @@ import BackgroundBubbles from '../components/BackgroundBubbles';
 import { toast } from 'react-toastify';
 import api from '../services/api';
 import authService from '../services/authService';
-import { FiMessageSquare } from 'react-icons/fi';
 import ChatScreen from './ChatScreen';
+import { FiHome, FiMessageSquare, FiAward } from 'react-icons/fi';
+import { RiSwordLine } from 'react-icons/ri';
+import Button from '../components/Button';
 
 function FollowerPage() {
+   const [activeTab, setActiveTab] = useState('followers');
   const [selectedChatUser, setSelectedChatUser] = useState(null);
   const [search, setSearch] = useState('');
   const [users, setUsers] = useState([]);
@@ -64,15 +67,74 @@ function FollowerPage() {
     );
   }, [search, users]);
 
+   const communityTabs = [
+      { id: 'feed', label: 'Feed', icon: <FiHome className="mr-1" /> },
+      { id: 'followers', label: 'Followers', icon: <FiMessageSquare className="mr-1" /> },
+      { id: 'challenges', label: 'Challenges', icon: <RiSwordLine className="mr-1" /> },
+      { id: 'leaderboard', label: 'Leaderboard', icon: <FiAward className="mr-1" /> },
+    ];
+    
+    const handleTabChange = (tabId) => {
+    if (tabId === 'challenges') {
+      navigate('/challenges'); // Navigate to the dedicated challenges page
+    } else if (tabId === 'leaderboard') {
+      navigate('/community/leaderboard'); // Navigate to the leaderboard page
+    } else if (tabId === 'followers') {
+      window.location.href = '/users'; // Full page navigation to users page
+      return;
+    } else {
+      setActiveTab(tabId);
+    }
+  };
+
   return (
     <>
       <div className="min-h-screen w-full bg-white text-gray-900 pb-24 overflow-hidden">
         <BackgroundBubbles />
         <div className="relative z-10 w-full">
           <Header />
-          <div className="pt-10 px-2 sm:px-4 md:px-8 w-full max-w-6xl mx-auto">
+          <div className="pt-20 md:pt-0 w-full flex justify-center">
+                    <div className="w-full max-w-3xl px-2">
+                      <div className="hidden md:flex gap-2 mb-2 overflow-x-auto py-1 justify-end pr-1">
+                        {communityTabs.map((tab) => (
+                          <Button
+                            key={tab.id}
+                            variant={activeTab === tab.id ? 'primary' : 'gradient'}
+                            onClick={() => handleTabChange(tab.id)}
+                            className="rounded-full px-4 py-2 flex items-center whitespace-nowrap text-sm"
+                          >
+                            {React.cloneElement(tab.icon, { className: 'mr-1.5' })}
+                            {tab.label}
+                          </Button>
+                        ))}
+                      </div>
+        
+                      <div className="flex md:hidden w-full mb-2 py-1 px-1">
+                        <div className="w-full flex justify-start space-x-1 pr-1">
+                          {communityTabs.map((tab) => (
+                            <Button
+                              key={tab.id}
+                              variant={activeTab === tab.id ? 'active' : 'gradient'}
+                              onClick={() => handleTabChange(tab.id)}
+                              className={`w-full rounded-full shadow-lg shadow-gray-700 ${activeTab === tab.id ? 'px-3 py-1.5' : 'p-2.5'} flex items-center justify-center`}
+                              title={tab.label}
+                            >
+                              {React.cloneElement(tab.icon, { 
+                                className: `text-sm ${activeTab === tab.id ? 'mr-1' : ''}` 
+                              })}
+                              {activeTab === tab.id && (
+                                <span className="text-xs ml-0.5">{tab.label}</span>
+                              )}
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+          <div className="pt-10 px-2 sm:px-4 md:px-8  mb-2 w-full max-w-6xl mx-auto">
             {/* Back button + Heading */}
-            <div className="flex items-center justify-center gap-3 mt-6 sm:mt-8 md:mt-6  mb-2 relative">
+            <div className="flex items-center justify-center gap-3 mb-2 relative">
               <button
                 onClick={() => navigate(-1)}
                 className="absolute left-0 text-gray-900 text-3xl px-2"
