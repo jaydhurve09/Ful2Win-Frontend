@@ -115,9 +115,9 @@ const navigate = useNavigate();
               <img
                 src={gameImage}
                 alt={gameTitle}
-                className="w-full h-full object-cover opacity-10"
+                className="w-full h-[92%] opacity-10"
               />
-              <div className="absolute inset-0 bg-gradient-to-b from-black/70 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-b from-black/5 to-transparent h-1/2 animate-pulse" />
               
               {/* Close Button */}
               <button
