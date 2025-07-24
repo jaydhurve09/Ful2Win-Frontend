@@ -111,7 +111,7 @@ function App() {
               <Route path="/gameOn/:gameId/:tournamentId" element={<GameOn />} />
               <Route path="/comingsoon" element={<ComingSoon />} />
               <Route path="/startscreen" element={<StartScreen />} />
-              
+                         
 
               {/* Game routes */}
               
