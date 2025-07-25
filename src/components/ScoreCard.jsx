@@ -28,7 +28,7 @@ const ScoreCard = ({ game, userId, score, roomId, gameName, gameImg }) => {
 //sound effect added for win..
 
   return (
-   <div    className="w-screen h-screen blur-none text-yellow-400 bg-black flex items-center justify-center">
+   <div    className="w-screen h-screen blur-none text-yellow-400 bg-blueGradient flex items-center justify-center">
   <motion.div initial={{ scale: 0 }} delay={1.6} animate={{ scale: 1 }} className="w-full max-w-sm bg-gray-900 rounded-2xl shadow-md p-6 relative border-2 shadow-gray-400 border-yellow-500 m-3">
         
         {/* Cancel Button */}
