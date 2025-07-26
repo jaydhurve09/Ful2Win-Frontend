@@ -77,7 +77,7 @@ const getUserInfo = async() => {
               userName,
               score,
               roomId: tournamentId,
-              gameName: game?.displayName || "Game",
+              gameName: game?.name || "Game",
               gameId: game?._id || gameId
             };
             
