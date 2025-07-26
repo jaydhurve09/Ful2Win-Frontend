@@ -42,7 +42,7 @@ const ScoreCard = ({ game, userId, score, roomId, gameName, gameImg }) => {
 
         {/* Header */}
         <div className="text-center flex flex-row items-center mb-6">
-          <img className="w-16 h-16 rounded-full m-4" src={gameImg||logo} alt={gameName} /> <h2 className="text-2xl font-extrabold">{gameName || 'Unknown Game'}</h2>
+          <img className="w-16 h-16 rounded-full m-4" src={gameImg} alt={gameName} /> <h2 className="text-2xl font-extrabold capitalize">{gameName || 'unknown game'}</h2>
         </div>
       
         
@@ -50,7 +50,7 @@ const ScoreCard = ({ game, userId, score, roomId, gameName, gameImg }) => {
         {/* Score Display */}
         <div className=" text-yellow-800 rounded-xl py-2 flex  justify-center items-center mb-6 text-center shadow-inner">
           <div className="flex justify-center gap-3 items-center mb-2 text-4xl pl-1 font-bold">
-           <h2 className="text-yellow-400">My Score:</h2> <p className="text-4xl font-bold text-white"> 50{score}</p>
+           <h2 className="text-yellow-400">My Score:</h2> <p className="text-4xl font-bold text-white">{score}</p>
           </div>
           
          

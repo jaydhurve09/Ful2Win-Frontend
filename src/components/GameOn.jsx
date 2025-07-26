@@ -105,8 +105,8 @@ const getUserInfo = async() => {
               score,
               game: game?._id || gameId,
               roomId: tournamentId,
-              gameName: game?.name,
-              gameImg: game?.assets?.gameImg?.baseUrl || ''
+              gameName: game?.displayName || game?.name || 'Game',
+              gameImg: game.assets?.thumbnail || ''
             });
   
             setGameOver(true);
