@@ -313,9 +313,9 @@ const handleRegisterTournament = async (tournamentId) => {
 
     const isCoinTournament = tournament.tournamentType === 'coin';
     
-      
-    navigate(`/gameOn/${gameId}/${tournamentId}`);
-   // }
+    navigate(`/gameOn/${gameId}/${tournamentId}`, {
+      state: { fromTournamentLobby: true }
+    });
   };
   //console.log(tournaments.currentPlayers);
 
