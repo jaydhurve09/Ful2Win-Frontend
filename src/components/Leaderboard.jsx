@@ -15,15 +15,15 @@ const Leaderboard = () => {
   // State to manage active tab
 const [activeTab, setActiveTab] = useState('leaderboard');
 const [prizeBreakup, setPrizeBreakup] = useState([]);
-
-
+const [prize, setPrize] = useState(null);
+const [tPrize, setTPrize] = useState(null);
 
   const [leaderboardData, setLeaderboardData] = useState([]);
 
   const fetchLeaderboard = async () => {
     try {
       
-      console.log('[Leaderboard] Fetching leaderboard with params:', { gameName, tournamentId });
+      
       
       const response = await api.get('/score/get-score', {
         params: {
@@ -58,10 +58,33 @@ const [prizeBreakup, setPrizeBreakup] = useState([]);
     }
   };
 
+  const fetchTournamentDetails = async () => {
+    try {
+      const response = await api.get(`/tournaments/${tournamentId}`,{
+        contenttype: 'application/json',
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      const data = response.data;
+     // console.log('[Leaderboard] Tournament details response:', data.data);
+      setPrize(data.data.CollectPrize);
+      
+      setTPrize(data.data.prizePool);
+       fetchLeaderboard();
+     
+    } catch (error) {
+      toast.error(error.response?.data?.message || "An error occurred while fetching tournament details.");
+      console.error("Error fetching tournament details:", error);
+    }
+  };
+
+ // console.log(`[Leaderboard] Tournament details:`, tPrize);
   useEffect(() => {
     window.scrollTo(0, 0);
     if (gameName && tournamentId) {
-      fetchLeaderboard();
+     
+      fetchTournamentDetails();
     } else {
       console.error("Invalid gameName or tournamentId");
     }
@@ -186,7 +209,7 @@ const [prizeBreakup, setPrizeBreakup] = useState([]);
 
         {/* Winnings */}
         <div className="w-3/12 text-right text-lime-300 text-sm font-semibold">
-          ₹{player.prize}
+          ₹{index===0?prize*0.5:0 || index===1?prize*0.2:0 || index===2?prize*0.1:0}
         </div>
       </div>
     ))}
@@ -216,7 +239,7 @@ const [prizeBreakup, setPrizeBreakup] = useState([]);
             <span>{item.rank}</span>
           </div>
           <div className="w-1/2 text-right text-lime-300 font-semibold text-sm">
-            ₹{item.prize}
+            ₹{item.rank === '1' ? tPrize * 0.5 : item.rank === '2' ? tPrize * 0.2 : item.rank === '3' ? tPrize * 0.1 : 0}
           </div>
         </div>
       ))}
