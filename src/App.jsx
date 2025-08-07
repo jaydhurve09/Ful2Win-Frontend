@@ -46,6 +46,8 @@ import 'react-toastify/dist/ReactToastify.css';
 import { playSound, toggleMute, getMuteStatus } from './utils/soundManager'; //sound effect
 import HowToPlay from './components/HowToPlay';
 import ScoreCard from './components/ScoreCard';
+import Ful2WinContextProvider from './context/ful2winContext';
+import ClassicLobby from './components/classicLobby';
 
 function App() {
   const { showSplash } = useAuth();
@@ -72,6 +74,7 @@ function App() {
             pauseOnHover
             theme="colored"
           />
+          <Ful2WinContextProvider>
           
           <Routes>
             {/* Public routes */}
@@ -79,6 +82,7 @@ function App() {
             <Route path="/signup" element={<SignUp />} />
             
             {/* Protected routes */}
+            
             <Route element={<ProtectedRoute />}>
               <Route path="/" element={<Home />} />
               <Route path="/profile" element={<ProfileScreen />} />
@@ -108,6 +112,7 @@ function App() {
               <Route path="/leaderboard_singlegame/:gameName/:tournamentId" element={<Leaderboard />}/>
               <Route path="/tournament/:tournamentId" element={<TournamentLobby />} />
               <Route path="/tournament-lobby/:gameId" element={<TournamentLobby />} />
+              <Route path="/classic-lobby/:gameId" element={<ClassicLobby />} />
               <Route path="/gameOn/:gameId/:tournamentId" element={<GameOn />} />
               <Route path="/comingsoon" element={<ComingSoon />} />
               <Route path="/startscreen" element={<StartScreen />} />
@@ -123,6 +128,8 @@ function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           
           </Routes>
+          
+        </Ful2WinContextProvider>
         </ErrorBoundary>
       </AuthProvider>
     </BrowserRouter>

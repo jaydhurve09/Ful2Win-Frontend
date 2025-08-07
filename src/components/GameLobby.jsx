@@ -40,6 +40,12 @@ const navigate = useNavigate();
     if (mode === 'tournament') {
       navigate(`/tournament-lobby/${gameId}`);
       }
+      else if (mode === 'classic') {
+      navigate(`/classic-lobby/${gameId}`);
+      }
+      else if (mode === 'private') {
+      navigate(`/private-lobby/${gameId}`);
+      }
     };
   
   const getEntryFee = (mode) => {
@@ -249,13 +255,20 @@ const navigate = useNavigate();
                     animation: shine 2s infinite;
                   }
                 `}</style>
-                
+                <GameModeCard
+                  title="Tournament"
+                  description="Compete for big prizes"
+                  entryFee={getEntryFee('tournament')}
+                 // comingSoon={!isActionGame}
+                  onClick={() => handleGameModeSelect('tournament')}
+                />
+               
                 <GameModeCard
                   title="Classic"
                   description="Play with 2-4 players"
                   entryFee={getEntryFee('classic')}
-                  comingSoon={!isActionGame}
-                  onClick={() => navigate(`/comingsoon`)}
+                 // comingSoon={!isActionGame}
+                  onClick={() => handleGameModeSelect('classic')}
                 />
                 
                 <GameModeCard

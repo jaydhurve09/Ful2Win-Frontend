@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 
 const GameCard = ({ game, featured = false, size = 'md' }) => {
   const isSmall = size === 'sm';
-  const rating = game.rating || 4.0;
+  const rating = game.rating || 3.0;
   const fullStars = Math.floor(rating);
   const hasHalfStar = rating % 1 >= 0.5;
 
