@@ -48,7 +48,7 @@ import HowToPlay from './components/HowToPlay';
 import ScoreCard from './components/ScoreCard';
 import Ful2WinContextProvider from './context/ful2winContext';
 import ClassicLobby from './components/classicLobby';
-
+import GameOn2 from './components/gameOn2';
 function App() {
   const { showSplash } = useAuth();
   
@@ -114,6 +114,7 @@ function App() {
               <Route path="/tournament-lobby/:gameId" element={<TournamentLobby />} />
               <Route path="/classic-lobby/:gameId" element={<ClassicLobby />} />
               <Route path="/gameOn/:gameId/:tournamentId" element={<GameOn />} />
+              <Route path="/gameOn2/:gameId/:tournamentId" element={<GameOn2 />} />
               <Route path="/comingsoon" element={<ComingSoon />} />
               <Route path="/startscreen" element={<StartScreen />} />
               

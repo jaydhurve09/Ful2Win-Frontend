@@ -10,6 +10,7 @@ export const Ful2WinContext = createContext();
 const Ful2WinContextProvider = (props) => {
   const [games, setGames] = useState([]);
   const [tournaments, setTournaments] = useState([]);
+  const [allUsers, setAllUsers] = useState([]);
 
   const fetchGames = async () => {
     try {
@@ -38,6 +39,23 @@ const Ful2WinContextProvider = (props) => {
       console.error('Error fetching tournaments:', error);
     }
   };
+  const fetchAllUsers = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/users/all`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch user');
+      }
+      const data = await response.json();
+      setAllUsers(data.data);
+      // Debug log
+    } catch (error) {
+      console.error('Error fetching user:', error);
+    }
+  };
 
 
 
@@ -47,13 +65,16 @@ const Ful2WinContextProvider = (props) => {
 useEffect(() => {
     fetchGames();
     fetchTournaments();
+    fetchAllUsers();
   }, []);
 
   const value = {
     games,
     setGames,
     tournaments,
-    setTournaments
+    setTournaments,
+    allUsers,
+    setAllUsers
   };
 
   return (
