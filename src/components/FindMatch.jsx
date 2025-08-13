@@ -11,7 +11,7 @@ const API_BASE_URL = import.meta.env.MODE === 'development'
 
 console.log('API Base URL:', API_BASE_URL); // Debug log
 const FindMatch = ({ tournament, onClose }) => {
-  const { allUsers } = useContext(Ful2WinContext);
+  const { allUsers, socket } = useContext(Ful2WinContext);
   const navigate = useNavigate();
   const [progress, setProgress] = useState(1); // 1 = full progress
   const [opponent, setOpponent] = useState(null);
@@ -23,10 +23,10 @@ const FindMatch = ({ tournament, onClose }) => {
   const roomIdRef = useRef(null);
   const timerRef = useRef(null);
   const autoPlayTimerRef = useRef(null);
-  const socketRef = useRef(null);
+
 
  const joinMatch = () => {
-  socketRef.current.emit('join_match', {
+  socket.emit('join_match', {
     userId: JSON.parse(localStorage.getItem('user')).id,
     gameId: tournament.gameId,
     entryFee: tournament.entryFee
@@ -50,7 +50,7 @@ const FindMatch = ({ tournament, onClose }) => {
         clearInterval(timerRef.current);
         setProgress(0);
         setTimeUp(true);
-        socketRef.current.emit('not_found', {
+        socket.emit('not_found', {
           userId: JSON.parse(localStorage.getItem('user')).id,
           gameId: tournament.gameId,
           entryFee: tournament.entryFee
@@ -67,15 +67,14 @@ const playHandler = () => {
     console.log('Auto-play timer cancelled - user clicked manually');
   }
   setAutoPlayCountdown(0);
-  
-  socketRef.current.emit('register', {
+
+  socket.emit('register', {
     userId: JSON.parse(localStorage.getItem('user')).id,
     gameId: tournament.gameId,
     roomId: roomIdRef.current,
     entryFee: tournament.entryFee
   });
 
-//  navigate(`/gameOn2/${tournament.gameId}/${tournament.roomId}`);
 };
 
  const opponentData = (opponentId) => {
@@ -143,11 +142,8 @@ const playHandler = () => {
  };
 
   useEffect(() => {
-    socketRef.current = io(API_BASE_URL);
-    socketRef.current.on('connect', () => {
-      console.log('Connected to server');
-    });
-    socketRef.current.on('match_found', (match) => {
+   
+    socket.on('match_found', (match) => {
       console.log('Match found:', match);
       console.log('Calling opponentData with:', match.opponent);
       console.log('Room ID from match:', match.roomId);
@@ -164,7 +160,7 @@ const playHandler = () => {
       
       // Timer will be stopped in opponentData function when user profile is loaded
     });
-    socketRef.current.on('register_success', (data) => {
+    socket.on('register_success', (data) => {
       console.log('Registration successful', data);
       const gameRoomId = data?.roomId || roomIdRef.current;
       console.log('Using roomId for navigation:', gameRoomId);
@@ -176,9 +172,7 @@ const playHandler = () => {
       if (autoPlayTimerRef.current) {
         clearInterval(autoPlayTimerRef.current);
       }
-      if (socketRef.current) {
-        socketRef.current.disconnect();
-      }
+    
     };
   }, [allUsers]);
 const userProfile = JSON.parse(localStorage.getItem('user')).profilePicture;

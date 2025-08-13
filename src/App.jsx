@@ -114,13 +114,10 @@ function App() {
               <Route path="/tournament-lobby/:gameId" element={<TournamentLobby />} />
               <Route path="/classic-lobby/:gameId" element={<ClassicLobby />} />
               <Route path="/gameOn/:gameId/:tournamentId" element={<GameOn />} />
-              <Route path="/gameOn2/:gameId/:tournamentId" element={<GameOn2 />} />
+              <Route path="/gameOn2/:gameId/:roomId" element={<GameOn2 />} />
               <Route path="/comingsoon" element={<ComingSoon />} />
               <Route path="/startscreen" element={<StartScreen />} />
               
-            
-                         
-
               {/* Game routes */}
               
             </Route>

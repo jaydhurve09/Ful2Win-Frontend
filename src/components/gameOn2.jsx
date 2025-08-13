@@ -1,28 +1,44 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState , useRef} from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import ScoreCard from "./ScoreCard";
-import api from "../services/api";
+import { useContext } from "react";
+import { Ful2WinContext } from "../context/ful2winContext";
+import Waiting from "./Waiting";
+import Winner from "./Winner";
+const API_BASE_URL = import.meta.env.MODE === 'development' 
+? 'http://localhost:5000' 
+:  `${import.meta.env.VITE_API_BACKEND_URL}/api`
+
 
 const GameOn2 = () => {
   const { gameId, roomId } = useParams();
+  const { allUsers,games,socket } = useContext(Ful2WinContext);
   const navigate = useNavigate();
   const location = useLocation();
+  const [isWaiting , setIsWaiting] = useState(false);
 
   const [game, setGame] = useState(null);
   const [error, setError] = useState(null);
   const [gameOver, setGameOver] = useState(false);
   const [scoreData, setScoreData] = useState(null);
   
-  
 
   useEffect(() => {
-    
+   
+    socket.on("game_over_response", (data) => {
+      console.log("Game over event received:", data);
+      setScoreData(data);
+      setIsWaiting(false);
+      setGameOver(true);
+      
+    });
+
+  
+  }, []);
 
     const fetchGameById = async () => {
       try {
-        const response = await api.get('/games');
-        const allGames = response.data?.data || [];
-        const foundGame = allGames.find((g) => g._id === gameId);
+       
+        const foundGame = games.find((g) => g._id === gameId);
 
         if (foundGame) {
           setGame(foundGame);
@@ -35,12 +51,9 @@ const GameOn2 = () => {
       }
     };
 
-    if (gameId) {
+    useEffect(() => {
       fetchGameById();
-    } else {
-      setError("Invalid game ID");
-    }
-  }, [gameId]);
+    }, [gameId]);
 
   const getUserInfo = async() => {
     try {
@@ -61,73 +74,29 @@ const GameOn2 = () => {
     const handleMessage = async (event) => {
       const { type, score } = event.data;
       if (type === "GAME_OVER") {
-        const { userId, userName } = await getUserInfo();
+        const { userId } = await getUserInfo();
+        
         try {
           const scorePayload = {
-            userId,
-            userName,
-            score,
-            roomId: tournamentId,
-            gameName: game?.name || "Game",
-            gameId: game?._id || gameId
-          };
-          
-          console.log('Submitting score with payload:', scorePayload);
-          
-          try {
-            const requestData = {
-              userId,
-              userName,
-              score,
-              roomId: roomId,
-              gameName: game?.name || "Game",
-              gameId: game?._id || gameId
-            };
-            
-            console.log('Sending request with data:', JSON.stringify(requestData, null, 2));
-            
-            const response = await fetch(`${import.meta.env.VITE_API_BACKEND_URL}/api/score/submit-score`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
-              },
-              body: JSON.stringify(requestData)
-            });
+                   score,
+                   userId,
+                   roomId,
+                 };
 
-            const responseData = await response.json();
-            
-            if (!response.ok) {
-              throw new Error(responseData.message || 'Failed to submit score');
-            }
-            setScoreData({
-              userId,
-              userName,
-              score,
-              game: game?._id || gameId,
-              roomId: roomId,
-              gameName: game?.displayName || game?.name || 'Game',
-              gameImg: game.assets?.thumbnail || ''
-            });
-  
-            setGameOver(true);
-            console.log('Score submitted successfully:', responseData);
-            return responseData;
-            
-          } catch (error) {
-            console.error('Error in score submission:', {
-              message: error.message,
-              stack: error.stack,
-              response: error.response?.data || 'No response data'
-            });
-            throw error;
-          }
-        } catch (err) {
-          console.error("Score submit failed", err);
+               socket.emit("game_over", scorePayload);
+               setIsWaiting(true);
+
         }
-      }
-    };
+    catch (error) {
+         console.error('Error in score submission:', {
+           message: error.message,
+           stack: error.stack,
+           response: error.response?.data || 'No response data'
+         });
+         throw error;
+    }
+  }
+}
 
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
@@ -154,12 +123,15 @@ const GameOn2 = () => {
       </div>
     );
   }
+  if (isWaiting) {
+    return <Waiting gameId={gameId} />;
+  }
 
   const iframeSrc = game.assets?.gameUrl?.baseUrl;
 
-  return gameOver && scoreData ? (
+  return gameOver ? (
     <div className="min-h-screen w-full bg-gray-100 flex items-center justify-center">
-      <ScoreCard {...scoreData} />
+      <Winner scoreData={scoreData} />
     </div>
   ) : (
     <div className="relative w-full h-screen bg-black overflow-hidden">

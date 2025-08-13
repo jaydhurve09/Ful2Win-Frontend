@@ -255,19 +255,19 @@ const navigate = useNavigate();
                     animation: shine 2s infinite;
                   }
                 `}</style>
-                <GameModeCard
+                {/* <GameModeCard
                   title="Tournament"
                   description="Compete for big prizes"
                   entryFee={getEntryFee('tournament')}
                  // comingSoon={!isActionGame}
                   onClick={() => handleGameModeSelect('tournament')}
                 />
-               
+                */}
                 <GameModeCard
                   title="Classic"
                   description="Play with 2-4 players"
                   entryFee={getEntryFee('classic')}
-                 // comingSoon={!isActionGame}
+                 comingSoon={!isActionGame}
                   onClick={() => handleGameModeSelect('classic')}
                 />
                 
