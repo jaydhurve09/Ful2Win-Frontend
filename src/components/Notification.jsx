@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import Header from './Header';
 import Navbar from './Navbar';
 import BackgroundBubbles from './BackgroundBubbles';
+import BackgroundCircles from './BackgroundCircles';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
 import { toast } from 'react-toastify';
@@ -269,7 +270,7 @@ const Notification = () => {
   };
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-b from-[#0A2472] via-[#0D47A1] to-[#1565C0] text-white pb-24 overflow-hidden">
+    <div className="relative min-h-screen bg-royalBlueGradient text-white pb-24 overflow-hidden">
       <Header />
       
       <div className="container mx-auto px-4 py-6 pt-16">
@@ -467,7 +468,7 @@ const Notification = () => {
       </div>
       
       <Navbar />
-      <BackgroundBubbles />
+      <BackgroundCircles />
     </div>
   );
 };

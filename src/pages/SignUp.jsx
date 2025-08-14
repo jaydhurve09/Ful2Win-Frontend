@@ -4,6 +4,7 @@ import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import logo from '../assets/logo.png';
 import BackgroundBubbles from '../components/BackgroundBubbles';
+import BackgroundCircles from '../components/BackgroundCircles';
 import api from '../services/api';
 import authService from '../services/authService';
 import { FaEye, FaEyeSlash, FaCheckCircle, FaTimesCircle, FaSpinner } from 'react-icons/fa';
@@ -163,9 +164,9 @@ const Signup = () => {
   };
 
   return (
-    <div className="min-h-screen bg-blueGradient flex flex-col justify-end">
-      <BackgroundBubbles />
-      
+    <div className="min-h-screen bg-royalBlueGradient flex flex-col justify-end">
+  
+      <BackgroundCircles />
       {/* Premium Logo Section with same animation as Login */}
       <div className="flex flex-col items-center pt-6">
         {/* Logo with professional bounce animation */}

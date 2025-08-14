@@ -1,21 +1,25 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaSearch, FaStar, FaGamepad } from 'react-icons/fa';
-import CachedImage from '../components/CachedImage';
 import { motion, AnimatePresence } from 'framer-motion';
+
+// --- FIXED: ADDED MISSING IMPORT FOR BackgroundBubbles ---
+import CachedImage from '../components/CachedImage';
 import Header from '../components/Header';
 import Navbar from '../components/Navbar';
-import BackgroundBubbles from '../components/BackgroundBubbles';
+import BackgroundCircles from '../components/BackgroundCircles';
+import BackgroundBubbles from '../components/BackgroundBubbles'; // The missing import
+
 import api from '../services/api';
 
 const defaultGameImage = 'https://via.placeholder.com/300x200/1a1a2e/ffffff?text=Game+Image';
 
-  const GAME_CATEGORIES = [
-    { id: 'all', name: 'All Games' },
-    { id: 'card', name: 'Card' },
-    { id: 'board', name: 'Board' },
-    { id: 'action', name: 'Action' },
-  ];
+const GAME_CATEGORIES = [
+  { id: 'all', name: 'All Games' },
+  { id: 'card', name: 'Card' },
+  { id: 'board', name: 'Board' },
+  { id: 'action', name: 'Action' },
+];
 
 const Games = () => {
   const navigate = useNavigate();
@@ -24,6 +28,8 @@ const Games = () => {
   const [games, setGames] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedGameId, setSelectedGameId] = useState(null);
+  const [glowGameId, setGlowGameId] = useState(null);
 
   useEffect(() => {
     const fetchGames = async () => {
@@ -64,8 +70,9 @@ const Games = () => {
     fetchGames();
   }, []);
 
-  const { filteredGames } = useMemo(() => {
-    if (!Array.isArray(games)) return { filteredGames: [] };
+  // --- IMPROVEMENT: Simplified the useMemo return ---
+  const filteredGames = useMemo(() => {
+    if (!Array.isArray(games)) return [];
 
     const filtered = games.filter((game) => {
       if (!game || typeof game !== 'object') return false;
@@ -86,12 +93,12 @@ const Games = () => {
       return categoryMatch && searchMatch;
     });
 
-    return { filteredGames: filtered };
+    return filtered;
   }, [games, activeCategory, searchQuery]);
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-white flex flex-col">
+      <div className="min-h-screen bg-royalBlueGradient text-white flex flex-col">
         <Header />
         <Navbar />
         <div className="flex-1 flex items-center justify-center">
@@ -106,7 +113,7 @@ const Games = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-white flex flex-col">
+      <div className="min-h-screen bg-royalBlueGradient text-white flex flex-col">
         <Header />
         <Navbar />
         <div className="flex-1 flex items-center justify-center p-4">
@@ -126,17 +133,17 @@ const Games = () => {
   }
 
   return (
-    <div className="min-h-screen bg-blueGradient text-white flex flex-col">
-      <BackgroundBubbles />
+    <div className="min-h-screen bg-royalBlueGradient text-white flex flex-col">
+      <BackgroundCircles />
+
       <Header />
 
       <div className="flex-1 overflow-y-auto pt-[64px] pb-[64px]">
-        {/* Sticky Search + Category Section with Bubbles */}
+        {/* Search + Categories */}
         <div className="sticky top-0 z-20 pt-4 pb-4 backdrop-blur-md">
           <div className="absolute inset-0 z-[-1] pointer-events-none">
             <BackgroundBubbles />
           </div>
-
           <div className="container mx-auto px-4">
             <div className="flex flex-col sm:flex-row gap-3">
               <div className="relative flex-1">
@@ -152,16 +159,17 @@ const Games = () => {
                 />
               </div>
 
-              {/* Categories - Desktop */}
+              {/* Categories Desktop */}
               <div className="hidden sm:flex flex-wrap gap-2">
                 {GAME_CATEGORIES.map((category) => (
                   <button
                     key={category.id}
                     onClick={() => setActiveCategory(category.id)}
-                    className={`px-3 py-2 text-xs font-medium whitespace-nowrap rounded-lg transition-colors ${activeCategory === category.id
-                      ? 'bg-active text-gray-800'
-                      : 'bg-gray-800/70 text-gray-300 hover:bg-gray-700/70'
-                      }`}
+                    className={`px-3 py-2 text-xs font-medium rounded-lg transition-colors ${
+                      activeCategory === category.id
+                        ? 'bg-active text-gray-800'
+                        : 'bg-gray-800/70 text-gray-300 hover:bg-gray-700/70'
+                    }`}
                   >
                     {category.name}
                   </button>
@@ -169,27 +177,26 @@ const Games = () => {
               </div>
             </div>
 
-            {/* Categories - Mobile */}
-            <div className="sm:hidden mt-3">
-              <div className="flex flex-wrap gap-2">
-                {GAME_CATEGORIES.map((category) => (
-                  <button
-                    key={category.id}
-                    onClick={() => setActiveCategory(category.id)}
-                    className={`px-3 py-1.5 text-xs font-medium whitespace-nowrap rounded-lg transition-colors flex-shrink-0 ${activeCategory === category.id
+            {/* Categories Mobile */}
+            <div className="sm:hidden mt-3 flex flex-wrap gap-2">
+              {GAME_CATEGORIES.map((category) => (
+                <button
+                  key={category.id}
+                  onClick={() => setActiveCategory(category.id)}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+                    activeCategory === category.id
                       ? 'bg-active text-gray-800'
                       : 'bg-gray-800/70 text-gray-300 hover:bg-gray-700/70'
-                      }`}
-                  >
-                    {category.name}
-                  </button>
-                ))}
-              </div>
+                  }`}
+                >
+                  {category.name}
+                </button>
+              ))}
             </div>
           </div>
         </div>
 
-        {/* Games Grid Section */}
+        {/* Games Grid */}
         <main className="container mx-auto px-4 relative z-10">
           <section>
             <div className="flex justify-between items-center mb-6">
@@ -198,7 +205,7 @@ const Games = () => {
                   ? 'All Games'
                   : `${activeCategory.charAt(0).toUpperCase() + activeCategory.slice(1)} Games`}
                 {searchQuery && (
-                  <span className="text-sm text-purple-300 font-normal ml-2">
+                  <span className="text-sm text-purple-300 ml-2">
                     "{searchQuery}"
                   </span>
                 )}
@@ -211,60 +218,61 @@ const Games = () => {
             {filteredGames.length > 0 ? (
               <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7 gap-4">
                 <AnimatePresence>
-                  {filteredGames.map((game) => (
-                    <motion.div
-                      key={game._id || Math.random().toString(36).substr(2, 9)}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      whileHover={{ scale: 1.03 }}
-                      whileTap={{ scale: 0.98 }}
-                      transition={{ duration: 0.2 }}
-                      className="bg-gray-800/50 backdrop-blur-sm rounded-xl overflow-hidden border border-gray-700/50 hover:border-purple-500/50 transition-all cursor-pointer"
-                      onClick={() => {
-                        const gameId = game._id || game.name;
-                        if (gameId) navigate(`/game-lobby/${gameId}`);
-                      }}
-                    >
-                      <div className="aspect-square bg-gray-900 relative overflow-hidden">
-                        <CachedImage
-                          src={game.assets?.thumbnail || defaultGameImage}
-                          alt={game.displayName || game.name || 'Game'}
-                          className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                          onError={(e) => {
-                            e.target.onerror = null;
-                            e.target.src = defaultGameImage;
-                          }}
-                          loading="lazy"
-                        />
-                        {/* ⭐ Rating Top Right */}
-                        {/* <div className="absolute top-1.5 right-2.5 text-golden text-sm font-semibold z-10">
-                          {game.rating !== undefined && !isNaN(game.rating)
-                            ? `★ ${Number(game.rating).toFixed(1)}`
-                            : ''}
-                        </div>  */}
+                  {filteredGames.map((game) => {
+                    const gameId = game._id || game.name;
+                    const isGlowing =
+                      selectedGameId === gameId || glowGameId === gameId;
 
-
-                        {game.status?.isFeatured && (
-                          <div className="absolute top-2 left-2 bg-yellow-500 text-yellow-900 text-xs font-bold px-2 py-1 rounded-full flex items-center z-10">
-                            <FaStar className="mr-1" />
-                            <span>Featured</span>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* --- MODIFICATIONS START HERE --- */}
-                      <div className="p-1 min-h-[30px] flex items-center justify-center"> {/* Reduced padding (p-4 to p-1) and added a smaller min-height */}
-                        <h3
-                          className="font-semibold text-white text-[0.65rem] leading-tight break-words mb-0 text-center" // Changed text-xs to text-[0.65rem] for even smaller font, reduced margin-bottom
-                          title={game.displayName || game.name || 'Untitled Game'}
-                        >
-                          {game.displayName || game.name || 'Untitled Game'}
-                        </h3>
-                      </div>
-                      {/* --- MODIFICATIONS END HERE --- */}
-
-                    </motion.div>
-                  ))}
+                    return (
+                      <motion.div
+                        key={gameId}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.98 }}
+                        transition={{ duration: 0.2 }}
+                        className={`bg-gray-800/50 backdrop-blur-sm rounded-xl overflow-hidden border-2 transition-all duration-300 cursor-pointer
+                          ${
+                            isGlowing
+                              ? 'border-green-500 shadow-lg shadow-green-500/50 scale-105'
+                              : 'border-transparent hover:border-green-500 hover:shadow-lg hover:shadow-green-500/50'
+                          }`}
+                        onTouchStart={() => setGlowGameId(gameId)}
+                        onTouchEnd={() => setTimeout(() => setGlowGameId(null), 300)}
+                        onClick={() => {
+                          setSelectedGameId(gameId);
+                          if (gameId) navigate(`/game-lobby/${gameId}`);
+                        }}
+                      >
+                        <div className="aspect-square bg-gray-900 relative overflow-hidden">
+                          <CachedImage
+                            src={game.assets?.thumbnail || defaultGameImage}
+                            alt={game.displayName || game.name || 'Game'}
+                            className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = defaultGameImage;
+                            }}
+                            loading="lazy"
+                          />
+                          {game.status?.isFeatured && (
+                            <div className="absolute top-2 left-2 bg-yellow-500 text-yellow-900 text-xs font-bold px-2 py-1 rounded-full flex items-center z-10">
+                              <FaStar className="mr-1" />
+                              <span>Featured</span>
+                            </div>
+                          )}
+                        </div>
+                        <div className="p-1 min-h-[30px] flex items-center justify-center">
+                          <h3
+                            className="font-semibold text-white text-[0.65rem] text-center"
+                            title={game.displayName || game.name || 'Untitled Game'}
+                          >
+                            {game.displayName || game.name || 'Untitled Game'}
+                          </h3>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
                 </AnimatePresence>
               </div>
             ) : (
@@ -276,8 +284,8 @@ const Games = () => {
                   {searchQuery
                     ? `No games match "${searchQuery}"`
                     : activeCategory !== 'all'
-                      ? `No ${activeCategory} games available`
-                      : 'No games found'}
+                    ? `No ${activeCategory} games available`
+                    : 'No games found'}
                 </h3>
                 <p className="text-xs text-gray-400">
                   {searchQuery || activeCategory !== 'all'
@@ -296,4 +304,3 @@ const Games = () => {
 };
 
 export default Games;
-

@@ -13,6 +13,7 @@ import Header from '../components/Header';
 import Navbar from '../components/Navbar';
 import BackgroundBubbles from '../components/BackgroundBubbles';
 import api from '../services/api';
+import BackgroundCircles from '../components/BackgroundCircles';
 
 // Format date and time
 const formatDateTime = (dateString) => {
@@ -207,7 +208,7 @@ const GameTournaments = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white">
-      <BackgroundBubbles />
+      <BackgroundCircles />
       <Header />
       
       <main className="container mx-auto px-4 py-8 relative z-10">

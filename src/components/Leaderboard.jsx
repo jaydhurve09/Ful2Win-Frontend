@@ -4,7 +4,7 @@ import { FaArrowLeft } from 'react-icons/fa';
 import CachedImage from './CachedImage';
 import Header from '../components/Header';
 import Navbar from '../components/Navbar';
-import BackgroundBubbles from '../components/BackgroundBubbles';
+import BackgroundCircles from '../components/BackgroundCircles';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import api from '../services/api';
@@ -108,8 +108,8 @@ const [tPrize, setTPrize] = useState(null);
   };
 
   return (
-    <div className="relative min-h-screen bg-blueGradient text-white">
-      <BackgroundBubbles />
+    <div className="relative min-h-screen bg-royalBlueGradient text-white">
+      <BackgroundCircles />
       <Header />
 
       {/* Scrollable Content */}

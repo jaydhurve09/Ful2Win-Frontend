@@ -6,7 +6,7 @@ import authService from '../services/authService';
 import { toast } from 'react-toastify';
 import Header from '../components/Header';
 import Navbar from '../components/Navbar';
-import BackgroundBubbles from '../components/BackgroundBubbles';
+import BackgroundCircles from '../components/BackgroundCircles';
 
 const getIcon = (type) => {
   switch (type.toLowerCase()) {
@@ -148,8 +148,8 @@ const HistoryPage = () => {
   );
 
   return (
-    <div className="relative min-h-screen overflow-hidden text-white bg-gradient-to-b from-[#0b3fae] via-[#1555d1] to-[#2583ff] pb-24">
-      <BackgroundBubbles />
+    <div className="relative min-h-screen overflow-hidden text-white bg-royalBlueGradient">
+      <BackgroundCircles />
       <div className="relative z-10">
         <Header />
 

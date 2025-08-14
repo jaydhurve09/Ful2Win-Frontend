@@ -3,7 +3,7 @@ import { FaTrophy, FaArrowLeft, FaCoins, FaGamepad } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import Header from './Header';
-import BackgroundBubbles from './BackgroundBubbles';
+import BackgroundCircles from './BackgroundCircles';
 import Navbar from './Navbar';
 import authService from '../services/authService';
 import api from '../services/api';
@@ -221,7 +221,7 @@ const CommunityLeaderboard = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-blueGradient text-white flex items-center justify-center">
+      <div className="min-h-screen bg-royalBlueGradient text-white flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-400 mx-auto mb-4"></div>
           <p>Loading leaderboard...</p>
@@ -231,10 +231,10 @@ const CommunityLeaderboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-blueGradient py-16 text-white overflow-hidden relative">
+    <div className="min-h-screen bg-royalBlueGradient py-16 text-white overflow-hidden relative">
       <div className="absolute inset-0 bg-gradient-to-b from-blue-900/30 to-blue-900/0"></div>
       <div className="absolute inset-0 bg-gradient-to-r from-blue-900/20 to-blue-900/0"></div>
-      <BackgroundBubbles />
+      <BackgroundCircles />
       <Header />
       <div className="absolute inset-0 shadow-[inset_0_0_100px_rgba(0,0,0,0.3)] pointer-events-none"></div>
       <main className="container mx-auto px-4 py-8 relative z-10 bg-blue-900/20 backdrop-blur-sm rounded-2xl shadow-2xl border border-blue-700/20">

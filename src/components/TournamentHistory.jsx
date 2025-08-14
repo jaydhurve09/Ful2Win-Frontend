@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import BackgroundBubbles from '../components/BackgroundBubbles';
+import BackgroundCircles from '../components/BackgroundCircles';
 import Navbar from '../components/Navbar';
 import tournamentService from '../services/tournamentService';
 
@@ -110,9 +110,9 @@ const TournamentHistory = () => {
 
   return (
     <div className="min-h-screen w-full text-white relative overflow-hidden"
-      style={{ background: 'linear-gradient(to bottom, #0A2472 0%, #0D47A1 45%, #1565C0 100%)' }}
+      style={{ background: 'royalBlueGradient' }}
     >
-      <BackgroundBubbles />
+      <BackgroundCircles />
 
       <div className="p-4 text-center text-2xl font-bold">History</div>
 

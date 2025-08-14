@@ -61,17 +61,19 @@ export default {
         dullBlue: "#AECBF9",
         bgColor: "#000B18",
       },
-      backgroundImage: {
-        whiteGradient: "linear-gradient(to bottom right, #ffffff, #f0f0f0)",
-        // blueGradient: "linear-gradient(to bottom, #000B18, #002B5A, #00498E)",
-        blueGradient: "linear-gradient(to bottom, #0A2472 0%, #0D47A1 45%, #1565C0 100%)",
-        blueHorizontalGradient: "linear-gradient(to left, #0A2472 0%, #0D47A1 45%, #1565C0 100%)",
-        darkBlueGradient: "linear-gradient(to bottom, #021242, #0D34A7)",
-        neonBlueGradient: "linear-gradient(to bottom right, #00cfff, #00b8ff, #007bff)",
-        glassDark: "linear-gradient(to bottom right, rgba(31, 41, 55, 0.1), rgba(0, 0, 0, 0.1))",
-        blueGradient: "linear-gradient(to bottom right, #1565C0, #0D47A1, #0A2472)",
-        communityGradient:"linear-gradient(to bottom, #1565C0 0%, #0D47A1 42%, #0A2472 100%)",
-      },
+backgroundImage: {
+  whiteGradient: "linear-gradient(to bottom right, #ffffff, #f0f0f0)",
+  blueGradient: "linear-gradient(to top, #0A2472 0%, #0D47A1 45%, #1565C0 100%)",
+  blueHorizontalGradient: "linear-gradient(to left, #0A2472 0%, #0D47A1 45%, #1565C0 100%)",
+  darkBlueGradient: "linear-gradient(to bottom, #021242, #0D34A7)",
+  neonBlueGradient: "linear-gradient(to bottom right, #00cfff, #00b8ff, #007bff)",
+  blueGradientAlt: "linear-gradient(to bottom right, #1565C0, #0D47A1, #0A2472)",
+  communityGradient: "linear-gradient(to bottom, #1565C0 0%, #0D47A1 42%, #0A2472 100%)",
+
+  // Exact colors from your uploaded gradient image
+  deepRoyalGradient: "linear-gradient(to bottom, #0B33FF 0%, #000B33 100%)"
+}
+,
       animation: {
         'fade-in-out': 'fadeInOut 2s ease-in-out',
       },

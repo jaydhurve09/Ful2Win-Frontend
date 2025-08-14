@@ -5,7 +5,7 @@ import { FaHome, FaGamepad, FaTrophy, FaUsers, FaUser, FaWallet } from 'react-ic
 const Navbar = () => {
   const location = useLocation();
 
-    // Define base navigation items (without wallet)
+  // Define base navigation items (without wallet)
   const baseNavItems = [
     { path: '/', icon: <FaHome />, label: 'Home', priority: 1 },
     { path: '/games', icon: <FaGamepad />, label: 'Games', priority: 2 },
@@ -60,10 +60,10 @@ const Navbar = () => {
   return (
     <>
       {/* Background Blur */}
-      <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-b from-transparent to-[#022870] h-11 md:h-16 z-40" />
+      <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-b from-transparent to-[#000B33] h-11 md:h-16 z-40" />
 
       {/* Main Navbar */}
-      <nav className="fixed bottom-0 left-0 right-0 lg:m-2 md:mx-16 lg:mx-64 rounded-t-lg md:rounded-lg bg-blueHorizontalGradient text-dullBlue z-50 h-11 md:h-14">
+      <nav className="fixed bottom-0 left-0 right-0 lg:m-2 md:mx-16 lg:mx-64 rounded-t-lg md:rounded-lg bg-gradient-to-b from-[#1565C0] to-[#0A2472] text-dullBlue z-50 h-12 md:h-14">
         <div className="max-w-3xl mx-auto px-4 relative h-full">
 
           {/* Grid */}
@@ -91,7 +91,7 @@ const Navbar = () => {
             {/* Floating Active Icon */}
             <div className="absolute left-1/2 transform -translate-x-1/2 -top-6 md:-top-7 z-10">
               <Link to={activeItem.path} className="flex flex-col items-center">
-                <div className="w-10 h-10 md:w-11 md:h-11 rounded-full flex items-center justify-center bg-blueGradient shadow-lg ring-2 ring-white">
+                <div className="w-10 h-10 md:w-11 md:h-11 rounded-full flex items-center justify-center bg-gradient-to-b from-[#0B33FF] to-[#000B33] shadow-lg ring-2 ring-white">
                   {React.cloneElement(activeItem.icon, {
                     className: 'text-yellow-400 text-lg md:text-xl',
                   })}

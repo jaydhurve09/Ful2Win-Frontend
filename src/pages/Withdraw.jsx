@@ -6,7 +6,7 @@ import authService from '../services/authService';
 import { toast } from 'react-toastify';
 import Header from '../components/Header';
 import Navbar from '../components/Navbar';
-import BackgroundBubbles from '../components/BackgroundBubbles';
+import BackgroundCircles from '../components/BackgroundCircles';
 
 const Withdraw = () => {
   const [amount, setAmount] = useState('');
@@ -93,8 +93,8 @@ const Withdraw = () => {
   };
 
   return (
-    <div className="relative min-h-screen overflow-hidden text-white bg-gradient-to-b from-[#0b3fae] via-[#1555d1] to-[#2583ff] pb-24">
-      <BackgroundBubbles />
+    <div className="relative min-h-screen overflow-hidden text-white bg-royalBlueGradient pb-24">
+      <BackgroundCircles />
       <div className="relative z-10">
         <Header />
 
@@ -152,7 +152,7 @@ const Withdraw = () => {
             placeholder="Enter amount"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
-            className="mt-4 w-full p-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/60 text-center"
+            className="mt-4 w-full p-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/60 "
           />
 
           {/* UPI Input */}

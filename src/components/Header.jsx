@@ -129,7 +129,7 @@ const Header = () => {
             {/* Wallet (clickable) */}
             <div
               onClick={() => navigate('/wallet')}
-              className="flex items-center justify-center mx-auto py-1.5 px-3 gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-blue-500 cursor-pointer hover:opacity-90 transition shadow-md"
+              className="flex items-center justify-center mx-auto py-1.5 px-3 gap-2 rounded-lg bg-gradient-to-b from-[#0B33FF] to-[#000B33] cursor-pointer hover:opacity-90 transition shadow-md"
             >
               <div className="flex items-center gap-2">
                 <div className="flex items-center gap-2 text-white font-medium">
@@ -192,7 +192,7 @@ const Header = () => {
       </header>
 
       {/* Mobile Header */}
-      <header className="md:hidden fixed top-0 left-0 right-0 bg-blueGradient z-40 rounded-b-xl">
+      <header className="md:hidden fixed top-0 left-0 right-0 bg-gradient-to-b from-[#1565C0] to-[#0A2472] z-40 rounded-b-xl">
         <div className="container mx-auto px-4 py-1.5 flex items-center justify-between">
           <img src={logo} alt="Ludo Logo" className="h-10 w-auto object-contain" />
 

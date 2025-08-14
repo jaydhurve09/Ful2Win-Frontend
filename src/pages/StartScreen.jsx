@@ -1,5 +1,6 @@
 import React from 'react';
-import BackgroundBubbles from './BackgroundBubbles';
+// import BackgroundBubbles from './BackgroundBubbles';
+import BackgroundCircles from './BackgroundCircles';
 import logo from '../assets/logo.png';
 import CachedImage from '../components/CachedImage'; // adjust path if needed
 
@@ -8,10 +9,10 @@ const StartScreen = () => {
     <div
       className="min-h-screen w-full flex flex-col items-center justify-center relative overflow-hidden text-white"
       style={{
-        background: "linear-gradient(to bottom, #0A2472 0%, #0D47A1 45%, #1565C0 100%)",
+        background: "linear-gradient(to bottom, #0B33FF 0%, #0D47A1 45%, #000B33 100%)",
       }}
     >
-      <BackgroundBubbles />
+      <BackgroundCircles />
 
       {/* Logo and tagline container */}
       <div className="relative z-10 flex flex-col items-center text-center">
