@@ -117,9 +117,6 @@ function App() {
               <Route path="/comingsoon" element={<ComingSoon />} />
               <Route path="/startscreen" element={<StartScreen />} />
               
-            
-                         
-
               {/* Game routes */}
               
             </Route>

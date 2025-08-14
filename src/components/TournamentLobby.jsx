@@ -15,7 +15,7 @@ import { toast } from 'react-toastify';
 import api from '../services/api';
 import axios from 'axios'
 import Header from './Header';
-import BackgroundBubbles from './BackgroundBubbles';
+import BackgroundCircles from './BackgroundCircles';
 import Navbar from './Navbar';
  const API_BASE_URL = import.meta.env.MODE === 'development' 
           ? 'http://localhost:5000/api' 
@@ -549,9 +549,9 @@ const filteredTournaments = {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-blueGradient text-white"> 
+    <div className="min-h-screen flex flex-col bg-royalBlueGradient text-white"> 
    
-      <BackgroundBubbles />
+      <BackgroundCircles />
       <Header />
       <main className="container mx-auto px-2 pt-24 pb-20 relative z-10">
         <div className="flex items-center mb-4">

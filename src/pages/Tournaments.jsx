@@ -4,6 +4,7 @@ import { FaGamepad, FaUsers, FaTrophy, FaSearch } from 'react-icons/fa';
 import Header from '../components/Header';
 import Navbar from '../components/Navbar';
 import BackgroundBubbles from '../components/BackgroundBubbles';
+import BackgroundCircles from '../components/BackgroundCircles';
 import { toast } from 'react-toastify';
 import api from '../services/api';
 import ShineButton from '../components/ui/ShineButton';
@@ -99,8 +100,8 @@ const Tournaments = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-blueGradient text-white">
-        <BackgroundBubbles />
+      <div className="min-h-screen bg-royalBlueGradient text-white">
+        <BackgroundCircles />
         <Header />
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-yellow-500"></div>
@@ -112,8 +113,8 @@ const Tournaments = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen py-24 pb-28 bg-blueGradient text-white">
-        <BackgroundBubbles />
+      <div className="min-h-screen py-24 pb-28 bg-royalBlueGradient text-white">
+        <BackgroundCircles />
         <Header />
         <div className="container mx-auto px-4 py-8 text-center">
           <div className="bg-red-900/30 border border-red-800 text-red-200 rounded-lg p-6 max-w-2xl mx-auto">
@@ -133,8 +134,8 @@ const Tournaments = () => {
   }
 
   return (
-    <div className="min-h-screen bg-blueGradient text-white">
-      <BackgroundBubbles />
+    <div className="min-h-screen bg-royalBlueGradient text-white">
+      <BackgroundCircles />
       <Header />
 
       <main className="container mx-auto px-4 py-8 pb-32 relative z-10">

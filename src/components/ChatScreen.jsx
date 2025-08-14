@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { FiArrowLeft, FiSend, FiClock } from 'react-icons/fi';
-import BackgroundBubbles from './BackgroundBubbles';
+import BackgroundBubbles from './BackgroundCircles';
 import { io } from 'socket.io-client';
 import api from '../services/api';
 import chatService from '../services/chatService';

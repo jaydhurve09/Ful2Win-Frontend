@@ -13,6 +13,7 @@ import { IoMdPerson } from "react-icons/io";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import BackgroundBubbles from "../components/BackgroundBubbles";
+import BackgroundCircles from "../components/BackgroundCircles";
 import Account from "../components/Account";
 import { useAuth } from "../contexts/AuthContext";
 import { toast } from "react-toastify";
@@ -222,10 +223,10 @@ const ProfileScreen = () => {
   return (
     <div className="min-h-screen w-full text-white overflow-x-hidden relative px-4 py-8"
       style={{
-        background: "linear-gradient(to bottom, #0A2472 0%, #0D47A1 45%, #1565C0 100%)",
+        background: "royalBlueGradient",
         paddingBottom: '100px'
       }}>
-      <BackgroundBubbles />
+      <BackgroundCircles />
       <div className="relative z-10 py-4 max-w-2xl mx-auto px-4">
         {/* Profile Header */}
         <div className="flex items-start justify-between px-4 mb-4">
