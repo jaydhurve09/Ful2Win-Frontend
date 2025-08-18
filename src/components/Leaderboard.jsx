@@ -414,8 +414,133 @@ const handleRegisterTournament = async (tournamentId) => {
       state: { fromTournamentLobby: true }
     });
   };
-  //console.log(tournaments.currentPlayers);
 
+  // Fetch game and tournaments
+  const fetchGameAndTournaments = useCallback(async () => {
+    if (!gameId) return;
+    
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        navigate('/login', { state: { from: `/tournament-lobby/${gameId}` } });
+        return;
+      }
+
+      const [gameResponse, tournamentsResponse] = await Promise.all([
+        api.get(`/games/${gameId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+          validateStatus: (status) => status < 500
+        }),
+        api.get(`/tournaments?gameId=${gameId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+          validateStatus: (status) => status < 500
+        })
+      ]);
+
+      if (gameResponse.data.success) {
+        setGame(gameResponse.data.data);
+      } else {
+        throw new Error(gameResponse.data.message || 'Failed to load game');
+      }
+
+      if (tournamentsResponse.data.success) {
+        setTournaments(tournamentsResponse.data.data || []);
+      } else {
+        throw new Error(tournamentsResponse.data.message || 'Failed to load tournaments');
+      }
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      setError(error.message || 'Failed to load data');
+      toast.error(error.message || 'Failed to load data');
+      
+      if (error.response?.status === 401) {
+        navigate('/login', { state: { from: `/tournament-lobby/${gameId}` } });
+      } else if (error.response?.status === 404) {
+        navigate('/tournaments');
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [gameId, navigate]);
+
+  // Initial data fetch
+  useEffect(() => {
+    fetchGameAndTournaments();
+  }, [fetchGameAndTournaments]);
+
+  // Filter and separate tournaments by type
+ const groupAndLimitTournaments = (list) => {
+  const filtered = list.filter(t =>
+    (activeFilter === 'all' || t.status === activeFilter) &&
+    t.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const statusOrder = ['live', 'upcoming', 'completed'];
+
+  const grouped = {
+    live: [],
+    upcoming: [],
+    completed: [],
+    
+  };
+
+  for (const t of filtered) {
+    if (grouped[t.status]) {
+      grouped[t.status].push(t);
+    }
+  }
+
+  // Limit completed to 5
+  grouped.completed = grouped.completed.slice(0, 3);
+
+  // Merge in order: live → upcoming → completed
+  return statusOrder.flatMap(status => grouped[status] || []);
+};
+
+// Helper to remove duplicate tournaments by _id
+const uniqueTournaments = (tournaments) => {
+  const seen = new Set();
+  return tournaments.filter(t => {
+    if (seen.has(t._id)) return false;
+    seen.add(t._id);
+    return true;
+  });
+};
+
+// Apply to both coin and cash
+const filteredTournaments = {
+  coins: uniqueTournaments(groupAndLimitTournaments(tournaments.filter(t => t.tournamentType === 'coin'))),
+  cash: uniqueTournaments(groupAndLimitTournaments(tournaments.filter(t => t.tournamentType !== 'coin'))),
+};
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-500 mx-auto mb-4"></div>
+          <p>Loading tournaments...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white flex items-center justify-center">
+        <div className="text-center p-6 bg-red-900/50 rounded-lg">
+          <p className="text-red-300 mb-4">{error}</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="bg-yellow-500 hover:bg-yellow-400 text-gray-900 font-medium py-2 px-4 rounded-lg transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative min-h-screen bg-royalBlueGradient text-white">
@@ -528,132 +653,5 @@ const handleRegisterTournament = async (tournamentId) => {
     </div>
   );
 };
-
-// Fetch game and tournaments
-const fetchGameAndTournaments = useCallback(async () => {
-  if (!gameId) return;
-  
-  try {
-    setLoading(true);
-    const token = localStorage.getItem('token');
-    
-    if (!token) {
-      navigate('/login', { state: { from: `/tournament-lobby/${gameId}` } });
-      return;
-    }
-
-    const [gameResponse, tournamentsResponse] = await Promise.all([
-      api.get(`/games/${gameId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-        validateStatus: (status) => status < 500
-      }),
-      api.get(`/tournaments?gameId=${gameId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-        validateStatus: (status) => status < 500
-      })
-    ]);
-
-    if (gameResponse.data.success) {
-      setGame(gameResponse.data.data);
-    } else {
-      throw new Error(gameResponse.data.message || 'Failed to load game');
-    }
-
-    if (tournamentsResponse.data.success) {
-      setTournaments(tournamentsResponse.data.data || []);
-    } else {
-      throw new Error(tournamentsResponse.data.message || 'Failed to load tournaments');
-    }
-  } catch (error) {
-    console.error('Error fetching data:', error);
-    setError(error.message || 'Failed to load data');
-    toast.error(error.message || 'Failed to load data');
-    
-    if (error.response?.status === 401) {
-      navigate('/login', { state: { from: `/tournament-lobby/${gameId}` } });
-    } else if (error.response?.status === 404) {
-      navigate('/tournaments');
-    }
-  } finally {
-    setLoading(false);
-  }
-}, [gameId, navigate]);
-
-// Initial data fetch
-useEffect(() => {
-  fetchGameAndTournaments();
-}, [fetchGameAndTournaments]);
-
-// Filter and separate tournaments by type
-const groupAndLimitTournaments = (list) => {
-  const filtered = list.filter(t =>
-    (activeFilter === 'all' || t.status === activeFilter) &&
-    t.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const statusOrder = ['live', 'upcoming', 'completed'];
-
-  const grouped = {
-    live: [],
-    upcoming: [],
-    completed: [],
-    
-  };
-
-  for (const t of filtered) {
-    if (grouped[t.status]) {
-      grouped[t.status].push(t);
-    }
-  }
-
-  // Limit completed to 5
-  grouped.completed = grouped.completed.slice(0, 3);
-
-  // Merge in order: live → upcoming → completed
-  return statusOrder.flatMap(status => grouped[status] || []);
-};
-
-// Helper to remove duplicate tournaments by _id
-const uniqueTournaments = (tournaments) => {
-  const seen = new Set();
-  return tournaments.filter(t => {
-    if (seen.has(t._id)) return false;
-    seen.add(t._id);
-    return true;
-  });
-};
-
-// Apply to both coin and cash
-const filteredTournaments = {
-  coins: uniqueTournaments(groupAndLimitTournaments(tournaments.filter(t => t.tournamentType === 'coin'))),
-  cash: uniqueTournaments(groupAndLimitTournaments(tournaments.filter(t => t.tournamentType !== 'coin'))),
-};
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-500 mx-auto mb-4"></div>
-          <p>Loading tournaments...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white flex items-center justify-center">
-        <div className="text-center p-6 bg-red-900/50 rounded-lg">
-          <p className="text-red-300 mb-4">{error}</p>
-          <button 
-            onClick={() => window.location.reload()}
-            className="bg-yellow-500 hover:bg-yellow-400 text-gray-900 font-medium py-2 px-4 rounded-lg transition-colors"
-          >
-            Retry
-          </button>
-        </div>
-      </div>
-    );
-  }
 
 export default TournamentLobby;
