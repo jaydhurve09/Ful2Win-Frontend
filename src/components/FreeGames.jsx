@@ -1,22 +1,30 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef ,useContext} from 'react';
 import { useNavigate } from 'react-router-dom';
 import poker from '../assets/poker.png';
 import ludo from '../assets/ludo.png';
 import carrom from '../assets/carrom.png';
+import { Ful2WinContext } from '../context/ful2winContext';
 
 const FreeGames = () => {
+  const { games } = useContext(Ful2WinContext);
+
   const navigate = useNavigate();
   const [expanded, setExpanded] = useState(false);
   const [showButton, setShowButton] = useState(false);
   const [rowHeight, setRowHeight] = useState(null);
   const gridRef = useRef(null);
-
-  const games = [
-    { id: 1, name: 'Poker', path: '/comingsoon', image: poker },
-    { id: 2, name: 'Ludo', path: '/comingsoon', image: ludo },
-    { id: 3, name: 'Carrom', path: '/comingsoon', image: carrom },
-  ];
-
+ const [game, setGame] = useState(null);
+  //filter games that type only unlimited
+  const fetchedGames = () => {
+    const filteredGames = games.filter((game) => game.type === 'Unlimited');
+    setGame(filteredGames);
+    console.log(filteredGames, "all are filtered games");
+    console.log(games.id, "all games from context");
+    return filteredGames;
+  };
+  useEffect(() => {
+    fetchedGames();
+  }, [games]);
   useEffect(() => {
     const checkWrapAndRowHeight = () => {
       if (!gridRef.current) return;
@@ -39,7 +47,7 @@ const FreeGames = () => {
     window.addEventListener('resize', checkWrapAndRowHeight);
     return () => window.removeEventListener('resize', checkWrapAndRowHeight);
   }, []);
-
+  const tournamentId = "127Asfs";
   return (
     <section
       className="w-full text-white px-4 flex items-start justify-start rounded-tr-[32px]"
@@ -49,41 +57,33 @@ const FreeGames = () => {
         background: 'linear-gradient(to bottom,rgba(32, 28, 70, 0.75) 50%, rgba(37, 33, 79, 0.34) 75%, rgba(48, 43, 99, 0) 100%)',
       }}
     >
-      <div className="w-full pt-4">
-        <div
-          ref={gridRef}
-          className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7 xl:grid-cols-8 gap-3 transition-all duration-300 overflow-hidden"
-          style={{
-            maxHeight: !expanded && rowHeight ? `${rowHeight}px` : 'none',
-          }}
-        >
-          {games.map((game) => (
-            <div
-              key={game.id}
-              onClick={() => navigate(game.path)}
-              className="bg-white/10 rounded-lg overflow-hidden cursor-pointer transition-transform hover:scale-105 active:scale-95 relative"
-              style={{ border: '3px solid #AECBF9' }}
-            >
-              <div className="shine-overlay"></div>
-              <div className="w-full aspect-square">
-                <img src={game.image} alt={game.name} className="w-full h-full object-cover" />
-              </div>
+      <div ref={gridRef} className="flex gap-4 flex-wrap w-full">
+        {game?.map((g) => (
+          <div
+            key={g._id}
+            onClick={() => navigate(`/gameOn2/${g._id}/${tournamentId}`)}
+            className="bg-white/10 rounded-lg overflow-hidden cursor-pointer transition-transform hover:scale-105 active:scale-95 relative"
+            style={{ border: '3px solid #AECBF9' }}
+          >
+            <div className="shine-overlay"></div>
+            <div className="w-full aspect-square">
+              <img src={g.assets?.thumbnail || g.image} alt={g.name} className="w-full h-full object-cover" />
             </div>
-          ))}
-        </div>
-
-        {showButton && (
-          <div className="mt-0 flex justify-end">
-            <button
-              onClick={() => setExpanded(!expanded)}
-              className="text-[10px] text-white/80 underline hover:text-white transition"
-              style={{ visibility: 'hidden' }}
-            >
-              {expanded ? 'See Less' : 'See More'}
-            </button>
           </div>
-        )}
+        ))}
       </div>
+
+      {showButton && (
+        <div className="mt-0 flex justify-end">
+          <button
+            onClick={() => setExpanded(!expanded)}
+            className="text-[10px] text-white/80 underline hover:text-white transition"
+            style={{ visibility: 'hidden' }}
+          >
+            {expanded ? 'See Less' : 'See More'}
+          </button>
+        </div>
+      )}
     </section>
   );
 };
