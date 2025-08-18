@@ -11,7 +11,6 @@ import SpinWheelScreen from '../components/SpinWheelScreen';
 import { useAuth } from '../contexts/AuthContext';
 import authService from '../services/authService';
 import { toast } from 'react-toastify';
-import BackgroundCircles from '../components/BackgroundCircles';
 
 // ONLY ADDITION: Coin Sprinkler Animation Component
 const CoinSprinkler = ({ isActive, onComplete }) => {
