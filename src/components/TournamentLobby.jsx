@@ -372,7 +372,7 @@ const TournamentCard = ({
           <div className="text-[11px]">Prize Pool</div>
           <div className="text-base font-bold flex items-center">
             {tournamentType === 'coin' ? <FaCoins className="text-yellow-400 mr-1" /> : <FaRupeeSign className="text-yellow-400 mr-1" />} 
-            {prizePool}
+            <span className="italic">{prizePool}</span>
           </div>
           <div className="mt-1 text-[11px]">
             {participants.length} of {maxParticipants} Spots Left

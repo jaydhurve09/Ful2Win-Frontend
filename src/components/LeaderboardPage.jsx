@@ -82,12 +82,14 @@ const LeaderboardPage = () => {
 
         {top3.length > 0 && (
           <div className="flex flex-col items-center w-1/3">
-            <div className="bg-yellow-400 text-black w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-full flex items-center justify-center text-3xl sm:text-4xl md:text-5xl font-bold mb-2">
+            {/* Distinct section for 1st prize */}
+            <div className="bg-gradient-to-br from-yellow-400 via-yellow-300 to-yellow-500 text-black w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full flex items-center justify-center text-4xl sm:text-5xl md:text-6xl font-bold mb-2 shadow-lg border-4 border-yellow-600">
               1
             </div>
-            <div className="bg-white/20 backdrop-blur-md rounded-lg p-3 w-full text-center">
-              <div className="font-bold truncate">{top3[0].username}</div>
-              <div className="text-yellow-300 font-bold text-lg">{top3[0].score}</div>
+            <div className="bg-yellow-100/80 backdrop-blur-md rounded-lg p-4 w-full text-center shadow-lg border border-yellow-400">
+              <div className="font-bold text-yellow-900 truncate">{top3[0].username}</div>
+              <div className="text-yellow-700 font-bold text-xl italic">{top3[0].score}</div>
+              <div className="mt-2 text-yellow-700 font-semibold text-sm">🏆 1st Prize Winner!</div>
             </div>
           </div>
         )}

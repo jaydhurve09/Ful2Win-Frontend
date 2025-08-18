@@ -6,6 +6,7 @@ import Banner from '../components/Banner';
 import TrendingGames from '../components/TrendingGames';
 import MultiplayerGames from '../components/MultiplayerGames';
 import PopularGames from '../components/PopularGames';
+import FreeGames from '../components/freegames';
 import Navbar from '../components/Navbar';
 import SpinWheelScreen from '../components/SpinWheelScreen';
 import BackgroundBubbles from '../components/BackgroundBubbles';
@@ -116,6 +117,16 @@ const Home = () => {
               <TrendingGames className="mt-3" />
             </div>
 
+            {/* Free games */}
+            <div className="mb-1">
+              <SectionTitle
+                icon={controllerIcon}
+                title="Free Games"
+                gradient="linear-gradient(to bottom, #96D9C0, #013220 )"
+              />
+              <FreeGames className="mt-4" />
+            </div>
+
             {/* Multiplayer */}
             <div className="mb-2">
               <SectionTitle
@@ -135,6 +146,8 @@ const Home = () => {
               />
               <PopularGames className="mt-3" />
             </div>
+
+            
           </div>
         </div>
       </div>

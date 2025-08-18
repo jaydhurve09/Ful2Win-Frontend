@@ -104,8 +104,10 @@ const SpinWheelScreen = ({ onClose, isVisible, initialSpins = 5 }) => {
         setSpinsLeft((s) => Math.max(0, s - 1));
         setCurrentReward(`${LABELS[correctedIndex]} Coins`);
 
+
         // Play win sound
         window.dispatchEvent(new CustomEvent("play-sound", { detail: "win" }));
+
 
         setShowReward(true);
         setLastTimestamp(Date.now());
