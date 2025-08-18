@@ -1,6 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import authService from '../services/authService';
-import { toast } from 'react-toastify';
 
 const COLORS = [
   '#800080', '#FF1493', '#FFB6C1', '#FF0000',
@@ -36,17 +34,17 @@ const SpinWheelScreen = ({ onClose, isVisible, initialSpins = 5 }) => {
   const [isSpinning, setIsSpinning] = useState(false);
 
   const [spinsLeft, setSpinsLeft] = useState(() => {
-    const saved = localStorage.getItem(SPINS_KEY);
+    const saved = typeof localStorage !== 'undefined' ? localStorage.getItem(SPINS_KEY) : null;
     return saved !== null ? Number(saved) : initialSpins;
   });
 
   const [timer, setTimer] = useState(() => {
-    const saved = localStorage.getItem(TIMER_KEY);
+    const saved = typeof localStorage !== 'undefined' ? localStorage.getItem(TIMER_KEY) : null;
     return saved !== null ? Number(saved) : REFILL_TIME;
   });
 
   const [lastTimestamp, setLastTimestamp] = useState(() => {
-    const saved = localStorage.getItem(LAST_TIMESTAMP_KEY);
+    const saved = typeof localStorage !== 'undefined' ? localStorage.getItem(LAST_TIMESTAMP_KEY) : null;
     return saved !== null ? Number(saved) : Date.now();
   });
 
@@ -61,15 +59,21 @@ const SpinWheelScreen = ({ onClose, isVisible, initialSpins = 5 }) => {
   }, []);
 
   useEffect(() => {
-    localStorage.setItem(SPINS_KEY, spinsLeft.toString());
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(SPINS_KEY, spinsLeft.toString());
+    }
   }, [spinsLeft]);
 
   useEffect(() => {
-    localStorage.setItem(TIMER_KEY, timer.toString());
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(TIMER_KEY, timer.toString());
+    }
   }, [timer]);
 
   useEffect(() => {
-    localStorage.setItem(LAST_TIMESTAMP_KEY, lastTimestamp.toString());
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(LAST_TIMESTAMP_KEY, lastTimestamp.toString());
+    }
   }, [lastTimestamp]);
 
   const spin = async () => {
@@ -91,23 +95,23 @@ const SpinWheelScreen = ({ onClose, isVisible, initialSpins = 5 }) => {
       const coinsWon = parseInt(LABELS[correctedIndex], 10);
 
       try {
-        // Register coin win in backend
-        await authService.spinWheelWin(coinsWon);
-        // Refresh user profile (wallet, history, etc.)
-        await authService.getCurrentUserProfile();
+        // Simulated API call - replace with actual authService calls
+        // await authService.spinWheelWin(coinsWon);
+        // await authService.getCurrentUserProfile();
+        console.log(`Won ${coinsWon} coins!`);
+        
         setIsSpinning(false);
         setSpinsLeft((s) => Math.max(0, s - 1));
         setCurrentReward(`${LABELS[correctedIndex]} Coins`);
 
-         //window.dispatchEvent(new CustomEvent("play-sound", { detail: "coin" })); //another sound coin effect.
-        window.dispatchEvent(new CustomEvent("play-sound", { detail: "win" })); // ✅ Play win sound
+        // Simulated sound event
+        // window.dispatchEvent(new CustomEvent("play-sound", { detail: "win" }));
 
         setShowReward(true);
         setLastTimestamp(Date.now());
-        toast.success(`You won ${coinsWon} coins!`);
       } catch (error) {
         setIsSpinning(false);
-        toast.error('Failed to register coin win. Please try again.');
+        console.error('Failed to register coin win. Please try again.');
       }
     }, 3500);
   };
@@ -136,7 +140,7 @@ const SpinWheelScreen = ({ onClose, isVisible, initialSpins = 5 }) => {
     }, 1000);
 
     return () => clearInterval(timerId.current);
-  }, [spinsLeft]);
+  }, [spinsLeft, initialSpins]);
 
   const handleCloseReward = () => {
     setShowReward(false);
@@ -145,90 +149,272 @@ const SpinWheelScreen = ({ onClose, isVisible, initialSpins = 5 }) => {
 
   if (!isVisible) return null;
 
-  const wheelSize = 'min(70vw, 320px)';
-
   return (
     <>
-      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 backdrop-blur-md p-4" onClick={onClose}>
-        <div className="relative w-full max-w-[400px] bg-white/10 backdrop-blur-lg rounded-2xl p-6 flex flex-col items-center" onClick={(e) => e.stopPropagation()}>
-          <h2 className="text-2xl font-extrabold text-[#FFD700] text-center mb-6">Daily Spin Wheel</h2>
+      {/* Main Container */}
+      <div 
+        className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+        onClick={onClose}
+      >
+        <div 
+          className="relative w-full max-w-md mx-auto flex flex-col items-center rounded-3xl p-8"
+          style={{
+            background: 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)',
+            boxShadow: `
+              0 25px 50px rgba(0, 0, 0, 0.5),
+              inset 0 1px 0 rgba(255, 255, 255, 0.1),
+              inset 0 -1px 0 rgba(0, 0, 0, 0.2)
+            `,
+            border: '2px solid rgba(255, 255, 255, 0.1)',
+            position: 'relative'
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* 3D Corner Effects */}
+          <div
+            className="absolute top-0 left-0 rounded-tl-3xl"
+            style={{
+              width: '60px',
+              height: '60px',
+              background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.05))',
+              clipPath: 'polygon(0 0, 100% 0, 0 100%)'
+            }}
+          />
+          <div
+            className="absolute top-0 right-0 rounded-tr-3xl"
+            style={{
+              width: '60px',
+              height: '60px',
+              background: 'linear-gradient(225deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.05))',
+              clipPath: 'polygon(100% 0, 100% 100%, 0 0)'
+            }}
+          />
+          <div
+            className="absolute bottom-0 left-0 rounded-bl-3xl"
+            style={{
+              width: '60px',
+              height: '60px',
+              background: 'linear-gradient(45deg, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.05))',
+              clipPath: 'polygon(0 0, 100% 100%, 0 100%)'
+            }}
+          />
+          <div
+            className="absolute bottom-0 right-0 rounded-br-3xl"
+            style={{
+              width: '60px',
+              height: '60px',
+              background: 'linear-gradient(315deg, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.05))',
+              clipPath: 'polygon(100% 0, 100% 100%, 0 100%)'
+            }}
+          />
+        
+          {/* Title */}
+          <h1 
+            className="text-3xl font-black text-center mb-6 tracking-wider relative z-10"
+            style={{
+              background: 'linear-gradient(45deg, #FFD700, #FFA500)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+              textShadow: '2px 2px 4px rgba(0,0,0,0.3)',
+              filter: 'drop-shadow(0 0 10px rgba(255, 215, 0, 0.5))'
+            }}
+          >
+            DAILY SPIN WHEEL
+          </h1>
 
-          <div className="relative flex items-center justify-center mb-8" style={{ width: wheelSize, height: wheelSize }}>
-            {/* Upward Arrow */}
-            <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-t-[16px] border-l-transparent border-r-transparent border-t-white z-10" />
-
-            <div
-              className="rounded-full transition-transform duration-[3500ms] ease-out relative"
+          {/* Wheel Container */}
+          <div className="relative mb-6 z-10" style={{ width: '280px', height: '280px' }}>
+            {/* Pointer */}
+            <div 
+              className="absolute z-30"
               style={{
-                width: '100%',
-                height: '100%',
-                background: getConicGradient(),
-                transform: `rotate(${rotation + SEGMENT_DEGREE / 2}deg)`,
+                top: '-12px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: '0',
+                height: '0',
+                borderLeft: '12px solid transparent',
+                borderRight: '12px solid transparent',
+                borderTop: '24px solid #FFD700',
+                filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))'
+              }}
+            />
+
+            {/* Outer Golden Ring */}
+            <div
+              className="absolute inset-0 rounded-full"
+              style={{
+                background: 'linear-gradient(45deg, #B8860B, #DAA520, #FFD700, #DAA520, #B8860B)',
+                padding: '12px',
+                boxShadow: '0 0 30px rgba(255, 215, 0, 0.6), inset 0 0 20px rgba(255, 215, 0, 0.3)'
               }}
             >
-              {LABELS.map((label, index) => {
-                const angle = index * SEGMENT_DEGREE + SEGMENT_DEGREE / 2;
-                const radius = 44;
-                const rad = (angle * Math.PI) / 180;
-                const x = 50 + radius * Math.cos(rad);
-                const y = 50 + radius * Math.sin(rad);
-                return (
-                  <div
-                    key={index}
-                    className="absolute"
+              {/* Inner Wheel */}
+              <div
+                className="w-full h-full rounded-full relative transition-transform duration-[3500ms] ease-out"
+                style={{
+                  background: getConicGradient(),
+                  transform: `rotate(${rotation + SEGMENT_DEGREE / 2}deg)`,
+                  boxShadow: 'inset 0 0 20px rgba(0,0,0,0.2)'
+                }}
+              >
+                {/* Segment Labels */}
+                {LABELS.map((label, index) => {
+                  const angle = index * SEGMENT_DEGREE + SEGMENT_DEGREE / 2;
+                  const radius = 42;
+                  const rad = (angle * Math.PI) / 180;
+                  const x = 50 + radius * Math.cos(rad);
+                  const y = 50 + radius * Math.sin(rad);
+                  
+                  return (
+                    <div
+                      key={index}
+                      className="absolute text-white font-bold"
+                      style={{
+                        left: `${x}%`,
+                        top: `${y}%`,
+                        transform: `translate(-50%, -50%) rotate(${angle}deg)`,
+                        fontSize: '18px',
+                        textShadow: '2px 2px 4px rgba(0,0,0,0.8)'
+                      }}
+                    >
+                      <div style={{ transform: `rotate(${-angle}deg)` }}>
+                        {label}
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {/* Center Hub */}
+                <div
+                  className="absolute left-1/2 top-1/2 rounded-full flex items-center justify-center z-20"
+                  style={{
+                    width: '60px',
+                    height: '60px',
+                    background: 'linear-gradient(135deg, #FFD700, #FFA500)',
+                    transform: 'translate(-50%, -50%)',
+                    boxShadow: '0 0 20px rgba(255, 215, 0, 0.8), inset 0 0 10px rgba(255, 255, 255, 0.3)',
+                    border: '3px solid #B8860B'
+                  }}
+                >
+                  <div 
+                    className="text-2xl font-bold"
                     style={{
-                      left: `${x}%`,
-                      top: `${y}%`,
-                      transform: `translate(-50%, -50%) rotate(${angle}deg)`,
+                      color: '#8B4513',
+                      textShadow: '1px 1px 2px rgba(0,0,0,0.3)'
                     }}
                   >
-                    <div
-                      className="text-white text-[13px] font-bold"
-                      style={{ transform: `rotate(${-angle}deg)` }}
-                    >
-                      {label}
-                    </div>
+                    ₹
                   </div>
-                );
-              })}
-
-              {/* Center Black Circle */}
-              <div className="absolute left-1/2 top-1/2 w-6 h-6 bg-black rounded-full z-20" style={{ transform: 'translate(-50%, -50%)' }} />
+                </div>
+              </div>
             </div>
           </div>
 
+          {/* Spin Button */}
           <button
             onClick={spin}
             disabled={isSpinning || spinsLeft === 0}
-            className={`w-4/5 h-12 rounded-lg font-bold text-white text-lg transition-opacity ${
-              isSpinning || spinsLeft === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'
+            className={`w-64 h-14 rounded-xl font-bold text-white text-lg transition-all duration-200 relative z-10 ${
+              isSpinning || spinsLeft === 0 
+                ? 'opacity-50 cursor-not-allowed' 
+                : 'hover:scale-105 active:scale-95'
             }`}
-            style={{ backgroundColor: '#DC2626' }}
+            style={{
+              background: spinsLeft > 0 
+                ? 'linear-gradient(135deg, #DC2626, #B91C1C)' 
+                : 'linear-gradient(135deg, #6B7280, #4B5563)',
+              boxShadow: spinsLeft > 0 
+                ? '0 8px 20px rgba(220, 38, 38, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2)' 
+                : '0 8px 20px rgba(107, 114, 128, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+              textShadow: '1px 1px 2px rgba(0,0,0,0.5)'
+            }}
           >
             {spinsLeft > 0 ? `Spin (${spinsLeft} left)` : 'No Spins Left'}
           </button>
 
+          {/* Timer */}
           {spinsLeft < initialSpins && (
-            <p className="mt-2 text-yellow-300 font-semibold text-sm select-none">
+            <p 
+              className="mt-3 font-semibold text-base relative z-10"
+              style={{
+                color: '#FFD700',
+                textShadow: '1px 1px 2px rgba(0,0,0,0.5)'
+              }}
+            >
               Next spin in: {formatTime(timer)}
             </p>
           )}
 
-          <button onClick={onClose} className="absolute top-2 right-3 text-gray-300 text-xl">×</button>
+          {/* Close Button */}
+          <button 
+            onClick={onClose} 
+            className="absolute top-4 right-4 w-8 h-8 rounded-full bg-black bg-opacity-30 text-white text-xl font-bold hover:bg-opacity-50 transition-all duration-200 z-20"
+            style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.5)' }}
+          >
+            ×
+          </button>
         </div>
       </div>
 
+      {/* Reward Popup */}
       {showReward && (
-        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/40 backdrop-blur-md p-4" onClick={handleCloseReward}>
+        <div 
+          className="fixed inset-0 z-[10000] flex items-center justify-center bg-black bg-opacity-50 p-4" 
+          onClick={handleCloseReward}
+        >
           <div
-            className="relative w-full max-w-xs rounded-2xl p-6 flex flex-col items-center bg-white/10 backdrop-blur-lg border border-yellow-400 shadow-lg"
+            className="relative w-full max-w-sm rounded-2xl p-8 flex flex-col items-center"
             onClick={(e) => e.stopPropagation()}
-            style={{ boxShadow: '0 0 15px 5px rgba(255, 215, 0, 0.5)' }}
+            style={{
+              background: 'linear-gradient(135deg, #1e3c72, #2a5298)',
+              border: '3px solid #FFD700',
+              boxShadow: '0 0 30px rgba(255, 215, 0, 0.8)'
+            }}
           >
-            <h3 className="text-2xl font-extrabold text-yellow-400 drop-shadow-[0_0_8px_rgba(255,215,0,0.9)] mb-2">Reward Unlocked!</h3>
-            <p className="text-white text-base mb-6 text-center drop-shadow-md font-semibold">Congratulations! You have won:</p>
-            <p className="text-3xl font-bold text-yellow-300 mb-8 drop-shadow-[0_0_12px_rgba(255,215,0,0.9)] animate-pulse">{currentReward}</p>
-            <button onClick={handleCloseReward} className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-extrabold text-lg px-10 py-3 rounded-full shadow-lg transition-colors duration-300">OK</button>
+            <h3 
+              className="text-3xl font-black mb-4"
+              style={{
+                background: 'linear-gradient(45deg, #FFD700, #FFA500)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+                textShadow: '2px 2px 4px rgba(0,0,0,0.3)'
+              }}
+            >
+              Reward Unlocked!
+            </h3>
+            
+            <p className="text-white text-lg mb-6 text-center font-semibold">
+              Congratulations! You have won:
+            </p>
+            
+            <p 
+              className="text-4xl font-black mb-8 animate-pulse"
+              style={{
+                background: 'linear-gradient(45deg, #FFD700, #FFA500)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+                filter: 'drop-shadow(0 0 10px rgba(255, 215, 0, 0.8))'
+              }}
+            >
+              {currentReward}
+            </p>
+            
+            <button 
+              onClick={handleCloseReward} 
+              className="px-12 py-4 rounded-full font-bold text-lg transition-all duration-200 hover:scale-105 active:scale-95"
+              style={{
+                background: 'linear-gradient(135deg, #FFD700, #FFA500)',
+                color: '#1e3c72',
+                boxShadow: '0 8px 20px rgba(255, 215, 0, 0.4)',
+                textShadow: '1px 1px 2px rgba(0,0,0,0.2)'
+              }}
+            >
+              OK
+            </button>
           </div>
         </div>
       )}

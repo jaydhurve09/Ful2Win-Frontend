@@ -1,276 +1,658 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { FaArrowLeft } from 'react-icons/fa';
-import CachedImage from './CachedImage';
-import Header from '../components/Header';
-import Navbar from '../components/Navbar';
-import BackgroundBubbles from '../components/BackgroundBubbles';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import {
+  FaTrophy,
+  FaGamepad,
+  FaUsers,
+  FaClock,
+  FaSearch,
+  FaRupeeSign,
+  FaCoins,
+  FaArrowLeft
+} from 'react-icons/fa';
+import HowToPlay from './HowToPlay';
 import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 import api from '../services/api';
-const Leaderboard = () => {
-  const navigate = useNavigate();
-  const { gameName, tournamentId } = useParams(); 
-  const userId = JSON.parse(localStorage.getItem('user'))?._id;
-  // State to manage active tab
-const [activeTab, setActiveTab] = useState('leaderboard');
-const [prizeBreakup, setPrizeBreakup] = useState([]);
-const [prize, setPrize] = useState(null);
-const [tPrize, setTPrize] = useState(null);
+import axios from 'axios'
+import Header from './Header';
+import BackgroundBubbles from './BackgroundBubbles';
+import Navbar from './Navbar';
+ const API_BASE_URL = import.meta.env.MODE === 'development' 
+          ? 'http://localhost:5000/api' 
+          : `${import.meta.env.VITE_API_BACKEND_URL}/api`;
 
-  const [leaderboardData, setLeaderboardData] = useState([]);
+// Countdown timer hook (keep backend logic, but update for new layout)
+const useCountdown = ({ targetDate, endTime, status }, onStart, onComplete) => {
+  const [timeLeft, setTimeLeft] = useState('');
+  //const [endTime, setEndTime] = useState('');
 
-  const fetchLeaderboard = async () => {
-    try {
-      
-      
-      
-      const response = await api.get('/score/get-score', {
-        params: {
-          gameName,
-          roomId: tournamentId
-          
-        }
-      });
-      
-      
-      const data = response.data;
-      console.log('[Leaderboard] Raw API response:', response);
-      console.log('[Leaderboard] Response data:', data);
-      
-      if (data && Array.isArray(data.scores)) {
-        console.log(`[Leaderboard] Received ${data.scores.length} scores`);
-        setLeaderboardData(data.scores);
-      } else if (data && data.message) {
-        console.log('[Leaderboard] Server message:', data.message);
-        toast.info(data.message);
-        console.log('[Leaderboard] Server message:', response.data.message);
-        toast.info(response.data.message);
-        setLeaderboardData([]);
-      } else {
-        console.error('[Leaderboard] Unexpected response format:', response.data);
-        toast.error("Unexpected response format from server");
-      }
-    } catch (error) {
-      toast.error(error.response?.data?.message || "An error occurred while fetching leaderboard data.");
-      navigate(-1);
-      console.error("Error fetching leaderboard data:", error);
-    }
-  };
-
-  const fetchTournamentDetails = async () => {
-    try {
-      const response = await api.get(`/tournaments/${tournamentId}`,{
-        contenttype: 'application/json',
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-      const data = response.data;
-     // console.log('[Leaderboard] Tournament details response:', data.data);
-      setPrize(data.data.CollectPrize);
-      
-      setTPrize(data.data.prizePool);
-       fetchLeaderboard();
-     
-    } catch (error) {
-      toast.error(error.response?.data?.message || "An error occurred while fetching tournament details.");
-      console.error("Error fetching tournament details:", error);
-    }
-  };
-
- // console.log(`[Leaderboard] Tournament details:`, tPrize);
   useEffect(() => {
-    window.scrollTo(0, 0);
-    if (gameName && tournamentId) {
-     
-      fetchTournamentDetails();
-    } else {
-      console.error("Invalid gameName or tournamentId");
-    }
-  }, [gameName, tournamentId]);
-   useEffect(() => {
-    // 🔧 Temporary prize data
-    setPrizeBreakup([
-      { rank: '1', prize: 5000 },
-      { rank: '2', prize: 4000 },
-      { rank: '3', prize: 2500 },
-      
-    ]);
-  }, []);
+    if (!targetDate) return;
 
-  const myScore = leaderboardData.find(player => player.userId === userId);
-   const getBadge = (rank) => {
-    if (rank === '1') return '🥇';
-    if (rank === '2') return '🥈';
-    if (rank === '3') return '🥉';
-    return null;
-  };
+    const updateCountdown = () => {
+      const now = new Date().getTime();
+      const target = new Date(targetDate).getTime();
+      const end = new Date(endTime).getTime();
+      const distance = target - now;
+      const tend = end - now;
+      if(distance <0 && status == 'upcoming') {
+          onStart?.(); 
+          return;
+
+      }
+      if ( tend <0 && status === 'live') {
+        onComplete?.(); // Mark as completed if passed endTime by 10+ seconds
+        return;
+      }
+if(status === 'completed') {
+        setTimeLeft('00:00');
+      } else if (status === 'live') {
+         const minutes = Math.floor((tend % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((tend % (1000 * 60)) / 1000);
+    
+      setTimeLeft(`${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
+
+      }else{
+
+      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+      setTimeLeft(`${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
+      }
+    };
+    updateCountdown();
+    const timer = setInterval(updateCountdown, 1000);
+    return () => clearInterval(timer);
+  }, [targetDate]);
+  return timeLeft;
+};
+
+// Format date and time
+const formatDateTime = (dateString) => {
+  if (!dateString) return 'TBD';
+  const date = new Date(dateString);
+  return date.toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true
+  });
+};
+
+// Format prize pool with appropriate currency/coin display
+const formatPrize = (amount, isCoin = false) => {
+  if (isCoin) {
+    return (
+      <span>
+        {amount.toLocaleString()} coins
+      </span>
+    );
+  }
+  return (
+    <span className="flex items-center">
+      <FaRupeeSign className="mr-1" />
+      {amount.toLocaleString()}
+    </span>
+  );
+};
+
+// Format player count
+const formatPlayerCount = (current, max) => {
+  if (!max) return `${current} joined`;
+  return `${current}/${max} players`;
+};
+// 🔽 Place this ConfirmRegisterModal ABOVE TournamentLobby
+const ConfirmRegisterModal = ({ tournament, onConfirm, onCancel }) => {
+  const isCoin = tournament?.tournamentType === 'coin';
+  const entryFee = isCoin
+    ? `${tournament?.entryFee} coins`
+    : `₹${tournament?.entryFee}`;
+  const prizePool = isCoin
+    ? `${tournament?.prizePool} coins`
+    : `₹${tournament?.prizePool}`;
 
   return (
-    <div className="relative min-h-screen bg-blueGradient text-white">
-      <BackgroundBubbles />
-      <Header />
-
-      {/* Scrollable Content */}
-      <div className="relative z-10 max-w-md mx-auto px-4 pt-14 pb-24 flex flex-col h-[calc(100vh-64px)] overflow-y-auto">
-        {/* Back & Title */}
-        <div className="flex items-center mt-6 mb-4">
-          <button onClick={() => navigate(-1)} className="text-white text-lg mr-3">
-            <FaArrowLeft />
+    <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/50">
+      <div className="bg-gray-900 text-white rounded-lg p-6 w-11/12 max-w-sm text-center shadow-xl border border-yellow-400">
+        <h3 className="text-xl font-bold text-yellow-400 mb-3">Register for Tournament?</h3>
+        <p className="mb-2 text-white">Entry Fee: <span className="font-semibold">{entryFee}</span></p>
+        <p className="mb-4 text-white">Prize Pool: <span className="font-semibold">{prizePool}</span></p>
+        <div className="flex justify-center gap-4">
+          <button
+            className="bg-yellow-400 text-gray-900 font-semibold py-2 px-6 rounded hover:bg-yellow-300 transition"
+            onClick={onConfirm}
+          >
+            Yes
           </button>
-          <div>
-    <h1 className="font-Orbitron italic text-white text-2xl tracking-wider uppercase font-semibold">
-  MOST BOOT AMOUNT PAID
-</h1>
-        
-          </div>
-
-          
-        </div>
-<div className="relative z-20 mt-2">
-  <div className="flex justify-around text-sm font-semibold text-white/60 border-b border-white/20 pb-1">
-    {['leaderboard', 'prize'].map((tab) => (
-      <button
-        key={tab}
-        onClick={() => setActiveTab(tab)}
-        className={`uppercase transition-all duration-200 ${
-          activeTab === tab
-            ? 'text-white font-bold border-b-2 border-white'
-            : 'text-white/50'
-        }`}
-      >
-        {tab === 'leaderboard' && 'LEADERBOARD'}
-        {tab === 'prize' && 'PRIZE BREAKUP'}
-        
-      </button>
-    ))}
-  </div>
-</div>
-
-        {/* Table Header */}
-        {/* <div className="text-xs text-white/70 font-semibold px-2 mb-2 flex justify-between">
-          <div className="w-1/12">#</div>
-          <div className="w-5/12">Player</div>
-          <div className="w-3/12 text-right">Score</div>
-          <div className="w-3/12 text-right">Prize Won</div>
-        </div> */}
-
-        {/* Leaderboard Entries */}
-  {activeTab === 'leaderboard' && (
-  <div className="mt-4 space-y-2 pr-1 pb-4">
-    {/* Header Row */}
-  <div className="flex justify-between text-white/70 text-xs font-semibold px-4 pb-1 border-b border-white/10">
-  <div className="w-4/12">Player</div>
-  <div className="w-2/12 text-center">Score</div>
-  
-  <div className="w-2.5/12 text-right">Winnings</div>
-</div>
-
-
-    {/* Leaderboard Rows */}
-    {leaderboardData.map((player, index) => (
-      <div
-        key={index}
-        className="bg-white/10 backdrop-blur-md border border-white/10 rounded-lg px-4 py-2 flex justify-between items-center hover:scale-[1.01] transition"
-      >
-        {/* Profile Image + Username + Rank Badge */}
-        <div className="flex items-center gap-3 w-4/12 relative">
-          <div className="w-9 h-9 rounded-full overflow-hidden border border-white/20 bg-white/10">
-            <CachedImage
-              src={
-                player.avatar ||
-                player.profileImage ||
-                `https://api.dicebear.com/7.x/thumbs/svg?seed=${player.username}`
-              }
-              alt="avatar"
-              className="object-cover w-full h-full"
-            />
-          </div>
-          <p className="text-sm text-white font-medium truncate">
-            {player.username}
-          </p>
-
-          {/* Rank Badge */}
-          <span className="absolute -top-1 -left-2 bg-yellow-400 text-black text-[10px] font-bold px-2 py-[1px] rounded-full shadow">
-            #{index + 1}
-          </span>
-        </div>
-
-        {/* Score */}
-        <div className="w-2/12 text-center text-green-300 font-semibold text-sm">
-          {player.score}
-        </div>
-
-        {/* Games Played */}
-        {/* <div className="w-3/12 text-center text-white/80 text-xs font-semibold">
-          {player.gamesPlayed || 1}
-        </div> */}
-
-        {/* Winnings */}
-        <div className="w-3/12 text-right text-lime-300 text-sm font-semibold">
-          ₹{index===0?prize*0.5:0 || index===1?prize*0.2:0 || index===2?prize*0.1:0}
+          <button
+            className="bg-gray-700 text-white font-medium py-2 px-6 rounded hover:bg-gray-600 transition"
+            onClick={onCancel}
+          >
+            Cancel
+          </button>
         </div>
       </div>
-    ))}
-  </div>
-)}
-
-
-        {activeTab === 'prize' && (
-  <div className="mt-6">
-    {/* Table Header */}
-    <div className="text-xs text-white/70 font-semibold px-2 mb-2 flex justify-between">
-      <div className="w-1/2 text-left">Rank</div>
-      <div className="w-1/2 text-right">Prize</div>
-    </div>
-
-    {/* Prize Rows */}
-    <div className="bg-white/10 backdrop-blur-md rounded-xl px-4 py-3 space-y-3">
-      {prizeBreakup.map((item, index) => (
-        <div
-          key={index}
-          className="flex items-center justify-between border-b border-white/10 pb-1 last:border-b-0"
-        >
-          <div className="w-1/2 flex items-center gap-2 text-white text-sm font-medium">
-            {getBadge(item.rank) && (
-              <span className="text-xl">{getBadge(item.rank)}</span>
-            )}
-            <span>{item.rank}</span>
-          </div>
-          <div className="w-1/2 text-right text-lime-300 font-semibold text-sm">
-            ₹{item.rank === '1' ? tPrize * 0.5 : item.rank === '2' ? tPrize * 0.2 : item.rank === '3' ? tPrize * 0.1 : 0}
-          </div>
-        </div>
-      ))}
-    </div>
-  </div>
-)}
-{activeTab === 'info' && (
-  <div className="mt-6 space-y-4 text-sm text-white/80 leading-relaxed">
-    <h2 className="text-white text-lg font-semibold font-orbitron italic uppercase tracking-wide">How to Play</h2>
-
-    <ul className="list-disc list-inside space-y-2">
-      <li>Join the tournament before it starts by clicking the "Play" button.</li>
-      <li>Each game has a set duration — complete it before the timer ends.</li>
-      <li>Your score is calculated based on performance — aim for a high score!</li>
-      <li>You can retry multiple times if allowed, only the best score is recorded.</li>
-      <li>Check the "Leaderboard" tab to track your rank.</li>
-      <li>Prizes will be distributed based on final rankings at the tournament’s end.</li>
-    </ul>
-
-    <p className="text-white/60 italic text-xs mt-4">
-      Tip: Practice before the tournament begins to improve your chances!
-    </p>
-  </div>
-)}
-
-    <p className="text-center text-xs text-white/50 mt-3">Compete daily to reach the top!</p>
-      </div>
-
-      <Navbar />
     </div>
   );
 };
 
-export default Leaderboard;
+
+const TournamentLobby = () => {
+  const { gameId } = useParams();
+  const navigate = useNavigate();
+  const [showModal, setShowModal] = useState(false);
+  const [modalMessage, setModalMessage] = useState('');
+  const [game, setGame] = useState(null);
+  const [tournaments, setTournaments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [activeFilter, setActiveFilter] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [userId, setUserId] = useState(null);
+  const [type, setType] = useState('cash'); // 'cash' or 'coin'
+ const [onClose, setOnClose] = useState(false);
+
+  const showPopup = (message) => {
+  setModalMessage(message);
+  setShowModal(true);
+};
+const [confirmModal, setConfirmModal] = useState({
+  visible: false,
+  tournament: null,
+});
+ const setTournamentStatus = async (tournamentId, newStatus) => {
+  console.log("run setTournamentStatus");
+  try {
+    const token = localStorage.getItem('token');
+    const response = await fetch(
+      `${API_BASE_URL}/tournaments/${tournamentId}/status`,
+      {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ status: newStatus })
+      }
+    );
+    const data = await response.json();
+    return data.success;
+  } catch (error) {
+    console.error('Failed to set tournament status:', error);
+    return false;
+  }
+};
+
+const handleConfirmRegister = async () => {
+  const tournament = confirmModal.tournament;
+  if (!tournament) return;
+
+  const tournamentId = tournament._id || tournament.id;
+
+  await handleRegisterTournament(tournamentId);
+  setConfirmModal({ visible: false, tournament: null });
+
+  //navigate(`/gameOn/${gameId}/${tournamentId}`);
+};
+
+const handleCancelRegister = () => {
+  setConfirmModal({ visible: false, tournament: null });
+};
+
+
+
+const SimpleModal = ({ message, onClose }) => (
+  <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/50">
+    <div className="bg-gray-800 text-white rounded-lg p-6 w-11/12 max-w-xs text-center shadow-lg border border-yellow-400">
+      <h3 className="text-xl font-bold text-yellow-400 mb-2">Notification</h3>
+      <p className="text-white text-base mb-4">{message}</p>
+      <button
+        className="bg-yellow-400 text-gray-900 font-semibold py-2 px-6 rounded hover:bg-yellow-300 transition"
+        onClick={onClose}
+      >
+        OK
+      </button>
+    </div>
+  </div>
+);
+
+  // Get user ID from local storage
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        const userData = JSON.parse(localStorage.getItem('user'));
+        if (userData && userData._id) {
+          setUserId(userData._id);
+        }
+      } catch (error) {
+        console.error('Error parsing user data:', error);
+      }
+    }
+  }, []);
+
+  // Format prize as string for confirmation dialog
+  const formatPrizeString = (amount, isCoin = false) => {
+    if (isCoin) return `${amount.toLocaleString()} coins`;
+    return `₹${amount.toLocaleString()}`;
+  };
+const goToLeaderboard = ({ gameName, tournamentId }) => {
+  navigate(`/leaderboard_singlegame/${gameName}/${tournamentId}`);
+};
+const handleRegisterTournament = async (tournamentId) => {
+  const tournament = tournaments.find(t => t.id === tournamentId || t._id === tournamentId);
+    
+  // if (!tournament) {
+  //   toast.error('Tournament not found');
+  //   return;
+  // }
+
+  const isCoinTournament = tournament.tournamentType === 'coin';
+
+  try {
+    const token = localStorage.getItem('token');
+    const user = JSON.parse(localStorage.getItem('user'));
+
+    if (!user || !token) {
+      toast.error('User not logged in');
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/tournaments/${tournamentId}/register`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ playerId: user._id }),
+          credentials: 'include'
+        }
+      );
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to register for tournament');
+      }
+
+      toast.success('Successfully registered for the tournament!');
+       handleViewTournament(tournamentId);
+      // Add any success handling here (e.g., update UI state)
+    } catch (error) {
+      console.error('Registration error:', error);
+      toast.error(error.message || 'Failed to register for tournament');
+      return;
+    }
+
+  } catch (error) {
+    console.error('Registration error:', error);
+    
+    toast.error(
+      error.response?.data?.message || 'Failed to register for tournament'
+      
+    );
+    fetchGameAndTournaments();
+    return;
+    
+  }
+};
+
+  // Handle view/join tournament
+  const handleViewTournament = (tournamentId) => {
+    const tournament = tournaments.find(t => t.id === tournamentId);
+    
+    if (!tournament) {
+      toast.error('Tournament not found');
+      return;
+    }
+
+    const isCoinTournament = tournament.tournamentType === 'coin';
+    
+    navigate(`/gameOn/${gameId}/${tournamentId}`, {
+      state: { fromTournamentLobby: true }
+    });
+  };
+  //console.log(tournaments.currentPlayers);
+
+
+  // Tournament card component
+const TournamentCard = ({
+  id,
+  name,
+  entryFee,
+  startTime,
+  prizePool,
+  participants = [],
+  maxParticipants,
+  imageUrl,
+  status,
+  endTime,
+  tournamentType,
+  currentPlayers = [],
+  rules = {},
+}) => {
+  const progressPercent = Math.min(100, (participants.length / (maxParticipants || 1)) * 100);
+  const countdown = useCountdown({ targetDate: startTime, endTime, status },  async () => {
+      const success = await setTournamentStatus(id, 'live');
+      
+        fetchGameAndTournaments(); // re-fetch to show updated status
+      
+    },
+    async () => {
+      await setTournamentStatus(id, 'completed');
+    
+      fetchGameAndTournaments();
+      
+    }
+);
+  const hasJoined = currentPlayers.includes(userId);
+ 
+  return (
+    <div className={`relative w-full bg-gradient-to-r from-blue-900 via-blue-700 to-blue-900 rounded-xl p-2  text-white overflow-hidden mb-[2px] shadow-md shadow-[#292828]`}> 
+      <div className={`absolute top-1 left-1 px-1.5 py-0.5 rounded text-[10px] font-bold ${status === 'live' ? 'bg-yellow-500 text-black' : status === 'completed' ? 'bg-gray-400 text-gray-900' : 'bg-yellow-500 text-black'}`}> 
+        {status === 'live' ? 'LIVE' : status === 'completed' ? 'COMPLETED' : status.toUpperCase()} 
+      </div>
+      <div className="absolute top-1 right-1 text-[10px]">{
+        status === 'live' ? 'Ends in' : status === 'completed' ? 'Ended on' : 'Starts on'
+      }
+        <span className="font-bold">{countdown || '00:00'}</span>
+      </div>
+      <div className="flex gap-2 items-center mt-4">
+        <img
+          src={imageUrl || '/placeholder.jpg'}
+          alt={name}
+          className="w-12 h-14 rounded-md border border-white object-cover"
+        />
+        <div className="flex-1 flex flex-col justify-between">
+          <div className="text-[11px]">Prize Pool</div>
+          <div className="text-base font-bold flex items-center">
+            {tournamentType === 'coin' ? <FaCoins className="text-yellow-400 mr-1" /> : <FaRupeeSign className="text-yellow-400 mr-1" />} 
+            {prizePool}
+          </div>
+          <div className="mt-1 text-[11px]">
+            {participants.length} of {maxParticipants} Spots Left
+          </div>
+          <div className="w-full h-1 bg-gray-600 rounded-full mt-1">
+            <div
+              className="h-full bg-yellow-400 rounded-full"
+              style={{ width: `${progressPercent}%` }}
+            ></div>
+          </div>
+        </div>
+        <div className="ml-1 flex flex-col items-end">
+          <button
+            className={`bg-green-500 hover:bg-green-600 text-black font-bold px-3 py-1 rounded-full text-xs whitespace-nowrap mb-1 ${ status === 'completed' ? 'opacity-50 cursor-not-allowed bg-gray-400 text-gray-700' : ''}`}
+            onClick={() => {
+               console.log('Clicked register for tournament:', hasJoined && status !== 'live');
+              if (!hasJoined && status === 'live') {
+                setConfirmModal({ visible: true, tournament: tournaments.find(t => t._id === id || t.id === id) });
+              } else if (hasJoined && status === 'live') {
+                handleViewTournament(id);
+              }
+             
+            }}
+            disabled={ status !== 'live'}
+          >
+            <div>{tournamentType === 'coin' ? <FaCoins className="inline mr-1" /> : <FaRupeeSign className="inline mr-1" />}{
+  status === 'live'
+    ? hasJoined
+      ? 'Play'
+      : ` ${entryFee}`
+    : status === 'completed'
+    ? 'Completed'
+    : 'Upcoming'
+}
+</div>
+          </button>
+        </div>
+      </div>
+      <div className="flex justify-between items-center mt-2 border-t border-white/20 pt-1 text-[10px]">
+        <div className="border px-2 py-0.5 pt-2 pb-2 rounded-full cursor-pointer"
+        onClick={() => setOnClose(true)}
+        >How to play</div>
+        <div className="border px-2 py-0.5 pt-2 pb-2 rounded-full cursor-pointer" onClick={() => goToLeaderboard({ gameName: game?.name, tournamentId: id })}>Leaderboard</div>
+      </div>
+    </div>
+  );
+};
+
+  // Fetch game and tournaments
+  const fetchGameAndTournaments = useCallback(async () => {
+    if (!gameId) return;
+    
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        navigate('/login', { state: { from: `/tournament-lobby/${gameId}` } });
+        return;
+      }
+
+      const [gameResponse, tournamentsResponse] = await Promise.all([
+        api.get(`/games/${gameId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+          validateStatus: (status) => status < 500
+        }),
+        api.get(`/tournaments?gameId=${gameId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+          validateStatus: (status) => status < 500
+        })
+      ]);
+
+      if (gameResponse.data.success) {
+        setGame(gameResponse.data.data);
+      } else {
+        throw new Error(gameResponse.data.message || 'Failed to load game');
+      }
+
+      if (tournamentsResponse.data.success) {
+        setTournaments(tournamentsResponse.data.data || []);
+      } else {
+        throw new Error(tournamentsResponse.data.message || 'Failed to load tournaments');
+      }
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      setError(error.message || 'Failed to load data');
+      toast.error(error.message || 'Failed to load data');
+      
+      if (error.response?.status === 401) {
+        navigate('/login', { state: { from: `/tournament-lobby/${gameId}` } });
+      } else if (error.response?.status === 404) {
+        navigate('/tournaments');
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [gameId, navigate]);
+
+  // Initial data fetch
+  useEffect(() => {
+    fetchGameAndTournaments();
+  }, [fetchGameAndTournaments]);
+
+  // Filter and separate tournaments by type
+ const groupAndLimitTournaments = (list) => {
+  const filtered = list.filter(t =>
+    (activeFilter === 'all' || t.status === activeFilter) &&
+    t.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const statusOrder = ['live', 'upcoming', 'completed'];
+
+  const grouped = {
+    live: [],
+    upcoming: [],
+    completed: [],
+    
+  };
+
+  for (const t of filtered) {
+    if (grouped[t.status]) {
+      grouped[t.status].push(t);
+    }
+  }
+
+  // Limit completed to 5
+  grouped.completed = grouped.completed.slice(0, 3);
+
+  // Merge in order: live → upcoming → completed
+  return statusOrder.flatMap(status => grouped[status] || []);
+};
+
+// Helper to remove duplicate tournaments by _id
+const uniqueTournaments = (tournaments) => {
+  const seen = new Set();
+  return tournaments.filter(t => {
+    if (seen.has(t._id)) return false;
+    seen.add(t._id);
+    return true;
+  });
+};
+
+// Apply to both coin and cash
+const filteredTournaments = {
+  coins: uniqueTournaments(groupAndLimitTournaments(tournaments.filter(t => t.tournamentType === 'coin'))),
+  cash: uniqueTournaments(groupAndLimitTournaments(tournaments.filter(t => t.tournamentType !== 'coin'))),
+};
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-500 mx-auto mb-4"></div>
+          <p>Loading tournaments...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white flex items-center justify-center">
+        <div className="text-center p-6 bg-red-900/50 rounded-lg">
+          <p className="text-red-300 mb-4">{error}</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="bg-yellow-500 hover:bg-yellow-400 text-gray-900 font-medium py-2 px-4 rounded-lg transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen flex flex-col bg-blueGradient text-white"> 
+   
+      <BackgroundBubbles />
+      <Header />
+      <main className="container mx-auto px-2 pt-24 pb-20 relative z-10">
+        <div className="flex items-center mb-4">
+          <button
+            onClick={() => navigate(-1)}
+            className="mr-4 p-2 rounded-full hover:bg-gray-800/50"
+          >
+            <FaArrowLeft className="text-xl" />
+          </button>
+          <h1 className="text-3xl font-bold italic">
+            {game?.displayName || game?.name || 'Tournaments'}
+          </h1>
+        </div>
+        <div className="mb-6 flex flex-col sm:flex-row gap-4">
+          <div className="relative flex-1">
+            <FaSearch className="absolute top-3 left-3 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search tournaments..."
+              className="w-full bg-gray-800/50 border border-gray-700 rounded-lg py-2 pl-10 pr-4 placeholder-gray-400"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+          <div className="flex space-x-2 justify-evenly overflow-x-auto">
+            {['all', 'upcoming', 'live', 'completed',].map(filter => (
+              <button
+                key={filter}
+                className={`px-4 py-2 rounded-full text-sm font-medium ${
+                  activeFilter === filter
+                    ? 'bg-yellow-500 text-gray-900'
+                    : 'bg-gray-800/50 text-white'
+                }`}
+                onClick={() => setActiveFilter(filter)}
+              >
+                {filter.charAt(0).toUpperCase() + filter.slice(1)}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="space-y-12">
+          {filteredTournaments[type]?.length > 0 && (
+            <div>
+             <div className='flex justify-between mb-4 m-2 '>
+              <h1  onClick={() => setType('cash')}
+      className={`px-4 py-2 flex items-center justify-center mr-2 w-full rounded-full text-sm font-medium border ${
+        type === 'cash'
+          ? 'bg-yellow-500 text-gray-900 border-yellow-400'
+          : 'bg-gray-800/50 text-white border-gray-700'
+      }`}>Cash</h1>
+              <h1  onClick={() => setType('coins')}
+      className={`px-4 py-2 flex items-center w-full ml-2 rounded-full text-sm font-medium border justify-center ${
+        type === 'coins'
+          ? 'bg-yellow-500 text-gray-900 border-yellow-400'
+          : 'bg-gray-800/50 text-white border-gray-700'
+      }`}>Coins</h1>
+
+             </div>
+             {onClose?(<HowToPlay rules={game.rules} onClose={() => setOnClose(false)} />):(
+             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                {filteredTournaments[type]?.map(tournament => (
+                  <TournamentCard
+                    key={tournament._id}
+                    id={tournament._id}
+                    name={tournament.name}
+                    entryFee={tournament.entryFee}
+                    prizePool={tournament.prizePool}
+                    participants={tournament.participants || []}
+                    maxParticipants={tournament.maxParticipants}
+                    imageUrl={game.assets?.thumbnail || tournament.imageUrl}
+                    status={tournament.status}
+                    startTime={tournament.startTime}
+                    endTime={tournament.endTime}
+                    tournamentType={tournament.tournamentType}
+                    currentPlayers={tournament.currentPlayers || []}
+                    rules={game.rules || {}}
+                    
+                  />
+                ))}
+              </div>)}
+            </div>
+          )}
+       
+        </div>
+      </main>
+      <Navbar />
+      {showModal && (
+        <SimpleModal
+          message={modalMessage}
+          onClose={() => setShowModal(false)}
+        />
+      )}
+      {confirmModal.visible && (
+        <ConfirmRegisterModal
+          tournament={confirmModal.tournament}
+          onConfirm={handleConfirmRegister}
+          onCancel={handleCancelRegister}
+        />
+      )}
+    </div>
+  );
+};
+
+export default TournamentLobby;

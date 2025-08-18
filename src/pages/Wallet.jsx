@@ -5,10 +5,12 @@ import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Navbar from '../components/Navbar';
 import BackgroundBubbles from '../components/BackgroundBubbles';
+import Backgroundcircle from '../components/BackgroundCircles';
 import SpinWheelScreen from '../components/SpinWheelScreen';
 import { useAuth } from '../contexts/AuthContext';
 import authService from '../services/authService';
 import { toast } from 'react-toastify';
+import BackgroundCircles from '../components/BackgroundCircles';
 
 const Wallet = () => {
   const navigate = useNavigate();
@@ -21,10 +23,14 @@ const Wallet = () => {
     profilePicture: '',
     transactions: [],
   });
+  const [displayCoins, setDisplayCoins] = useState(0); // Animated display
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [showSpinWheel, setShowSpinWheel] = useState(false);
+  const [showCoinSprinkle, setShowCoinSprinkle] = useState(false);
   const { currentUser } = useAuth();
+
+  const coinSound = new Audio('/sounds/coin.mp3'); // make sure you have this file in public/sounds
 
   const fetchUserData = useCallback(async () => {
     try {
@@ -41,6 +47,7 @@ const Wallet = () => {
           bonus: userData.bonus || 0,
           profilePicture: userData.profilePicture || userData.avatar || '',
         }));
+        setDisplayCoins(userData.coins || 0); // sync display count
       }
     } catch (error) {
       console.error('Error fetching user data:', error);
@@ -57,6 +64,7 @@ const Wallet = () => {
           bonus: localUser.bonus || 0,
           profilePicture: localUser.profilePicture || localUser.avatar || '',
         }));
+        setDisplayCoins(localUser.coins || 0);
       }
     } finally {
       setLoading(false);
@@ -70,6 +78,37 @@ const Wallet = () => {
 
   const handleRefresh = () => {
     fetchUserData();
+    triggerCoinSprinkle();
+  };
+
+  const triggerCoinSprinkle = () => {
+    setShowCoinSprinkle(true);
+    setTimeout(() => setShowCoinSprinkle(false), 3000);
+  };
+
+  const animateCoinIncrease = (coinsToAdd) => {
+    let start = displayCoins;
+    let end = start + coinsToAdd;
+    let step = Math.max(1, Math.floor(coinsToAdd / 40)); // smooth speed
+    let current = start;
+
+    triggerCoinSprinkle();
+    coinSound.play();
+
+    const interval = setInterval(() => {
+      current += step;
+      if (current >= end) {
+        current = end;
+        clearInterval(interval);
+      }
+      setDisplayCoins(current);
+    }, 50);
+
+    // Update actual wallet data
+    setWalletData(prev => ({
+      ...prev,
+      coins: end,
+    }));
   };
 
   const handleSpinClick = () => setShowSpinWheel(true);
@@ -78,22 +117,19 @@ const Wallet = () => {
   const handleReward = (reward) => {
     if (reward.includes('Coins')) {
       const coinsWon = parseInt(reward);
-      setWalletData((prev) => ({
-        ...prev,
-        coins: prev.coins + coinsWon,
-      }));
+      animateCoinIncrease(coinsWon);
     }
   };
 
   return (
-    <div className="relative min-h-screen pb-24 overflow-hidden text-white bg-gradient-to-b from-[#0b3fae] via-[#1555d1] to-[#2583ff]">
-      <BackgroundBubbles />
+    <div className="relative min-h-screen pb-24 overflow-hidden text-white bg-royalBlueGradient">
+     <BackgroundCircles />
       <div className="relative z-10">
         <Header />
 
         <div className="pt-20 mt-7 px-4 max-w-4xl mx-auto space-y-6">
           {/* Wallet Card */}
-          <div className="w-full border border-white/30 rounded-xl text-white text-center p-4">
+          <div className="w-full border border-white/30 rounded-xl text-white text-center p-4 relative overflow-hidden">
             {/* Profile Picture */}
             <div className="w-20 h-20 rounded-full bg-yellow-400 mx-auto flex items-center justify-center overflow-hidden mb-4 border-[3px] border-dullBlue">
               {walletData.profilePicture ? (
@@ -114,10 +150,25 @@ const Wallet = () => {
             </div>
 
             {/* Coins Section */}
-            <div className="flex flex-col items-center gap-1">
+            <div className="flex flex-col items-center gap-1 relative">
+              {showCoinSprinkle && (
+                <div className="absolute -top-6">
+                  {Array.from({ length: 8 }).map((_, i) => (
+                    <GiTwoCoins
+                      key={i}
+                      className="text-yellow-300 absolute animate-coin-fall"
+                      style={{
+                        left: `${Math.random() * 60 - 30}px`,
+                        animationDelay: `${i * 0.2}s`,
+                        fontSize: '18px',
+                      }}
+                    />
+                  ))}
+                </div>
+              )}
               <div className="flex items-center gap-2">
                 <p className="text-white/80 text-sm">Coins</p>
-                <button 
+                <button
                   onClick={handleRefresh}
                   disabled={refreshing}
                   className="text-white/60 hover:text-white transition-colors"
@@ -126,7 +177,7 @@ const Wallet = () => {
                 </button>
               </div>
               <h3 className="text-lg font-semibold text-yellow-300 flex items-center gap-1">
-                {walletData.coins.toLocaleString()} <GiTwoCoins size={18} />
+                {displayCoins.toLocaleString()} <GiTwoCoins size={18} />
               </h3>
             </div>
 
@@ -212,6 +263,23 @@ const Wallet = () => {
           onReward={handleReward}
         />
       )}
+
+      {/* Animation Styles */}
+      <style jsx>{`
+        @keyframes coinFall {
+          0% {
+            transform: translateY(-20px) rotate(0deg);
+            opacity: 1;
+          }
+          100% {
+            transform: translateY(60px) rotate(360deg);
+            opacity: 0;
+          }
+        }
+        .animate-coin-fall {
+          animation: coinFall 1s ease-in-out infinite;
+        }
+      `}</style>
     </div>
   );
 };
