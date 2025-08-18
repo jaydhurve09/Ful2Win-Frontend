@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import BackgroundBubbles from './BackgroundBubbles';
+import BackgroundCircles from './BackgroundCircles';
 import { useAuth } from '../contexts/AuthContext';
 
 const StartScreen = () => {
@@ -36,8 +37,8 @@ const StartScreen = () => {
   }, [navigate, isAuthenticated, location.state]);
 
   return (
-    <div className={`min-h-screen w-full bg-blueGradient flex flex-col items-center justify-center relative overflow-hidden transition-opacity duration-500 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
-      <BackgroundBubbles />
+    <div className={`min-h-screen w-full bg-royalBlueGradient flex flex-col items-center justify-center relative overflow-hidden transition-opacity duration-500 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
+      <BackgroundCircles />
       <img 
         src="/logo.png" 
         alt="Ful2Win Logo" 

@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import logo from '../assets/logo.png';
-import BackgroundBubbles from '../components/BackgroundBubbles';
+import BackgroundCircles from '../components/BackgroundCircles';
 import authService from '../services/api';
 
 const ForgotPassword = () => {
@@ -45,8 +45,8 @@ const ForgotPassword = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4 relative overflow-hidden">
-      <BackgroundBubbles />
+    <div className="min-h-screen bg-royalBlueGradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4 relative overflow-hidden">
+      <BackgroundCircles />
       
       <div className="w-full max-w-md bg-white rounded-xl shadow-2xl overflow-hidden z-10">
         <div className="p-8">

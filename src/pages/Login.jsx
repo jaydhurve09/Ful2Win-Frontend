@@ -5,6 +5,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import logo from '../assets/logo.png';
 import { useAuth } from '../contexts/AuthContext';
 import BackgroundBubbles from '../components/BackgroundBubbles';
+import BackgroundCircles from '../components/BackgroundCircles';
 import StartScreen from '../components/StartScreen';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
   
@@ -72,8 +73,8 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-blueGradient flex flex-col justify-end">
-      <BackgroundBubbles />
+    <div className="min-h-screen bg-royalBlueGradient flex flex-col justify-end">
+      <BackgroundCircles />
       {showMainContent ? (
         <StartScreen />
       ) : (

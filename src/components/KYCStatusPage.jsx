@@ -114,11 +114,11 @@ const KYCStatusPage = () => {
     <div
       className="min-h-screen w-full text-white overflow-hidden relative"
       style={{
-        background: 'linear-gradient(to bottom, #0A2472 0%, #0D47A1 45%, #1565C0 100%)',
+        background: 'royalBlueGradient',
       }}
     >
       <BackgroundCircles />
-      <BackgroundBubbles />
+ 
 
       <div className="relative z-10 px-4 pt-16 pb-24">
         {/* Back Button and Title */}
