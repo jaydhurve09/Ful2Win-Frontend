@@ -4,13 +4,121 @@ import { FaRedoAlt, FaPlay, FaBolt } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Navbar from '../components/Navbar';
-import BackgroundBubbles from '../components/BackgroundBubbles';
-import Backgroundcircle from '../components/BackgroundCircles';
+
+import BackgroundCircles from '../components/BackgroundCircles';
+
 import SpinWheelScreen from '../components/SpinWheelScreen';
 import { useAuth } from '../contexts/AuthContext';
 import authService from '../services/authService';
 import { toast } from 'react-toastify';
 import BackgroundCircles from '../components/BackgroundCircles';
+
+// ONLY ADDITION: Coin Sprinkler Animation Component
+const CoinSprinkler = ({ isActive, onComplete }) => {
+  useEffect(() => {
+    if (isActive) {
+      const timer = setTimeout(() => {
+        onComplete();
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [isActive, onComplete]);
+
+  if (!isActive) return null;
+
+  // Generate random coins
+  const coins = Array.from({ length: 15 }, (_, i) => ({
+    id: i,
+    delay: Math.random() * 0.5,
+    duration: 1.5 + Math.random() * 0.5,
+    startX: Math.random() * 100,
+    endX: Math.random() * 100,
+    rotation: Math.random() * 360,
+    size: 20 + Math.random() * 10,
+  }));
+
+  return (
+    <>
+      <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
+        {coins.map((coin) => (
+          <div
+            key={coin.id}
+            className="absolute"
+            style={{
+              left: `${coin.startX}%`,
+              top: '-30px',
+              animationDelay: `${coin.delay}s`,
+              animationDuration: `${coin.duration}s`,
+              animationFillMode: 'forwards',
+              animationName: `coinFall-${coin.id}`,
+              animationTimingFunction: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+            }}
+          >
+            <GiTwoCoins
+              className="text-yellow-400"
+              size={coin.size}
+              style={{
+                textShadow: '0 0 15px rgba(255, 215, 0, 0.9), 0 0 25px rgba(255, 215, 0, 0.6)',
+                filter: 'brightness(1.3)',
+                animation: `coinRotate 0.6s linear infinite, coinGlow 1s ease-in-out infinite alternate`,
+              }}
+            />
+          </div>
+        ))}
+      </div>
+      
+      {/* Dynamic CSS animations for each coin */}
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          ${coins.map((coin) => `
+            @keyframes coinFall-${coin.id} {
+              0% {
+                transform: translateY(-30px) translateX(0px) rotate(0deg) scale(0.8);
+                opacity: 0;
+              }
+              10% {
+                opacity: 1;
+                transform: translateY(20px) translateX(0px) rotate(36deg) scale(1);
+              }
+              50% {
+                opacity: 1;
+                transform: translateY(50vh) translateX(${(Math.random() - 0.5) * 100}px) rotate(180deg) scale(1.1);
+              }
+              100% {
+                transform: translateY(100vh) translateX(${(Math.random() - 0.5) * 150}px) rotate(720deg) scale(0.6);
+                opacity: 0;
+              }
+            }
+          `).join('')}
+          
+          @keyframes coinRotate {
+            0% { transform: rotateY(0deg) rotateX(0deg); }
+            25% { transform: rotateY(90deg) rotateX(90deg); }
+            50% { transform: rotateY(180deg) rotateX(180deg); }
+            75% { transform: rotateY(270deg) rotateX(270deg); }
+            100% { transform: rotateY(360deg) rotateX(360deg); }
+          }
+          
+          @keyframes coinGlow {
+            0% { 
+              text-shadow: 0 0 10px rgba(255, 215, 0, 0.8), 0 0 20px rgba(255, 215, 0, 0.4);
+              filter: brightness(1.2) drop-shadow(0 0 8px rgba(255, 215, 0, 0.6));
+            }
+            100% { 
+              text-shadow: 0 0 20px rgba(255, 215, 0, 1), 0 0 40px rgba(255, 215, 0, 0.8), 0 0 60px rgba(255, 215, 0, 0.4);
+              filter: brightness(1.6) drop-shadow(0 0 15px rgba(255, 215, 0, 0.9));
+            }
+          }
+          
+          @keyframes iconPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+          }
+        `
+      }} />
+    </>
+  );
+};
 
 const Wallet = () => {
   const navigate = useNavigate();
@@ -27,8 +135,24 @@ const Wallet = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [showSpinWheel, setShowSpinWheel] = useState(false);
+
   const [showCoinSprinkle, setShowCoinSprinkle] = useState(false);
+
   const { currentUser } = useAuth();
+  const [randomAvatar, setRandomAvatar] = useState('');
+
+  const avatarUrls = [
+    'https://static.vecteezy.com/system/resources/thumbnails/054/555/561/small/a-man-wearing-headphones-and-sunglasses-is-wearing-a-hoodie-free-vector.jpg',
+    'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTTkGqGhRMsxpIB4MJdd0PyWTnEmMouDPZF2tikUPWBlqag3n1hwaEm5dWZPhFsFpWoOAY&usqp=CAU',
+    'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT8S4iUctVEKnT2XADlOKU2BXtB4hnPCcWT5wOZLecqj_jlqm1srgGHB35KEmRr2DVYZ_k&usqp=CAU',
+    'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTusljDoqM83wPeOFOI0aLE8cTo9i1Od-D9-lwlY7J7cRHK2Foo2xO9doYTZup5HqLVJNI&usqp=CAU',
+    'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRtivNT4hLBnG6ONjJF3-g1-xcjm8l9IXSIvra4O0kOrdW52Bq4nrB1YEahHA2afCC7f10&usqp=CAU',
+  ];
+
+  useEffect(() => {
+    const randomIndex = Math.floor(Math.random() * avatarUrls.length);
+    setRandomAvatar(avatarUrls[randomIndex]);
+  }, []);
 
   const coinSound = new Audio('/sounds/coin.mp3'); // make sure you have this file in public/sounds
 
@@ -77,6 +201,7 @@ const Wallet = () => {
   }, [fetchUserData]);
 
   const handleRefresh = () => {
+    setShowCoinAnimation(true);
     fetchUserData();
     triggerCoinSprinkle();
   };
@@ -111,6 +236,10 @@ const Wallet = () => {
     }));
   };
 
+  const handleCoinAnimationComplete = () => {
+    setShowCoinAnimation(false);
+  };
+
   const handleSpinClick = () => setShowSpinWheel(true);
   const handleCloseSpin = () => setShowSpinWheel(false);
 
@@ -123,7 +252,15 @@ const Wallet = () => {
 
   return (
     <div className="relative min-h-screen pb-24 overflow-hidden text-white bg-royalBlueGradient">
-     <BackgroundCircles />
+
+      <BackgroundCircles />
+      
+      <CoinSprinkler 
+        isActive={showCoinAnimation} 
+        onComplete={handleCoinAnimationComplete} 
+      />
+      
+
       <div className="relative z-10">
         <Header />
 
@@ -132,9 +269,9 @@ const Wallet = () => {
           <div className="w-full border border-white/30 rounded-xl text-white text-center p-4 relative overflow-hidden">
             {/* Profile Picture */}
             <div className="w-20 h-20 rounded-full bg-yellow-400 mx-auto flex items-center justify-center overflow-hidden mb-4 border-[3px] border-dullBlue">
-              {walletData.profilePicture ? (
+              {randomAvatar ? (
                 <img
-                  src={walletData.profilePicture}
+                  src={randomAvatar}
                   alt="Profile"
                   className="w-full h-full object-cover"
                   onError={(e) => {
@@ -171,9 +308,19 @@ const Wallet = () => {
                 <button
                   onClick={handleRefresh}
                   disabled={refreshing}
-                  className="text-white/60 hover:text-white transition-colors"
+                  className={`text-white/60 hover:text-white transition-all duration-300 transform hover:scale-110 ${
+                    showCoinAnimation ? 'text-yellow-400 scale-125' : ''
+                  }`}
                 >
-                  <FaRedoAlt size={14} className={refreshing ? 'animate-spin' : ''} />
+                  <FaRedoAlt 
+                    size={14} 
+                    className={`${refreshing ? 'animate-spin' : ''} ${
+                      showCoinAnimation ? 'animate-pulse' : ''
+                    }`}
+                    style={{
+                      animation: showCoinAnimation ? 'iconPulse 0.5s ease-in-out infinite' : undefined
+                    }}
+                  />
                 </button>
               </div>
               <h3 className="text-lg font-semibold text-yellow-300 flex items-center gap-1">
@@ -222,8 +369,11 @@ const Wallet = () => {
             </div>
           </div>
 
+          {/* Earn Bonus Heading */}
+          <h2 className="text-center text-lg font-bold text-yellow-300 mt-6">Earn Bonus</h2>
+
           {/* Quick Access Buttons */}
-          <div className="flex justify-center gap-4 mt-6 flex-wrap">
+          <div className="flex justify-center gap-4 mt-4 flex-wrap">
             {[
               { icon: <FaRedoAlt size={18} className="text-blue-900" />, label: 'Spin', onClick: handleSpinClick },
               { icon: <FaPlay size={18} className="text-blue-900" />, label: 'Ads', onClick: () => navigate('/ads') },

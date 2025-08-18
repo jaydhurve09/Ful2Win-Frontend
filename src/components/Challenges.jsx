@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Header from '../components/Header';
 import Navbar from '../components/Navbar';
-import BackgroundBubbles from '../components/BackgroundBubbles';
+import BackgroundCircles from '../components/BackgroundCircles';
 import { NeonGradientCard } from '../components/ui-components/neon-gradient-card';
 import { useNavigate } from 'react-router-dom';
 import { FiArrowLeft } from 'react-icons/fi';
@@ -230,8 +230,8 @@ const Challenges = () => {
   };
 
   return (
-    <div className="relative min-h-screen pb-24 overflow-hidden text-white bg-blueGradient">
-      <BackgroundBubbles />
+    <div className="relative min-h-screen pb-24 overflow-hidden text-white bg-royalBlueGradient">
+      <BackgroundCircles />
       <div className="relative z-10">
         <Header />
 

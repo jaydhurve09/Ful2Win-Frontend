@@ -1,10 +1,37 @@
 import React, { useEffect, useRef, useState } from "react";
+import { useContext } from "react";
+import { Ful2WinContext } from "../context/ful2winContext";
 import { RxCrossCircled } from "react-icons/rx";
+import io from 'socket.io-client';
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+const API_BASE_URL = import.meta.env.MODE === 'development' 
+? 'http://localhost:5000' 
+:  `${import.meta.env.VITE_API_BACKEND_URL}/api`
 
+console.log('API Base URL:', API_BASE_URL); // Debug log
 const FindMatch = ({ tournament, onClose }) => {
+  const { allUsers, socket } = useContext(Ful2WinContext);
+  const navigate = useNavigate();
   const [progress, setProgress] = useState(1); // 1 = full progress
+  const [opponent, setOpponent] = useState(null);
+  const [opponentUsername, setOpponentUsername] = useState('User');
   const [timeUp, setTimeUp] = useState(false);
+  const [found, setFound] = useState(false);
+  const [autoPlayCountdown, setAutoPlayCountdown] = useState(0);
+  const [roomId, setRoomId] = useState(null);
+  const roomIdRef = useRef(null);
   const timerRef = useRef(null);
+  const autoPlayTimerRef = useRef(null);
+
+
+ const joinMatch = () => {
+  socket.emit('join_match', {
+    userId: JSON.parse(localStorage.getItem('user')).id,
+    gameId: tournament.gameId,
+    entryFee: tournament.entryFee
+  });
+};
 
   const handleStart = () => {
     setProgress(1); // Reset to full
@@ -23,14 +50,131 @@ const FindMatch = ({ tournament, onClose }) => {
         clearInterval(timerRef.current);
         setProgress(0);
         setTimeUp(true);
-        console.log("⏰ Time's up!");
+        socket.emit('not_found', {
+          userId: JSON.parse(localStorage.getItem('user')).id,
+          gameId: tournament.gameId,
+          entryFee: tournament.entryFee
+        });
+        toast.error("⏰ Time's up! Opponent not found.");
       }
     }, 50); // update every 50ms for smoothness
   };
+const playHandler = () => {
+  // Clear auto-play timer if user clicks manually
+  if (autoPlayTimerRef.current) {
+    clearTimeout(autoPlayTimerRef.current);
+    clearInterval(autoPlayTimerRef.current);
+    console.log('Auto-play timer cancelled - user clicked manually');
+  }
+  setAutoPlayCountdown(0);
+
+  socket.emit('register', {
+    userId: JSON.parse(localStorage.getItem('user')).id,
+    gameId: tournament.gameId,
+    roomId: roomIdRef.current,
+    entryFee: tournament.entryFee
+  });
+
+};
+
+ const opponentData = (opponentId) => {
+    console.log('Opponent Data called with ID:', opponentId);
+    console.log('All Users:', allUsers);
+    console.log('All Users length:', allUsers?.length);
+    
+    if (!allUsers || allUsers.length === 0) {
+      console.log('allUsers is empty or not loaded');
+      setOpponentUsername('Opponent');
+      return;
+    }
+    
+    // Try to find by both id and _id
+    const opponentUser = allUsers.find(user => 
+      user.id === opponentId || 
+      user._id === opponentId || 
+      user.id === String(opponentId) || 
+      user._id === String(opponentId)
+    );
+    
+    console.log('Found opponent user:', roomId);
+    
+    if (opponentUser) {
+      const opponentProfile = opponentUser.profilePicture || null;
+      const opponentUsername = opponentUser.username || 'Opponent';
+      
+      setOpponent(opponentProfile);
+      setOpponentUsername(opponentUsername);
+      console.log('Set opponent profile:', opponentProfile, 'username:', opponentUsername);
+      
+      // Stop timer when user profile is successfully loaded
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        console.log('Timer stopped - user profile loaded');
+        setFound(true);
+      }
+      setProgress(0);
+      setTimeUp(false); 
+      
+      // Start 5-second auto-play countdown
+      setAutoPlayCountdown(5);
+      let countdown = 5;
+      
+      // Update countdown every second
+      const countdownInterval = setInterval(() => {
+        countdown -= 1;
+        setAutoPlayCountdown(countdown);
+        console.log(`Auto-play in ${countdown} seconds...`);
+        
+        if (countdown <= 0) {
+          clearInterval(countdownInterval);
+          console.log('Auto-play triggered');
+          playHandler();
+        }
+      }, 1000);
+      
+      // Store the interval reference so it can be cancelled
+      autoPlayTimerRef.current = countdownInterval;
+
+    } else {
+      console.log('No opponent found with ID:', opponentId);
+      setOpponentUsername('Opponent');
+    }
+ };
 
   useEffect(() => {
-    return () => clearInterval(timerRef.current); // Cleanup on unmount
-  }, []);
+   
+    socket.on('match_found', (match) => {
+      console.log('Match found:', match);
+      console.log('Calling opponentData with:', match.opponent);
+      console.log('Room ID from match:', match.roomId);
+      
+      if (match.roomId) {
+        setRoomId(match.roomId);
+        roomIdRef.current = match.roomId;
+        console.log('Room ID set to:', match.roomId);
+      } else {
+        console.error('No roomId in match data!');
+      }
+      
+      opponentData(match.opponent);
+      
+      // Timer will be stopped in opponentData function when user profile is loaded
+    });
+    socket.on('register_success', (data) => {
+      console.log('Registration successful', data);
+      const gameRoomId = data?.roomId || roomIdRef.current;
+      console.log('Using roomId for navigation:', gameRoomId);
+      navigate(`/gameOn2/${tournament.gameId}/${gameRoomId}`);
+    });
+
+    return () => {
+      clearInterval(timerRef.current);
+      if (autoPlayTimerRef.current) {
+        clearInterval(autoPlayTimerRef.current);
+      }
+    
+    };
+  }, [allUsers]);
 const userProfile = JSON.parse(localStorage.getItem('user')).profilePicture;
 const username = JSON.parse(localStorage.getItem('user')).username;
 
@@ -117,22 +261,44 @@ const profilePicture = userProfile==""? <span className="first">{username.charAt
               </div>
 
               <div className="rounded-full overflow-hidden h-30 w-30">
-                <img
-                  src={tournament?.imageUrl || "/placeholder.jpg"}
-                  alt={tournament?.name}
-                  className="w-28 h-28 object-cover rounded-md"
-                />
+              
+                {(!opponent || opponent === "") ? (
+                   <span className="w-28 h-28 flex items-center justify-center rounded-full bg-green-600 text-white text-5xl font-bold relative z-30 select-none">
+                    {opponentUsername ? opponentUsername.charAt(0).toUpperCase() : "U"}
+                  </span>
+               
+                ) : (
+                  <img
+                    src={opponent || "/placeholder.jpg"}
+                    alt={opponentUsername}
+                    className="w-28 h-28 object-cover rounded-md"
+                  />
+                )}
               </div>
             </div>
 
             {/* Start Match Button */}
             <div className="p-4 flex flex-col items-center">
-              <button
-                onClick={handleStart}
-                className="w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:bg-yellow-500 text-white text-xl p-4 pl-9 pr-9 rounded-xl shadow transition-all duration-200 flex items-center justify-center gap-2"
-              >
-                Find Match
-              </button>
+              {found ? (
+                <button
+                  onClick={() => {
+                    playHandler();
+                  }}
+                  className="w-auto bg-gradient-to-r from-green-600 to-green-700 hover:bg-green-500 text-white text-xl p-4 pl-9 pr-9 rounded-xl shadow transition-all duration-200 flex items-center justify-center gap-2"
+                >
+                  {autoPlayCountdown > 0 ? `Play (Auto in ${autoPlayCountdown}s)` : 'Play'}
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    handleStart();
+                    joinMatch();
+                  }}
+                  className="w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:bg-yellow-500 text-white text-xl p-4 pl-9 pr-9 rounded-xl shadow transition-all duration-200 flex items-center justify-center gap-2"
+                >
+                  Find Match
+                </button>
+              ) }
 
               {/* Time's Up Message */}
               {timeUp && (

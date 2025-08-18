@@ -3,14 +3,14 @@ import { FiArrowLeft } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Navbar from '../components/Navbar';
-import BackgroundBubbles from '../components/BackgroundBubbles';
+import BackgroundCircles from '../components/BackgroundCircles';
 
 const Ads = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="relative min-h-screen pb-24 overflow-hidden text-white bg-gradient-to-b from-[#0b3fae] via-[#1555d1] to-[#2583ff]">
-      <BackgroundBubbles />
+    <div className="relative min-h-screen pb-24 overflow-hidden text-white bg-royalBlueGradient">
+      <BackgroundCircles />
       <div className="relative z-10">
         <Header />
 

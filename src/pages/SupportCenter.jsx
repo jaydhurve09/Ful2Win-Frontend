@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { FiChevronDown, FiChevronUp, FiSend, FiX } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
-import BackgroundBubbles from '../components/BackgroundBubbles';
+import BackgroundCircles from '../components/BackgroundCircles';
 
 const SupportCenter = () => {
   const navigate = useNavigate();
@@ -85,10 +85,10 @@ const SupportCenter = () => {
     <div
       className="min-h-screen p-4 sm:p-6 lg:p-8 relative text-white"
       style={{
-        background: 'linear-gradient(to bottom, #0A2472 0%, #0D47A1 45%, #1565C0 100%)'
+        background: 'royalBlueGradient'
       }}
     >
-      <BackgroundBubbles />
+      <BackgroundCircles />
 
       {/* Navbar stays at top */}
       <Navbar title="Support Center" />

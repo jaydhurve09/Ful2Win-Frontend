@@ -1,16 +1,12 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import {
-  FaTrophy,
-  FaGamepad,
-  FaUsers,
-  FaClock,
-  FaSearch,
-  FaRupeeSign,
-  FaCoins,
-  FaArrowLeft
-} from 'react-icons/fa';
-import HowToPlay from './HowToPlay';
+
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { FaArrowLeft } from 'react-icons/fa';
+import CachedImage from './CachedImage';
+import Header from '../components/Header';
+import Navbar from '../components/Navbar';
+import BackgroundCircles from '../components/BackgroundCircles';
+
 import { toast } from 'react-toastify';
 import api from '../services/api';
 import axios from 'axios'
@@ -318,6 +314,12 @@ const handleRegisterTournament = async (tournamentId) => {
     });
   };
   //console.log(tournaments.currentPlayers);
+
+
+  return (
+    <div className="relative min-h-screen bg-royalBlueGradient text-white">
+      <BackgroundCircles />
+      <Header />
 
 
   // Tournament card component

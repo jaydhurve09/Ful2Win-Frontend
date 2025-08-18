@@ -13,6 +13,7 @@ import authService from '../services/authService';
 import Header from './Header';
 import Navbar from './Navbar';
 import BackgroundBubbles from './BackgroundBubbles';
+import BackgroundCircles from './BackgroundCircles';
 import '../App.css';
 import Select from 'react-select';
 import countries from 'i18n-iso-countries';
@@ -320,8 +321,8 @@ const Account = () => {
   // Show loading state while initializing
   if (isLoading || !user) {
     return (
-      <div className="min-h-screen pb-16 bg-blueGradient text-white relative overflow-hidden">
-        <BackgroundBubbles />
+      <div className="min-h-screen pb-16 bg-royalBlueGradient text-white relative overflow-hidden">
+        <BackgroundCircles />
         <Header />
         <div className="container mx-auto px-4 py-8">
           <div className="flex justify-center items-center h-64">
@@ -505,8 +506,8 @@ const Account = () => {
   
   return (
     <div>
-      <div className="relative min-h-screen pb-24 overflow-hidden text-white bg-gradient-to-b from-[#0b3fae] via-[#1555d1] to-[#2583ff]">
-        <BackgroundBubbles />
+      <div className="relative min-h-screen pb-24 overflow-hidden text-white bg-royalBlueGradient">
+        <BackgroundCircles />
         <div className="relative z-10">
           <Header />
 

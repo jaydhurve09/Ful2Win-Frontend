@@ -79,9 +79,10 @@ const Home = () => {
         }
       `}</style>
 
-      <BackgroundBubbles />
+      {/* <BackgroundBubbles /> 
+      */}
       <BackgroundCircles />
-      <div className="absolute inset-0 bg-gradient-to-b from-[#00bfff] to-[#000080] opacity-40 z-0" />
+      <div className="absolute inset-0 bg-royalBlueGradient opacity-40 z-0" />
 
       <div className="relative z-10 pt-8">
         <Header />

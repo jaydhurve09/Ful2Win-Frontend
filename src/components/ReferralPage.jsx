@@ -142,8 +142,8 @@ const ReferralPage = () => {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-900 to-blue-700 text-white pb-20 relative">
-      <BackgroundBubbles />
+    <div className="min-h-screen bg-royalBlueGradient text-white pb-20 relative">
+      
       <BackgroundCircles />
       <div className="relative z-10">
         <Header />
