@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { FaArrowLeft } from 'react-icons/fa';
@@ -10,10 +9,8 @@ import BackgroundCircles from '../components/BackgroundCircles';
 import { toast } from 'react-toastify';
 import api from '../services/api';
 import axios from 'axios'
-import Header from './Header';
 import BackgroundBubbles from './BackgroundBubbles';
-import Navbar from './Navbar';
- const API_BASE_URL = import.meta.env.MODE === 'development' 
+const API_BASE_URL = import.meta.env.MODE === 'development' 
           ? 'http://localhost:5000/api' 
           : `${import.meta.env.VITE_API_BACKEND_URL}/api`;
 
@@ -134,6 +131,110 @@ const ConfirmRegisterModal = ({ tournament, onConfirm, onCancel }) => {
   );
 };
 
+// Tournament card component
+const TournamentCard = ({
+  id,
+  name,
+  entryFee,
+  startTime,
+  prizePool,
+  participants = [],
+  maxParticipants,
+  imageUrl,
+  status,
+  endTime,
+  tournamentType,
+  currentPlayers = [],
+  rules = {},
+  onRegister, // Expecting a function prop
+  onView, // Expecting a function prop
+  userId,
+  gameName
+}) => {
+  const progressPercent = Math.min(100, (participants.length / (maxParticipants || 1)) * 100);
+  const countdown = useCountdown({ targetDate: startTime, endTime, status },  async () => {
+      const success = await setTournamentStatus(id, 'live');
+      
+        fetchGameAndTournaments(); // re-fetch to show updated status
+      
+    },
+    async () => {
+      await setTournamentStatus(id, 'completed');
+    
+      fetchGameAndTournaments();
+      
+    }
+);
+  const hasJoined = currentPlayers.includes(userId);
+ 
+  return (
+    <div className={`relative w-full bg-gradient-to-r from-blue-900 via-blue-700 to-blue-900 rounded-xl p-2  text-white overflow-hidden mb-[2px] shadow-md shadow-[#292828]`}> 
+      <div className={`absolute top-1 left-1 px-1.5 py-0.5 rounded text-[10px] font-bold ${status === 'live' ? 'bg-yellow-500 text-black' : status === 'completed' ? 'bg-gray-400 text-gray-900' : 'bg-yellow-500 text-black'}`}> 
+        {status === 'live' ? 'LIVE' : status === 'completed' ? 'COMPLETED' : status.toUpperCase()} 
+      </div>
+      <div className="absolute top-1 right-1 text-[10px]">{
+        status === 'live' ? 'Ends in' : status === 'completed' ? 'Ended on' : 'Starts on'
+      }
+        <span className="font-bold">{countdown || '00:00'}</span>
+      </div>
+      <div className="flex gap-2 items-center mt-4">
+        <img
+          src={imageUrl || '/placeholder.jpg'}
+          alt={name}
+          className="w-12 h-14 rounded-md border border-white object-cover"
+        />
+        <div className="flex-1 flex flex-col justify-between">
+          <div className="text-[11px]">Prize Pool</div>
+          <div className="text-base font-bold flex items-center">
+            {tournamentType === 'coin' ? <FaCoins className="text-yellow-400 mr-1" /> : <FaRupeeSign className="text-yellow-400 mr-1" />} 
+            {prizePool}
+          </div>
+          <div className="mt-1 text-[11px]">
+            {participants.length} of {maxParticipants} Spots Left
+          </div>
+          <div className="w-full h-1 bg-gray-600 rounded-full mt-1">
+            <div
+              className="h-full bg-yellow-400 rounded-full"
+              style={{ width: `${progressPercent}%` }}
+            ></div>
+          </div>
+        </div>
+        <div className="ml-1 flex flex-col items-end">
+          <button
+            className={`bg-green-500 hover:bg-green-600 text-black font-bold px-3 py-1 rounded-full text-xs whitespace-nowrap mb-1 ${ status === 'completed' ? 'opacity-50 cursor-not-allowed bg-gray-400 text-gray-700' : ''}`}
+            onClick={() => {
+               console.log('Clicked register for tournament:', hasJoined && status !== 'live');
+              if (!hasJoined && status === 'live') {
+                onRegister(id);
+              } else if (hasJoined && status === 'live') {
+                onView(id);
+              }
+             
+            }}
+            disabled={ status !== 'live'}
+          >
+            <div>{tournamentType === 'coin' ? <FaCoins className="inline mr-1" /> : <FaRupeeSign className="inline mr-1" />}{
+  status === 'live'
+    ? hasJoined
+      ? 'Play'
+      : ` ${entryFee}`
+    : status === 'completed'
+    ? 'Completed'
+    : 'Upcoming'
+}
+</div>
+          </button>
+        </div>
+      </div>
+      <div className="flex justify-between items-center mt-2 border-t border-white/20 pt-1 text-[10px]">
+        <div className="border px-2 py-0.5 pt-2 pb-2 rounded-full cursor-pointer"
+        onClick={() => setOnClose(true)}
+        >How to play</div>
+        <div className="border px-2 py-0.5 pt-2 pb-2 rounded-full cursor-pointer" onClick={() => goToLeaderboard({ gameName: gameName, tournamentId: id })}>Leaderboard</div>
+      </div>
+    </div>
+  );
+};
 
 const TournamentLobby = () => {
   const { gameId } = useParams();
@@ -322,239 +423,6 @@ const handleRegisterTournament = async (tournamentId) => {
       <Header />
 
 
-  // Tournament card component
-const TournamentCard = ({
-  id,
-  name,
-  entryFee,
-  startTime,
-  prizePool,
-  participants = [],
-  maxParticipants,
-  imageUrl,
-  status,
-  endTime,
-  tournamentType,
-  currentPlayers = [],
-  rules = {},
-}) => {
-  const progressPercent = Math.min(100, (participants.length / (maxParticipants || 1)) * 100);
-  const countdown = useCountdown({ targetDate: startTime, endTime, status },  async () => {
-      const success = await setTournamentStatus(id, 'live');
-      
-        fetchGameAndTournaments(); // re-fetch to show updated status
-      
-    },
-    async () => {
-      await setTournamentStatus(id, 'completed');
-    
-      fetchGameAndTournaments();
-      
-    }
-);
-  const hasJoined = currentPlayers.includes(userId);
- 
-  return (
-    <div className={`relative w-full bg-gradient-to-r from-blue-900 via-blue-700 to-blue-900 rounded-xl p-2  text-white overflow-hidden mb-[2px] shadow-md shadow-[#292828]`}> 
-      <div className={`absolute top-1 left-1 px-1.5 py-0.5 rounded text-[10px] font-bold ${status === 'live' ? 'bg-yellow-500 text-black' : status === 'completed' ? 'bg-gray-400 text-gray-900' : 'bg-yellow-500 text-black'}`}> 
-        {status === 'live' ? 'LIVE' : status === 'completed' ? 'COMPLETED' : status.toUpperCase()} 
-      </div>
-      <div className="absolute top-1 right-1 text-[10px]">{
-        status === 'live' ? 'Ends in' : status === 'completed' ? 'Ended on' : 'Starts on'
-      }
-        <span className="font-bold">{countdown || '00:00'}</span>
-      </div>
-      <div className="flex gap-2 items-center mt-4">
-        <img
-          src={imageUrl || '/placeholder.jpg'}
-          alt={name}
-          className="w-12 h-14 rounded-md border border-white object-cover"
-        />
-        <div className="flex-1 flex flex-col justify-between">
-          <div className="text-[11px]">Prize Pool</div>
-          <div className="text-base font-bold flex items-center">
-            {tournamentType === 'coin' ? <FaCoins className="text-yellow-400 mr-1" /> : <FaRupeeSign className="text-yellow-400 mr-1" />} 
-            {prizePool}
-          </div>
-          <div className="mt-1 text-[11px]">
-            {participants.length} of {maxParticipants} Spots Left
-          </div>
-          <div className="w-full h-1 bg-gray-600 rounded-full mt-1">
-            <div
-              className="h-full bg-yellow-400 rounded-full"
-              style={{ width: `${progressPercent}%` }}
-            ></div>
-          </div>
-        </div>
-        <div className="ml-1 flex flex-col items-end">
-          <button
-            className={`bg-green-500 hover:bg-green-600 text-black font-bold px-3 py-1 rounded-full text-xs whitespace-nowrap mb-1 ${ status === 'completed' ? 'opacity-50 cursor-not-allowed bg-gray-400 text-gray-700' : ''}`}
-            onClick={() => {
-               console.log('Clicked register for tournament:', hasJoined && status !== 'live');
-              if (!hasJoined && status === 'live') {
-                setConfirmModal({ visible: true, tournament: tournaments.find(t => t._id === id || t.id === id) });
-              } else if (hasJoined && status === 'live') {
-                handleViewTournament(id);
-              }
-             
-            }}
-            disabled={ status !== 'live'}
-          >
-            <div>{tournamentType === 'coin' ? <FaCoins className="inline mr-1" /> : <FaRupeeSign className="inline mr-1" />}{
-  status === 'live'
-    ? hasJoined
-      ? 'Play'
-      : ` ${entryFee}`
-    : status === 'completed'
-    ? 'Completed'
-    : 'Upcoming'
-}
-</div>
-          </button>
-        </div>
-      </div>
-      <div className="flex justify-between items-center mt-2 border-t border-white/20 pt-1 text-[10px]">
-        <div className="border px-2 py-0.5 pt-2 pb-2 rounded-full cursor-pointer"
-        onClick={() => setOnClose(true)}
-        >How to play</div>
-        <div className="border px-2 py-0.5 pt-2 pb-2 rounded-full cursor-pointer" onClick={() => goToLeaderboard({ gameName: game?.name, tournamentId: id })}>Leaderboard</div>
-      </div>
-    </div>
-  );
-};
-
-  // Fetch game and tournaments
-  const fetchGameAndTournaments = useCallback(async () => {
-    if (!gameId) return;
-    
-    try {
-      setLoading(true);
-      const token = localStorage.getItem('token');
-      
-      if (!token) {
-        navigate('/login', { state: { from: `/tournament-lobby/${gameId}` } });
-        return;
-      }
-
-      const [gameResponse, tournamentsResponse] = await Promise.all([
-        api.get(`/games/${gameId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-          validateStatus: (status) => status < 500
-        }),
-        api.get(`/tournaments?gameId=${gameId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-          validateStatus: (status) => status < 500
-        })
-      ]);
-
-      if (gameResponse.data.success) {
-        setGame(gameResponse.data.data);
-      } else {
-        throw new Error(gameResponse.data.message || 'Failed to load game');
-      }
-
-      if (tournamentsResponse.data.success) {
-        setTournaments(tournamentsResponse.data.data || []);
-      } else {
-        throw new Error(tournamentsResponse.data.message || 'Failed to load tournaments');
-      }
-    } catch (error) {
-      console.error('Error fetching data:', error);
-      setError(error.message || 'Failed to load data');
-      toast.error(error.message || 'Failed to load data');
-      
-      if (error.response?.status === 401) {
-        navigate('/login', { state: { from: `/tournament-lobby/${gameId}` } });
-      } else if (error.response?.status === 404) {
-        navigate('/tournaments');
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [gameId, navigate]);
-
-  // Initial data fetch
-  useEffect(() => {
-    fetchGameAndTournaments();
-  }, [fetchGameAndTournaments]);
-
-  // Filter and separate tournaments by type
- const groupAndLimitTournaments = (list) => {
-  const filtered = list.filter(t =>
-    (activeFilter === 'all' || t.status === activeFilter) &&
-    t.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const statusOrder = ['live', 'upcoming', 'completed'];
-
-  const grouped = {
-    live: [],
-    upcoming: [],
-    completed: [],
-    
-  };
-
-  for (const t of filtered) {
-    if (grouped[t.status]) {
-      grouped[t.status].push(t);
-    }
-  }
-
-  // Limit completed to 5
-  grouped.completed = grouped.completed.slice(0, 3);
-
-  // Merge in order: live → upcoming → completed
-  return statusOrder.flatMap(status => grouped[status] || []);
-};
-
-// Helper to remove duplicate tournaments by _id
-const uniqueTournaments = (tournaments) => {
-  const seen = new Set();
-  return tournaments.filter(t => {
-    if (seen.has(t._id)) return false;
-    seen.add(t._id);
-    return true;
-  });
-};
-
-// Apply to both coin and cash
-const filteredTournaments = {
-  coins: uniqueTournaments(groupAndLimitTournaments(tournaments.filter(t => t.tournamentType === 'coin'))),
-  cash: uniqueTournaments(groupAndLimitTournaments(tournaments.filter(t => t.tournamentType !== 'coin'))),
-};
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-500 mx-auto mb-4"></div>
-          <p>Loading tournaments...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white flex items-center justify-center">
-        <div className="text-center p-6 bg-red-900/50 rounded-lg">
-          <p className="text-red-300 mb-4">{error}</p>
-          <button 
-            onClick={() => window.location.reload()}
-            className="bg-yellow-500 hover:bg-yellow-400 text-gray-900 font-medium py-2 px-4 rounded-lg transition-colors"
-          >
-            Retry
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen flex flex-col bg-blueGradient text-white"> 
-   
-      <BackgroundBubbles />
-      <Header />
       <main className="container mx-auto px-2 pt-24 pb-20 relative z-10">
         <div className="flex items-center mb-4">
           <button
@@ -630,6 +498,10 @@ const filteredTournaments = {
                     tournamentType={tournament.tournamentType}
                     currentPlayers={tournament.currentPlayers || []}
                     rules={game.rules || {}}
+                    onRegister={handleRegisterTournament}
+                    onView={handleViewTournament}
+                    userId={userId}
+                    gameName={game.name}
                     
                   />
                 ))}
@@ -656,5 +528,132 @@ const filteredTournaments = {
     </div>
   );
 };
+
+// Fetch game and tournaments
+const fetchGameAndTournaments = useCallback(async () => {
+  if (!gameId) return;
+  
+  try {
+    setLoading(true);
+    const token = localStorage.getItem('token');
+    
+    if (!token) {
+      navigate('/login', { state: { from: `/tournament-lobby/${gameId}` } });
+      return;
+    }
+
+    const [gameResponse, tournamentsResponse] = await Promise.all([
+      api.get(`/games/${gameId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+        validateStatus: (status) => status < 500
+      }),
+      api.get(`/tournaments?gameId=${gameId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+        validateStatus: (status) => status < 500
+      })
+    ]);
+
+    if (gameResponse.data.success) {
+      setGame(gameResponse.data.data);
+    } else {
+      throw new Error(gameResponse.data.message || 'Failed to load game');
+    }
+
+    if (tournamentsResponse.data.success) {
+      setTournaments(tournamentsResponse.data.data || []);
+    } else {
+      throw new Error(tournamentsResponse.data.message || 'Failed to load tournaments');
+    }
+  } catch (error) {
+    console.error('Error fetching data:', error);
+    setError(error.message || 'Failed to load data');
+    toast.error(error.message || 'Failed to load data');
+    
+    if (error.response?.status === 401) {
+      navigate('/login', { state: { from: `/tournament-lobby/${gameId}` } });
+    } else if (error.response?.status === 404) {
+      navigate('/tournaments');
+    }
+  } finally {
+    setLoading(false);
+  }
+}, [gameId, navigate]);
+
+// Initial data fetch
+useEffect(() => {
+  fetchGameAndTournaments();
+}, [fetchGameAndTournaments]);
+
+// Filter and separate tournaments by type
+const groupAndLimitTournaments = (list) => {
+  const filtered = list.filter(t =>
+    (activeFilter === 'all' || t.status === activeFilter) &&
+    t.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const statusOrder = ['live', 'upcoming', 'completed'];
+
+  const grouped = {
+    live: [],
+    upcoming: [],
+    completed: [],
+    
+  };
+
+  for (const t of filtered) {
+    if (grouped[t.status]) {
+      grouped[t.status].push(t);
+    }
+  }
+
+  // Limit completed to 5
+  grouped.completed = grouped.completed.slice(0, 3);
+
+  // Merge in order: live → upcoming → completed
+  return statusOrder.flatMap(status => grouped[status] || []);
+};
+
+// Helper to remove duplicate tournaments by _id
+const uniqueTournaments = (tournaments) => {
+  const seen = new Set();
+  return tournaments.filter(t => {
+    if (seen.has(t._id)) return false;
+    seen.add(t._id);
+    return true;
+  });
+};
+
+// Apply to both coin and cash
+const filteredTournaments = {
+  coins: uniqueTournaments(groupAndLimitTournaments(tournaments.filter(t => t.tournamentType === 'coin'))),
+  cash: uniqueTournaments(groupAndLimitTournaments(tournaments.filter(t => t.tournamentType !== 'coin'))),
+};
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-500 mx-auto mb-4"></div>
+          <p>Loading tournaments...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white flex items-center justify-center">
+        <div className="text-center p-6 bg-red-900/50 rounded-lg">
+          <p className="text-red-300 mb-4">{error}</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="bg-yellow-500 hover:bg-yellow-400 text-gray-900 font-medium py-2 px-4 rounded-lg transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
 export default TournamentLobby;
