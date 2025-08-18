@@ -6,7 +6,7 @@ import Banner from '../components/Banner';
 import TrendingGames from '../components/TrendingGames';
 import MultiplayerGames from '../components/MultiplayerGames';
 import PopularGames from '../components/PopularGames';
-import FreeGames from '../components/freegames';
+import FreeGames from '../components/FreeGames';
 import Navbar from '../components/Navbar';
 import SpinWheelScreen from '../components/SpinWheelScreen';
 import BackgroundBubbles from '../components/BackgroundBubbles';
