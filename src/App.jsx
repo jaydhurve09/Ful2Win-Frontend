@@ -109,7 +109,7 @@ function App() {
               <Route path="/kyc" element={<KYCStatusPage />} />
               <Route path="/users" element={<FollowerPage />} />
               <Route path="/tournamenthistory" element={<TournamentHistory />} />
-              <Route path="/leaderboard_singlegame/:gameName/:tournamentId" element={<Leaderboard />}/>
+              <Route path="/leaderboard_singlegame/:gameName/:tournamentId" element={<LeaderboardPage />}/>
               <Route path="/tournament/:tournamentId" element={<TournamentLobby />} />
               <Route path="/tournament-lobby/:gameId" element={<TournamentLobby />} />
               <Route path="/classic-lobby/:gameId" element={<ClassicLobby />} />

@@ -68,39 +68,39 @@ const GameOn2 = () => {
   };
 
   // ✅ Handle GAME_OVER event from the iframe (only if authorized)
-  useEffect(() => {
+// //   useEffect(() => {
     
 
-    const handleMessage = async (event) => {
-      const { type, score } = event.data;
-      if (type === "GAME_OVER") {
-        const { userId } = await getUserInfo();
+// //     const handleMessage = async (event) => {
+// //       const { type, score } = event.data;
+// //       if (type === "GAME_OVER") {
+// //         const { userId } = await getUserInfo();
         
-        try {
-          const scorePayload = {
-                   score,
-                   userId,
-                   roomId,
-                 };
+// //         try {
+// //           const scorePayload = {
+// //                    score,
+// //                    userId,
+// //                    roomId,
+// //                  };
 
-               socket.emit("game_over", scorePayload);
-               setIsWaiting(true);
+// //                socket.emit("game_over", scorePayload);
+// //                setIsWaiting(true);
 
-        }
-    catch (error) {
-         console.error('Error in score submission:', {
-           message: error.message,
-           stack: error.stack,
-           response: error.response?.data || 'No response data'
-         });
-         throw error;
-    }
-  }
-}
+// //         }
+// //     catch (error) {
+// //          console.error('Error in score submission:', {
+// //            message: error.message,
+// //            stack: error.stack,
+// //            response: error.response?.data || 'No response data'
+// //          });
+// //          throw error;
+// //     }
+// //   }
+// // }
 
-    window.addEventListener("message", handleMessage);
-    return () => window.removeEventListener("message", handleMessage);
-  }, [game, roomId]);
+//     window.addEventListener("message", handleMessage);
+//     return () => window.removeEventListener("message", handleMessage);
+//   }, [game, roomId]);
 
   // Show loading while checking authorization
 
