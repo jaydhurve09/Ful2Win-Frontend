@@ -136,6 +136,7 @@ const Wallet = () => {
   const [showSpinWheel, setShowSpinWheel] = useState(false);
 
   const [showCoinSprinkle, setShowCoinSprinkle] = useState(false);
+  const [showCoinAnimation, setShowCoinAnimation] = useState(false);
 
   const { currentUser } = useAuth();
   const [randomAvatar, setRandomAvatar] = useState('');
@@ -254,11 +255,11 @@ const Wallet = () => {
 
       <BackgroundCircles />
       
-      <CoinSprinkler 
+      { <CoinSprinkler 
         isActive={showCoinAnimation} 
         onComplete={handleCoinAnimationComplete} 
       />
-      
+       }
 
       <div className="relative z-10">
         <Header />
